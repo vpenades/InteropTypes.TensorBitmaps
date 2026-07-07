@@ -18,22 +18,22 @@ namespace InteropTypes.TensorBitmaps
         where TElement : unmanaged
         where TPixel : unmanaged
     {
-        public static void CreatePlaneBitmaps(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format, out TensorSpanBitmap<TElement, TElement> x, out TensorSpanBitmap<TElement, TElement> y, out TensorSpanBitmap<TElement, TElement> z)
+        public static void CreatePlaneBitmaps(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format, out TensorSpanBitmap<TElement, TPixel> x, out TensorSpanBitmap<TElement, TPixel> y, out TensorSpanBitmap<TElement, TPixel> z)
         {
             if (tensor.Lengths[0] < 3) throw new IndexOutOfRangeException("the tensor has less than 3 planes");
 
             var planes = tensor.GetDimensionSpan(0);
 
-            x = new TensorSpanBitmap<TElement, TElement>(planes[0], new TensorPixelFormat(format.Components[0]));
-            y = new TensorSpanBitmap<TElement, TElement>(planes[1], new TensorPixelFormat(format.Components[1]));
-            z = new TensorSpanBitmap<TElement, TElement>(planes[2], new TensorPixelFormat(format.Components[2]));
+            x = new TensorSpanBitmap<TElement, TPixel>(planes[0], new TensorPixelFormat(format.Components[0]));
+            y = new TensorSpanBitmap<TElement, TPixel>(planes[1], new TensorPixelFormat(format.Components[1]));
+            z = new TensorSpanBitmap<TElement, TPixel>(planes[2], new TensorPixelFormat(format.Components[2]));
         }
 
         public static implicit operator TensorSpanBitmap<TElement, TPixel>(TensorBitmap<TElement, TPixel> bitmap)
         {
             var tensor = bitmap.Tensor.AsTensorSpan();
             return new TensorSpanBitmap<TElement, TPixel>(tensor, bitmap._Info, bitmap.Format);
-        }        
+        }
 
         private TensorSpanBitmap(System.Numerics.Tensors.TensorSpan<TElement> tensor, _TensorBitmapInfo info, TensorPixelFormat format)
         {
@@ -93,6 +93,25 @@ namespace InteropTypes.TensorBitmaps
             var ranges = _Info.CalculateSlice(Tensor.Rank, rectangle);
 
             return new TensorSpanBitmap<TElement, TPixel>(Tensor.Slice(ranges), Format);
+        }
+
+        public TensorSpanBitmap<TElement, TPixelOut> Cast<TPixelOut>()
+            where TPixelOut : unmanaged
+        {
+            if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
+            return new TensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
+        }
+
+        public ReadOnlyTensorSpanBitmap<TElement, TPixel> AsReadOnlyTensorSpanBitmap()
+        {
+            return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
+        }
+
+        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
+            where TOtherElement : unmanaged
+            where TOtherPixel : unmanaged
+        {
+            this.AsReadOnlyTensorSpanBitmap().CopyPixelsTo(dstBitmap, initPixels);
         }
     }
 }

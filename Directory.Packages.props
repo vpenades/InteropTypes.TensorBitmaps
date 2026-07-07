@@ -8,15 +8,15 @@
     <EnablePackageVersionOverride>true</EnablePackageVersionOverride>    
   </PropertyGroup>	
 	
-  <ItemGroup>
-    <!-- System -->    
-    <PackageVersion Include="System.Numerics.Tensors" Version="10.0.9" />    
-  </ItemGroup>
-
-	<ItemGroup>
-		<!-- unit Testing -->
+  <ItemGroup>    
+    <PackageVersion Include="System.Numerics.Tensors" Version="10.0.9" />		
+	</ItemGroup>
+	
+	<ItemGroup>		
 		<PackageVersion Include="TUnit" Version="1.58.0" />
-		<PackageVersion Include="TestAttachments.TUnit" Version="4.0.0-Preview-20260129-1218" />		
+		<PackageVersion Include="TestAttachments.TUnit" Version="4.0.0-Preview-20260129-1218" />
+		<!-- used only for testing -->
+		<PackageVersion Include="SixLabors.ImageSharp" Version="[3.1.12]" />
 	</ItemGroup>  
   
 </Project>

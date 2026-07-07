@@ -100,5 +100,77 @@ namespace InteropTypes.TensorBitmaps
 
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(Tensor.Slice(ranges), Format);
         }
+
+        public ReadOnlyTensorSpanBitmap<TElement, TPixelOut> Cast<TPixelOut>()
+            where TPixelOut : unmanaged
+        {
+            if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
+            return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
+        }
+
+        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
+            where TOtherElement : unmanaged
+            where TOtherPixel: unmanaged
+        {
+            var h = Math.Min(this.Height, dstBitmap.Height);
+
+            if (typeof(TElement) == typeof(byte) && typeof(TOtherElement) == typeof(byte))
+            {
+                var cvt = new PixelConverter<byte, byte, ComponentConverterByteByte>(this.Format.Components, dstBitmap.Format.Components, initPixels);
+
+                for (int y = 0; y < h; ++y)
+                {
+                    var srcRow = this.GetRowPixelsSpan(y);
+                    var dstRow = dstBitmap.GetRowPixelsSpan(y);
+                    cvt.ConvertPixels(srcRow, dstRow);
+                }
+
+                return;
+            }
+
+            if (typeof(TElement) == typeof(byte) && typeof(TOtherElement) == typeof(float))
+            {
+                var cvt = new PixelConverter<byte, float, ComponentConverterByteFloat>(this.Format.Components, dstBitmap.Format.Components, initPixels);
+
+                for (int y = 0; y < h; ++y)
+                {
+                    var srcRow = this.GetRowPixelsSpan(y);
+                    var dstRow = dstBitmap.GetRowPixelsSpan(y);
+                    cvt.ConvertPixels(srcRow, dstRow);
+                }
+
+                return;
+            }
+
+            if (typeof(TElement) == typeof(float) && typeof(TOtherElement) == typeof(byte))
+            {
+                var cvt = new PixelConverter<float, byte, ComponentConverterFloatByte>(this.Format.Components, dstBitmap.Format.Components, initPixels);
+
+                for (int y = 0; y < h; ++y)
+                {
+                    var srcRow = this.GetRowPixelsSpan(y);
+                    var dstRow = dstBitmap.GetRowPixelsSpan(y);
+                    cvt.ConvertPixels(srcRow, dstRow);
+                }
+
+                return;
+            }
+
+            if (typeof(TElement) == typeof(float) && typeof(TOtherElement) == typeof(float))
+            {
+                var cvt = new PixelConverter<float, float, ComponentConverterFloatFloat>(this.Format.Components, dstBitmap.Format.Components, initPixels);
+
+                for (int y = 0; y < h; ++y)
+                {
+                    var srcRow = this.GetRowPixelsSpan(y);
+                    var dstRow = dstBitmap.GetRowPixelsSpan(y);
+                    cvt.ConvertPixels(srcRow, dstRow);
+                }
+
+                return;
+            }
+
+            throw new NotImplementedException($"{typeof(TElement).Name} to {typeof(TOtherElement).Name}");
+        }
     }
 }

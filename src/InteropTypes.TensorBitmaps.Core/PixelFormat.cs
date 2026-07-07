@@ -11,16 +11,20 @@ namespace InteropTypes.TensorBitmaps
     /// Represents a pixel component within <see cref="TensorPixelFormat"/>
     /// </summary>
     public abstract record TensorPixelComponent
-    {
+    {        
         public static TensorPixelComponent<byte> Red255 = new TensorPixelComponent<byte>("Red", 0, 255);
         public static TensorPixelComponent<byte> Green255 = new TensorPixelComponent<byte>("Green", 0, 255);
         public static TensorPixelComponent<byte> Blue255 = new TensorPixelComponent<byte>("Blue", 0, 255);
         public static TensorPixelComponent<byte> Alpha255 = new TensorPixelComponent<byte>("Alpha", 0, 255);
+        public static TensorPixelComponent<byte> Premul255 = new TensorPixelComponent<byte>("Premultiplied", 0, 255);
+        public static TensorPixelComponent<byte> Luminance255 = new TensorPixelComponent<byte>("Luminance", 0, 255);
 
         public static TensorPixelComponent<float> RedScalar = new TensorPixelComponent<float>("Red", 0, 1);
         public static TensorPixelComponent<float> GreenScalar = new TensorPixelComponent<float>("Green", 0, 1);
         public static TensorPixelComponent<float> BlueScalar = new TensorPixelComponent<float>("Blue", 0, 1);
         public static TensorPixelComponent<float> AlphaScalar = new TensorPixelComponent<float>("Alpha", 0, 1);
+        public static TensorPixelComponent<float> PremulScalar = new TensorPixelComponent<float>("Premultiplied", 0, 1);
+        public static TensorPixelComponent<float> LuminanceScalar = new TensorPixelComponent<float>("Luminance", 0, 1);
 
         protected TensorPixelComponent(string semantic)
         {
@@ -54,6 +58,8 @@ namespace InteropTypes.TensorBitmaps
         {            
             MinValue = minValue;
             MaxValue = maxValue;
+
+            DefaultValue = semantic == "Alpha" || semantic == "Premultiplied" ? maxValue : minValue;
         }
 
         /// <summary>
@@ -72,6 +78,9 @@ namespace InteropTypes.TensorBitmaps
         /// </remarks>
         public T MaxValue { get; }
 
+
+        public T DefaultValue { get; }
+
         public override Type ComponentType => typeof(T);
 
         public override int ByteSize => Unsafe.SizeOf<T>();
@@ -85,6 +94,8 @@ namespace InteropTypes.TensorBitmaps
         public static TensorPixelFormat Rgb24 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255);
         public static TensorPixelFormat Bgr24 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255);
         public static TensorPixelFormat Rgba32 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255, TensorPixelComponent.Alpha255);
+        public static TensorPixelFormat Bgra32 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255, TensorPixelComponent.Alpha255);
+        public static TensorPixelFormat Argb32 = new TensorPixelFormat(TensorPixelComponent.Alpha255, TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255);
 
         public static TensorPixelFormat Rgb96f = new TensorPixelFormat(TensorPixelComponent.RedScalar, TensorPixelComponent.GreenScalar, TensorPixelComponent.BlueScalar);
         public static TensorPixelFormat Bgr96f = new TensorPixelFormat(TensorPixelComponent.BlueScalar, TensorPixelComponent.GreenScalar, TensorPixelComponent.RedScalar);

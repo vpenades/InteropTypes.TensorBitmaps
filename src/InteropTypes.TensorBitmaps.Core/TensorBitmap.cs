@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -96,6 +97,23 @@ namespace InteropTypes.TensorBitmaps
             var ranges = _Info.CalculateSlice(Tensor.Rank, rectangle);
 
             return new TensorBitmap<TElement, TPixel>(Tensor.Slice(ranges), Format);
+        }
+
+        public TensorBitmap<TElement,TPixelOut> Cast<TPixelOut>()
+            where TPixelOut:unmanaged
+        {
+            if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
+            return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
+        }
+
+        public TensorSpanBitmap<TElement, TPixel> AsTensorSpanBitmap()
+        {
+            return new TensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
+        }
+
+        public ReadOnlyTensorSpanBitmap<TElement,TPixel> AsReadOnlyTensorSpanBitmap()
+        {
+            return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
         }
     }
 }

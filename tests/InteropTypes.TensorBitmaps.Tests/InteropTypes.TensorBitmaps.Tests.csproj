@@ -16,6 +16,7 @@
 	<ItemGroup>
 		<PackageReference Include="TUnit" />
 		<PackageReference Include="TestAttachments.TUnit" />
+		<PackageReference Include="SixLabors.ImageSharp" />
 	</ItemGroup>	
 
 	<ItemGroup>
