@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/sources/">
+    <File Path="src/Directory.Build.props" />
+    <Project Path="src/InteropTypes.TensorBitmaps.Core/InteropTypes.TensorBitmaps.Core.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/InteropTypes.TensorBitmaps.Tests/InteropTypes.TensorBitmaps.Tests.csproj" />
+  </Folder>
+</Solution>

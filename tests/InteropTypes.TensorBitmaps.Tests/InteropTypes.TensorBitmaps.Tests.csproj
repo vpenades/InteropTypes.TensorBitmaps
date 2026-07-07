@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>InteropTypes.TensorBitmaps</RootNamespace>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PublishAot>true</PublishAot>
+	</PropertyGroup>	
+
+	<ItemGroup>
+		<PackageReference Include="TUnit" />
+		<PackageReference Include="TestAttachments.TUnit" />
+	</ItemGroup>	
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\src\InteropTypes.TensorBitmaps.Core\InteropTypes.TensorBitmaps.Core.csproj" />
+	</ItemGroup>	
+
+</Project>
