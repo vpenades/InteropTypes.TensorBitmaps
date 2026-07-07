@@ -22,12 +22,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
       - name: Determine package version
         id: version
         run: |
@@ -43,11 +37,13 @@ jobs:
           fi
           echo "Determined PACKAGE_VERSION=$PACKAGE_VERSION"
 
+      - name: Restore
+        run: dotnet restore      
+
       - name: Pack
         run: |
-          mkdir -p artifacts
-          # pack all projects that should produce nuget packages, or specify a project file instead of '.'
-          dotnet pack --configuration Release --no-build -o artifacts /p:PackageVersion=${PACKAGE_VERSION}
+          mkdir -p artifacts          
+          dotnet pack --configuration Release -o artifacts /p:PackageVersion=${PACKAGE_VERSION}
 
       # ------------------------------------------ Push packages
 
