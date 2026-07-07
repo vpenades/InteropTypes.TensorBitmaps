@@ -86,6 +86,10 @@ var blue = new TensorPixelComponent("Blue", -0.623, +0.5432);
 var tensorFormat = new TensorPixelFormat(red,green,blue);
 ```
 
+The only drawback of this API is that it's not easy to declare
+packed pixels formats like RGB565.
+
+
 This pixel format design also has the advantage to seamlessly translate
 to CHW tensors that store each component per plane, where we would have
 a bitmap per plane, and each bitmap defining a single pixel component.
@@ -104,6 +108,17 @@ TensorBitmap<float,Vector3>.CreatePlanes(
 ```
 
 Where redPlane, greenPlane and bluePlane represent the thee componentized planes of the tensor.
+
+### interop with third party libraries
+
+TensorBitmaps is only a data type to contain pixel bitmaps, so it lacks lots of features expected
+from full image libraries.
+
+In fact, it is expected to be used as long as other imaging libraries for tasks like load and save
+images from disk. As an example, the Unit Tests use ImageSharp as the backing library for load and
+save images
+
+
 
 
 
