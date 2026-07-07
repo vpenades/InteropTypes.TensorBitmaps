@@ -10,7 +10,8 @@
 
 	<PropertyGroup>
 		<PublishAot>true</PublishAot>
-	</PropertyGroup>	
+		<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="TUnit" />
