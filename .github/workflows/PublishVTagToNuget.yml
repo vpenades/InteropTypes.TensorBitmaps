@@ -10,7 +10,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:      
+    permissions:
+      contents: read  # required for private repos
       id-token: write # enable GitHub OIDC token issuance for this job
 
     steps:
@@ -38,12 +39,15 @@ jobs:
           echo "Determined PACKAGE_VERSION=$PACKAGE_VERSION"
 
       - name: Restore
-        run: dotnet restore      
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
       - name: Pack
         run: |
           mkdir -p artifacts          
-          dotnet pack --configuration Release -o artifacts /p:PackageVersion=${PACKAGE_VERSION}
+          dotnet pack --configuration Release --no-build -o artifacts /p:PackageVersion=${PACKAGE_VERSION}
 
       # ------------------------------------------ Push packages
 
