@@ -141,5 +141,15 @@ namespace InteropTypes.TensorBitmaps
         public IReadOnlyList<TensorPixelComponent> Components { get; }
 
         public int BytesPerPixel { get; }
+
+        public int IndexOf(string semantic)
+        {            
+            for (int i = 0; i < Components.Count; i++)
+            {
+                if (Components[i].Semantic.Equals(semantic, StringComparison.Ordinal)) return i;
+            }
+
+            return -1;
+        }
     }    
 }

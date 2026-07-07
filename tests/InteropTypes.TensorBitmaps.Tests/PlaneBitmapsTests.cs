@@ -26,24 +26,17 @@ namespace InteropTypes.TensorBitmaps
             var biasedRed = new TensorPixelComponent<float>("Red", -1, 1);
             var biasedGreen = new TensorPixelComponent<float>("Green", -1.3f, 1.3f);
             var biasedBlue = new TensorPixelComponent<float>("Blue", -0.8f, 0.8f);
-            var biasedFormat = new TensorPixelFormat(biasedRed, biasedBlue, biasedGreen);
-
-            var tensor = Tensor.Create(new float[256 * 256 * 3], [3, 256, 256]);
-            TensorSpanBitmap<float, float>.CreatePlaneBitmaps(tensor, biasedFormat, out var planeR, out var planeG, out var planeB);
+            var biasedFormat = new TensorPixelFormat(biasedRed, biasedBlue, biasedGreen);            
+            var planes = TensorSpanPlanes3<float>.Create(256,256, biasedFormat);
 
             // fill planar bitmaps:
 
-            srcBmp.CopyPixelsTo(planeR);
-            srcBmp.CopyPixelsTo(planeG);
-            srcBmp.CopyPixelsTo(planeB);
+            planes.CopyPixelsFrom(srcBmp);
 
             // merge back:
 
-            var dstBmp = TensorBitmap<byte, Rgb24>.Create(planeR.Width, planeR.Height, TensorPixelFormat.Rgb24);
-            planeR.CopyPixelsTo(dstBmp.AsTensorSpanBitmap(), false);
-            planeG.CopyPixelsTo(dstBmp.AsTensorSpanBitmap(), false);
-            planeB.CopyPixelsTo(dstBmp.AsTensorSpanBitmap(), false);
-
+            var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, TensorPixelFormat.Rgb24);
+            planes.CopyPixelsTo(dstBmp);
 
             using var result = dstBmp.ToImageSharp();
 

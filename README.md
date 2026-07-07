@@ -2,6 +2,16 @@
 
 ### Overview
 
+System.Numerics.Tensors is a great addition to .Net, and it is becoming the standard to interact with AI models.
+
+But when dealing with AI Vision, the complexity of tensors is multiplied by the complexity of dealing with images.
+
+.Net definitely needs a new Bitmap type that can be used as general purpose pixel container for a number of scenarios;
+the official .Net Bitmap at System.Drawing.Common is outdated and in the process of being deprecated, and third party
+libraries present their own set of problems.
+
+In the mean time, I present my own solution: Tensor Bitmaps
+
 This project contains some bare bones classes to wrap System.Numerics.Tensors with a Bitmap API facade.
 
 Mapping between tensor and bitmaps:
@@ -99,12 +109,12 @@ For example:
 ```csharp
 var tensor = Tensor.Create<float>(3,256,256); // CHW tensor
 
-TensorBitmap<float,Vector3>.CreatePlanes(
-    tensor,
-    TensorPixelFormat.Rgb96f,
-    out TensorBitmap<float,float> redPlane,
-    out TensorBitmap<float,float> greenPlane,
-    out TensorBitmap<float,float> bluePlane);
+var planes = TensorSpanPlanes3<float>.Create(tensor,TensorPixelFormat.Rgb96f);
+
+var planeRed = planes.PlaneX;
+var planeGreen = planes.PlaneY;
+var planeBlue = planes.PlaneZ;
+
 ```
 
 Where redPlane, greenPlane and bluePlane represent the thee componentized planes of the tensor.

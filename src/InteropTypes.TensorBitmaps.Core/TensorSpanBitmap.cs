@@ -18,17 +18,6 @@ namespace InteropTypes.TensorBitmaps
         where TElement : unmanaged
         where TPixel : unmanaged
     {
-        public static void CreatePlaneBitmaps(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format, out TensorSpanBitmap<TElement, TPixel> x, out TensorSpanBitmap<TElement, TPixel> y, out TensorSpanBitmap<TElement, TPixel> z)
-        {
-            if (tensor.Lengths[0] < 3) throw new IndexOutOfRangeException("the tensor has less than 3 planes");
-
-            var planes = tensor.GetDimensionSpan(0);
-
-            x = new TensorSpanBitmap<TElement, TPixel>(planes[0], new TensorPixelFormat(format.Components[0]));
-            y = new TensorSpanBitmap<TElement, TPixel>(planes[1], new TensorPixelFormat(format.Components[1]));
-            z = new TensorSpanBitmap<TElement, TPixel>(planes[2], new TensorPixelFormat(format.Components[2]));
-        }
-
         public static implicit operator TensorSpanBitmap<TElement, TPixel>(TensorBitmap<TElement, TPixel> bitmap)
         {
             var tensor = bitmap.Tensor.AsTensorSpan();

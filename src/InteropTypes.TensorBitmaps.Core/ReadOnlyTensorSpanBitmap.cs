@@ -17,17 +17,6 @@ namespace InteropTypes.TensorBitmaps
         where TElement : unmanaged
         where TPixel : unmanaged
     {
-        public static void CreatePlaneBitmaps(System.Numerics.Tensors.ReadOnlyTensorSpan<TElement> tensor, TensorPixelFormat format, out ReadOnlyTensorSpanBitmap<TElement, TElement> x, out ReadOnlyTensorSpanBitmap<TElement, TElement> y, out ReadOnlyTensorSpanBitmap<TElement, TElement> z)
-        {
-            if (tensor.Lengths[0] < 3) throw new IndexOutOfRangeException("the tensor has less than 3 planes");
-
-            var planes = tensor.GetDimensionSpan(0);
-
-            x = new ReadOnlyTensorSpanBitmap<TElement, TElement>(planes[0], new TensorPixelFormat(format.Components[0]));
-            y = new ReadOnlyTensorSpanBitmap<TElement, TElement>(planes[1], new TensorPixelFormat(format.Components[1]));
-            z = new ReadOnlyTensorSpanBitmap<TElement, TElement>(planes[2], new TensorPixelFormat(format.Components[2]));
-        }
-
         public static implicit operator ReadOnlyTensorSpanBitmap<TElement, TPixel>(TensorBitmap<TElement, TPixel> bitmap)
         {
             var tensor = bitmap.Tensor.AsReadOnlyTensorSpan();
@@ -113,6 +102,8 @@ namespace InteropTypes.TensorBitmaps
             where TOtherPixel: unmanaged
         {
             var h = Math.Min(this.Height, dstBitmap.Height);
+
+            // this can certainly be simplified
 
             if (typeof(TElement) == typeof(byte) && typeof(TOtherElement) == typeof(byte))
             {
