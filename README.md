@@ -4,29 +4,35 @@
 
 This project contains some bare bones classes to wrap System.Numerics.Tensors with a Bitmap API facade.
 
-### Bitmap core types
+Mapping between tensor and bitmaps:
 
 |Tensor type|Bitmap type|
 |-|-|
+|`ITensor`|`ITensorBitmap`|
+|`IReadOnlyTensor`|`IReadOnlyTensorBitmap`|
 |`Tensor<TElement>`|`TensorBitmap<TElement,TPixel>`|
 |`TensorSpan<TElement>`|`TensorSpanBitmap<TElement,TPixel>`|
 |`ReadOnlyTensorSpan<TElement>`|`ReadOnlyTensorSpanBitmap<TElement,TPixel>`|
 
-`TElement` is the type of the underlaying tensor as also a component of the `TPixel`, so for example we can do:
+`TElement` is the type of the underlaying tensor and also a part of the `TPixel`.
+
+For example:
 
 ```csharp
 struct Rgb24 { byte R; byte G; byte B; }
 
-var bitmap1 = TensorBitmap<byte,Rgb24>.Create(256, 256, TensorPixelFormat.Rgb24); // for a pixel format that uses 3 bytes
+// for a pixel format that uses 3 bytes
+var bitmap1 = TensorBitmap<byte,Rgb24>.Create(256, 256, TensorPixelFormat.Rgb24); 
 
-var bitmap2 = TensorBitmap<float,Vector3>.Create(256, 256, TensorPixelFormat.Rgb96f); // for a bitmap using floating points and a pixel format defined by System.Numerics.Vector3
+// for a bitmap using floating points and a pixel format defined by System.Numerics.Vector3
+var bitmap2 = TensorBitmap<float,Vector3>.Create(256, 256, TensorPixelFormat.Rgb96f); 
 ```
 
 but it is also possible to do
 
-`TensorBitmap<byte,Vector3>` for a byte based vector that uses 12 bytes casted to 3 floats
+`TensorBitmap<byte,Vector3>` for a byte based tensor that uses 12 bytes casted to 3 floats
 
-The three types have the same exact base API:
+All the bitmap types have the same exact base API:
 
 ```csharp
 class *Bitmap<TElement,TPixel>
@@ -41,7 +47,7 @@ class *Bitmap<TElement,TPixel>
 
 `GetCropped` returns a clipped area of the original surface without allocating new memory
 
-### pixel formats
+### Pixel formats
 
 Bitmaps usually require declaring some kind of pixel format.
 
@@ -51,8 +57,8 @@ entire framework around pixel formats.
 
 Declaring a pixel type is done using two types:
 
-- `record TensorPixelFormat`
-- `record TensorPixelComponent<T>`
+- `TensorPixelFormat`
+- `TensorPixelComponent<T>`
 
 Where `TensorPixelComponent` is just a collection of `TensorPixelComponent` plus a few predefined formats like:
 
@@ -71,7 +77,7 @@ var customFormat = new TensorPixelFormat(infrared, depth);
 
 The component class also defines a minimum and maximum value,
 which can be useful to automate the conversion between tensors
-that require aplying a standard-deviation pattern for each pixels, for example:
+that require aplying a standard-deviation ramp for each pixels, for example:
 
 ```csharp
 var red = new TensorPixelComponent("Red", -0.823, +0.7432);
@@ -97,7 +103,9 @@ TensorBitmap<float,Vector3>.CreatePlanes(
     out TensorBitmap<float,float> bluePlane);
 ```
 
-where redPlane, greenPlane and bluePlane represents each plane, and has captured each component of Rgb96f separately.
+Where redPlane, greenPlane and bluePlane represent the thee componentized planes of the tensor.
+
+
 
 
 
