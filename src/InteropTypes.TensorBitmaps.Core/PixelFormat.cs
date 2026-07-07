@@ -1,34 +1,60 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace InteropTypes.TensorBitmaps
 {
-    public record TensorPixelComponent
+    /// <summary>
+    /// Represents a pixel component within <see cref="TensorPixelFormat"/>
+    /// </summary>
+    public abstract record TensorPixelComponent
     {
-        public static TensorPixelComponent Red255 = new TensorPixelComponent("Red", 0, 255);
-        public static TensorPixelComponent Green255 = new TensorPixelComponent("Green", 0, 255);
-        public static TensorPixelComponent Blue255 = new TensorPixelComponent("Blue", 0, 255);
-        public static TensorPixelComponent Alpha255 = new TensorPixelComponent("Alpha", 0, 255);
+        public static TensorPixelComponent<byte> Red255 = new TensorPixelComponent<byte>("Red", 0, 255);
+        public static TensorPixelComponent<byte> Green255 = new TensorPixelComponent<byte>("Green", 0, 255);
+        public static TensorPixelComponent<byte> Blue255 = new TensorPixelComponent<byte>("Blue", 0, 255);
+        public static TensorPixelComponent<byte> Alpha255 = new TensorPixelComponent<byte>("Alpha", 0, 255);
 
-        public static TensorPixelComponent RedScalar = new TensorPixelComponent("Red", 0, 1);
-        public static TensorPixelComponent GreenScalar = new TensorPixelComponent("Green", 0, 1);
-        public static TensorPixelComponent BlueScalar = new TensorPixelComponent("Blue", 0, 1);
-        public static TensorPixelComponent AlphaScalar = new TensorPixelComponent("Alpha", 0, 1);
+        public static TensorPixelComponent<float> RedScalar = new TensorPixelComponent<float>("Red", 0, 1);
+        public static TensorPixelComponent<float> GreenScalar = new TensorPixelComponent<float>("Green", 0, 1);
+        public static TensorPixelComponent<float> BlueScalar = new TensorPixelComponent<float>("Blue", 0, 1);
+        public static TensorPixelComponent<float> AlphaScalar = new TensorPixelComponent<float>("Alpha", 0, 1);
 
-        public TensorPixelComponent(string semantic, float minValue, float maxValue)
+        protected TensorPixelComponent(string semantic)
         {
-            Semantic = semantic;            
-            MinValue = minValue;
-            MaxValue = maxValue;
+            Semantic = semantic;
         }
 
         /// <summary>
         /// Red, Green, Blue, Alpha, PremulAlpha, Luminance, etc
         /// </summary>
-        public string Semantic { get; }        
+        public string Semantic { get; }
+
+        /// <summary>
+        /// Gets the type of the component, usually Byte or Float.
+        /// </summary>
+        public abstract Type ComponentType { get; }
+
+        /// <summary>
+        /// Gets the size in bytes of the component.
+        /// </summary>
+        public abstract int ByteSize { get; }
+    }
+
+    /// <summary>
+    /// Represents a pixel component within <see cref="TensorPixelFormat"/>
+    /// </summary>
+    /// <typeparam name="T">The type of the pixel component, usually <see cref="byte"/> or <see cref="float"/></typeparam>
+    public record TensorPixelComponent<T> : TensorPixelComponent
+        where T:unmanaged
+    {
+        public TensorPixelComponent(string semantic, T minValue, T maxValue) : base(semantic)
+        {            
+            MinValue = minValue;
+            MaxValue = maxValue;
+        }
 
         /// <summary>
         /// the minimum value expected to be found in this component
@@ -36,7 +62,7 @@ namespace InteropTypes.TensorBitmaps
         /// <remarks>
         /// This is typically 0, but it can be a negative value if the pixels have been transformed by a std-mean
         /// </remarks>
-        public float MinValue { get; }
+        public T MinValue { get; }
 
         /// <summary>
         /// the maximum value expected to be found in this component
@@ -44,9 +70,16 @@ namespace InteropTypes.TensorBitmaps
         /// <remarks>
         /// This is typically 1 or 255, but it can be a different value if the pixels have been transformed by a std-mean
         /// </remarks>
-        public float MaxValue { get; }        
+        public T MaxValue { get; }
+
+        public override Type ComponentType => typeof(T);
+
+        public override int ByteSize => Unsafe.SizeOf<T>();
     }
 
+    /// <summary>
+    /// Represents a pixel format
+    /// </summary>
     public record TensorPixelFormat
     {
         public static TensorPixelFormat Rgb24 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255);
@@ -60,28 +93,40 @@ namespace InteropTypes.TensorBitmaps
         public TensorPixelFormat(IReadOnlyList<TensorPixelComponent> components)
         {
             Components = components;
+
+            BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
         public TensorPixelFormat(TensorPixelComponent x)
         {
             Components = [x];
+
+            BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
         public TensorPixelFormat(TensorPixelComponent x, TensorPixelComponent y)
         {
             Components = [x, y];
+
+            BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
         public TensorPixelFormat(TensorPixelComponent x, TensorPixelComponent y, TensorPixelComponent z)
         {
             Components = [x, y, z];
+
+            BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
         public TensorPixelFormat(TensorPixelComponent x, TensorPixelComponent y, TensorPixelComponent z, TensorPixelComponent w)
         {
             Components = [x, y, z, w];
+
+            BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
         public IReadOnlyList<TensorPixelComponent> Components { get; }
+
+        public int BytesPerPixel { get; }
     }    
 }

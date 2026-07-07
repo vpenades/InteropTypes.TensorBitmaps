@@ -51,7 +51,12 @@ namespace InteropTypes.TensorBitmaps
         {
             if (format.Components.Count != tensorChannelCount)
             {
-                throw new ArgumentException("Channels count mismatch", nameof(tensorChannelCount));
+                throw new ArgumentException($"Channels count mismatc; Tensor is {tensorChannelCount} and {nameof(format)} is {format.Components.Count}\"h", nameof(tensorChannelCount));
+            }
+
+            if (Unsafe.SizeOf<TPixel>() != format.BytesPerPixel)
+            {
+                throw new ArgumentException($"Pixel size mismatch; {typeof(TPixel).Name} is {Unsafe.SizeOf<TPixel>()} and {nameof(format)} is {format.BytesPerPixel}", nameof(format));
             }
         }
 
