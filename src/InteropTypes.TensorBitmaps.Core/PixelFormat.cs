@@ -11,7 +11,8 @@ namespace InteropTypes.TensorBitmaps
     /// Represents a pixel component within <see cref="TensorPixelFormat"/>
     /// </summary>
     public abstract record TensorPixelComponent
-    {        
+    {
+        public static TensorPixelComponent<byte> Undefined255 = new TensorPixelComponent<byte>("Undefined", 0, 255);
         public static TensorPixelComponent<byte> Red255 = new TensorPixelComponent<byte>("Red", 0, 255);
         public static TensorPixelComponent<byte> Green255 = new TensorPixelComponent<byte>("Green", 0, 255);
         public static TensorPixelComponent<byte> Blue255 = new TensorPixelComponent<byte>("Blue", 0, 255);
@@ -19,6 +20,7 @@ namespace InteropTypes.TensorBitmaps
         public static TensorPixelComponent<byte> Premul255 = new TensorPixelComponent<byte>("Premultiplied", 0, 255);
         public static TensorPixelComponent<byte> Luminance255 = new TensorPixelComponent<byte>("Luminance", 0, 255);
 
+        public static TensorPixelComponent<float> UndefinedScalar = new TensorPixelComponent<float>("Undefined", 0, 1);
         public static TensorPixelComponent<float> RedScalar = new TensorPixelComponent<float>("Red", 0, 1);
         public static TensorPixelComponent<float> GreenScalar = new TensorPixelComponent<float>("Green", 0, 1);
         public static TensorPixelComponent<float> BlueScalar = new TensorPixelComponent<float>("Blue", 0, 1);
