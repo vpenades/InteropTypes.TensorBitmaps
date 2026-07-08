@@ -93,15 +93,23 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     public record TensorPixelFormat
     {
-        public static TensorPixelFormat Rgb24 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255);
-        public static TensorPixelFormat Bgr24 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255);
+        public static TensorPixelFormat Rgb24 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255);        
+        public static TensorPixelFormat Rgbx32 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255, TensorPixelComponent.Undefined255);
         public static TensorPixelFormat Rgba32 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255, TensorPixelComponent.Alpha255);
+        public static TensorPixelFormat Rgbp32 = new TensorPixelFormat(TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255, TensorPixelComponent.Premul255);
+
+        public static TensorPixelFormat Bgr24 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255);
+        public static TensorPixelFormat Bgrx32 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255, TensorPixelComponent.Undefined255);
         public static TensorPixelFormat Bgra32 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255, TensorPixelComponent.Alpha255);
+        public static TensorPixelFormat Bgrp32 = new TensorPixelFormat(TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255, TensorPixelComponent.Premul255);
+
         public static TensorPixelFormat Argb32 = new TensorPixelFormat(TensorPixelComponent.Alpha255, TensorPixelComponent.Red255, TensorPixelComponent.Green255, TensorPixelComponent.Blue255);
+        public static TensorPixelFormat Abgr32 = new TensorPixelFormat(TensorPixelComponent.Alpha255, TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255);
 
         public static TensorPixelFormat Rgb96f = new TensorPixelFormat(TensorPixelComponent.RedScalar, TensorPixelComponent.GreenScalar, TensorPixelComponent.BlueScalar);
         public static TensorPixelFormat Bgr96f = new TensorPixelFormat(TensorPixelComponent.BlueScalar, TensorPixelComponent.GreenScalar, TensorPixelComponent.RedScalar);
         public static TensorPixelFormat Rgba128f = new TensorPixelFormat(TensorPixelComponent.RedScalar, TensorPixelComponent.GreenScalar, TensorPixelComponent.BlueScalar, TensorPixelComponent.AlphaScalar);
+        public static TensorPixelFormat Rgbp128f = new TensorPixelFormat(TensorPixelComponent.RedScalar, TensorPixelComponent.GreenScalar, TensorPixelComponent.BlueScalar, TensorPixelComponent.PremulScalar);
 
         public TensorPixelFormat(IReadOnlyList<TensorPixelComponent> components)
         {

@@ -14,8 +14,7 @@
 
   <!-- Configuration =================================================================================== -->
 
-  <PropertyGroup>
-    <!-- do not use versions over 8 because it's the max supported by Unity -->
+  <PropertyGroup>    
     <LangVersion>10.0</LangVersion>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
@@ -29,11 +28,7 @@
   <!-- https://learn.microsoft.com/en-us/dotnet/core/compatibility/sdk/8.0/trimming-unsupported-targetframework -->
   <!-- https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/issues/1703 -->
 
-  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
-    <IsTrimmable>true</IsTrimmable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+  <PropertyGroup>    
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
   
@@ -45,9 +40,7 @@
   
   <!-- Packaging =================================================================================== -->
 
-  <PropertyGroup>
-    
-    <Description>Heterogeneous collection of types for interop between third party graphics libraries</Description>
+  <PropertyGroup>    
 
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/vpenades/InteropTypes.TensorBitmaps</RepositoryUrl>
@@ -55,12 +48,20 @@
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-    <PackageTags>Interop graphics</PackageTags>
-  </PropertyGroup>  
+    <PackageTags>bitmaps images tensors onnx</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)TensorBitmaps.png" Link="TensorBitmaps.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PackageIcon>TensorBitmaps.png</PackageIcon>
+  </PropertyGroup>
   
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <VersionPrefix>1.0.0</VersionPrefix>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup>

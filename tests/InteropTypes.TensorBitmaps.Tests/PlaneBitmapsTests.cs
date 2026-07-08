@@ -19,7 +19,12 @@ namespace InteropTypes.TensorBitmaps
         public async Task TestPlaneBitmaps()
         {
             using var img = Image.Load<Bgr24>(ResourceInfo.From("shannon.jpg"));
-            var srcBmp = img.ToTensorBitmap<byte, Bgr24>().AsReadOnlyTensorSpanBitmap().GetCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
+
+            // convert ImageSharp to TensorBitmap
+
+            var srcBmp = img.ToTensorBitmap<byte, Bgr24>()
+                .AsReadOnlyTensorSpanBitmap()
+                .GetCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
 
             // create a CWH tensor and extract planar bitmaps
 

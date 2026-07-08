@@ -11,8 +11,14 @@
 		<InternalsVisibleTo Include="InteropTypes.TensorBitmaps.Tests" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="System.Numerics.Tensors" />		
-	</ItemGroup>	
+  <ItemGroup>
+    <PackageReference Include="System.Numerics.Tensors" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <Description>
+      Extends System.Numerics.Tensors with Bitmap types for tensor to bitmap interoperation.
+    </Description>
+  </PropertyGroup>
 
 </Project>

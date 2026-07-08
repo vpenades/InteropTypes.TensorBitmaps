@@ -20,6 +20,8 @@ namespace InteropTypes.TensorBitmaps
 
             var tbmp = img.ToTensorBitmap<byte, Rgb24>().AsReadOnlyTensorSpanBitmap().GetCropped(new System.Drawing.Rectangle(200,100,280,280));
 
+            ConvertAndSave<byte, Rgb24>(tbmp);
+
             ConvertAndSave<byte, Bgra32>(tbmp);
 
             ConvertAndSave<byte, Bgr24>(tbmp);
