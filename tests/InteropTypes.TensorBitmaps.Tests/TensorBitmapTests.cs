@@ -11,14 +11,16 @@ using TUnit;
 
 namespace InteropTypes.TensorBitmaps
 {
-    internal class CreationTests
+    internal class TensorBitmapTests
     {
 
         [Test]
         public async Task TestCreateBitmaps()
         {
-            var bmp = TensorBitmap<float, Vector3>.Create(256, 267, TensorPixelFormat.Rgb96f);
+            var bmp = TensorBitmap<float, Vector3>.Create(256, 267, KnownPixelFormats.RgbF32);
             await Assert.That(bmp).IsNotNull();
+
+            bmp.AsTensorSpanBitmap().FillPixels(new Vector3(0, 1, 0));
 
             var crop = bmp.GetCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
             await Assert.That(crop.Width).IsEqualTo(16);
@@ -33,15 +35,15 @@ namespace InteropTypes.TensorBitmaps
         }
 
         [Test]
-        public async Task LoadChangeSaveTest()
+        public async Task LoadSaveRoundtripTest()
         {
             using var img = Image.Load<Rgb24>(ResourceInfo.From("shannon.jpg"));
 
-            var tbmp = img.ToTensorBitmap<byte,Rgb24>().Cast<PixelRGB>();
+            var tbmp = img.ToTensorBitmap<byte,Rgb24>().Cast<Pixel888>();
 
             var crop = tbmp.GetCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
 
-            var fillColor = new PixelRGB(0, 255, 0);
+            var fillColor = new Pixel888(0, 255, 0);
             for (int i = 0; i < crop.Height; i++)
             {
                 var row = crop.GetRowPixelsSpan(i); 
@@ -54,19 +56,6 @@ namespace InteropTypes.TensorBitmaps
         }
 
 
-        [StructLayout(LayoutKind.Sequential,Pack =1)]
-        struct PixelRGB
-        {
-            public byte Red;
-            public byte Green;
-            public byte Blue;
-
-            public PixelRGB(byte red, byte green, byte blue)
-            {
-                Red = red;
-                Green = green;
-                Blue = blue;
-            }
-        }
+        
     }
 }

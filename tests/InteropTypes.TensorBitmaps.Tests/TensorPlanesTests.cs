@@ -13,7 +13,7 @@ using TUnit;
 
 namespace InteropTypes.TensorBitmaps
 {
-    internal class PlaneBitmapsTests
+    internal class TensorPlanesTests
     {
         [Test]
         public async Task TestPlaneBitmaps()
@@ -26,21 +26,24 @@ namespace InteropTypes.TensorBitmaps
                 .AsReadOnlyTensorSpanBitmap()
                 .GetCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
 
-            // create a CWH tensor and extract planar bitmaps
+            // create a custom RGB format with a std-mean range
 
             var biasedRed = new TensorPixelComponent<float>("Red", -1, 1);
             var biasedGreen = new TensorPixelComponent<float>("Green", -1.3f, 1.3f);
             var biasedBlue = new TensorPixelComponent<float>("Blue", -0.8f, 0.8f);
-            var biasedFormat = new TensorPixelFormat(biasedRed, biasedBlue, biasedGreen);            
+            var biasedFormat = new TensorPixelFormat(biasedRed, biasedBlue, biasedGreen);
+
+            // create a CWH bitmap and extract planar bitmaps
+
             var planes = TensorSpanPlanes3<float>.Create(256,256, biasedFormat);
 
-            // fill planar bitmaps:
+            // fill planes with shannon.jpg:
 
             planes.CopyPixelsFrom(srcBmp);
 
-            // merge back:
+            // merge planes back to a regular bitmap
 
-            var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, TensorPixelFormat.Rgb24);
+            var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, KnownPixelFormats.Rgb888);
             planes.CopyPixelsTo(dstBmp);
 
             using var result = dstBmp.ToImageSharp();

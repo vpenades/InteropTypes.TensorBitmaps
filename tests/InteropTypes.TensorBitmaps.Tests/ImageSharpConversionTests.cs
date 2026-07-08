@@ -12,7 +12,7 @@ using TUnit;
 
 namespace InteropTypes.TensorBitmaps
 {
-    internal class ConversionTests
+    internal class ImageSharpConversionTests
     {
         [Test]
         public async Task TestPixelConversions()
@@ -51,7 +51,9 @@ namespace InteropTypes.TensorBitmaps
 
             using var result = dst.ToImageSharp();
 
-            AttachmentInfo.From($"shannon.{typeof(TPixel).Name}.jpg").WriteObject(result.Save);
+            AttachmentInfo
+                .From($"shannon.{typeof(TPixel).Name}.jpg")
+                .WriteObject(result.Save);
         }
     }
 }

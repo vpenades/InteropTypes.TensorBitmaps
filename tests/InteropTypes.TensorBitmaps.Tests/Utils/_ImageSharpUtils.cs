@@ -72,26 +72,28 @@ namespace InteropTypes.TensorBitmaps
 
         public static TensorPixelFormat ToTensorPixelFormat(Type type)
         {
-            if (type == typeof(L8)) return new TensorPixelFormat(TensorPixelComponent.LuminanceByte);
+            if (type == typeof(A8)) return KnownPixelFormats.Alpha8;
+            if (type == typeof(L8)) return KnownPixelFormats.Luminance8;
 
-            if (type == typeof(Rgb24)) return TensorPixelFormat.Rgb24;
-            if (type == typeof(Rgba32)) return TensorPixelFormat.Rgba32;
-            if (type == typeof(RgbaVector)) return TensorPixelFormat.Rgba128f;
+            if (type == typeof(Rgb24)) return KnownPixelFormats.Rgb888;
+            if (type == typeof(Rgba32)) return KnownPixelFormats.Rgba8888;
+            if (type == typeof(RgbaVector)) return KnownPixelFormats.RgbaF32;
 
-            if (type == typeof(Bgr24)) return TensorPixelFormat.Bgr24;
-            if (type == typeof(Bgra32)) return TensorPixelFormat.Bgra32;
+            if (type == typeof(Bgr24)) return KnownPixelFormats.Bgr888;
+            if (type == typeof(Bgra32)) return KnownPixelFormats.Bgra8888;
 
-            if (type == typeof(Argb32)) return TensorPixelFormat.Argb32;
-            if (type == typeof(Abgr32)) return TensorPixelFormat.Abgr32;
+            if (type == typeof(Argb32)) return KnownPixelFormats.Argb8888;
+            if (type == typeof(Abgr32)) return KnownPixelFormats.Abgr8888;
 
-
-            if (type == typeof(Rg32)) return TensorPixelFormat.Rg32;
+            if (type == typeof(Rg32)) return KnownPixelFormats.Rg1616;
             if (type == typeof(HalfVector2))
             {
                 var r = new TensorPixelComponent<Half>("Red", -Half.One, Half.One);
                 var g = new TensorPixelComponent<Half>("Green", -Half.One, Half.One);
                 return new TensorPixelFormat(r, g);
             }
+
+            // add more pixel types here
 
             throw new NotImplementedException(type.Name);
         }
