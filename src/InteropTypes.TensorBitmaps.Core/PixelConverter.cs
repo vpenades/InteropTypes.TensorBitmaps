@@ -21,37 +21,38 @@ namespace InteropTypes.TensorBitmaps
     static class PixelConverters
     {
         public static IPixelConverter<TSrcPixel, TDstPixel> Create<TSrc, TSrcPixel, TDst, TDstPixel>(TensorPixelFormat sourceFmt, TensorPixelFormat targetFmt, bool initPixels)
-            where TSrc : unmanaged
+            where TSrc : unmanaged, INumber<TSrc>
             where TSrcPixel : unmanaged
-            where TDst : unmanaged
+            where TDst : unmanaged, INumber<TDst>
             where TDstPixel : unmanaged
         {
+            // direct converter when both types and formats are exactly the same:
+
             if (typeof(TSrcPixel) == typeof(TDstPixel) && sourceFmt == targetFmt)
             {
-                return new DirectConverter<TSrcPixel, TDstPixel>();
+                return new DirectPixelConverter<TSrcPixel, TDstPixel>();
             }
 
-            if (typeof(TSrc) == typeof(byte) && typeof(TDst) == typeof(byte))
+            // converters using floating point:
+
+            if (typeof(TSrc) == typeof(double) || typeof(TDst) == typeof(double))
             {
-                return new PixelConverter<byte, TSrcPixel, byte, TDstPixel, ComponentConverterByteByte>(sourceFmt.Components, targetFmt.Components, initPixels);
+                return new ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, ComponentConverter<TSrc, double, TDst>>(sourceFmt.Components, targetFmt.Components, initPixels);
             }
 
-            if (typeof(TSrc) == typeof(byte) && typeof(TDst) == typeof(float))
+            if (typeof(TSrc) == typeof(float) || typeof(TDst) == typeof(float))
             {
-                return new PixelConverter<byte, TSrcPixel, float, TDstPixel, ComponentConverterByteFloat>(sourceFmt.Components, targetFmt.Components, initPixels);
+                return new ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, ComponentConverter<TSrc, float, TDst>>(sourceFmt.Components, targetFmt.Components, initPixels);
             }
 
-            if (typeof(TSrc) == typeof(float) && typeof(TDst) == typeof(byte))
+            if (typeof(TSrc) == typeof(Half) || typeof(TDst) == typeof(Half))
             {
-                return new PixelConverter<float, TSrcPixel, byte, TDstPixel, ComponentConverterFloatByte>(sourceFmt.Components, targetFmt.Components, initPixels);
+                return new ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, ComponentConverter<TSrc, Half, TDst>>(sourceFmt.Components, targetFmt.Components, initPixels);
             }
 
-            if (typeof(TSrc) == typeof(float) && typeof(TDst) == typeof(float))
-            {
-                return new PixelConverter<float, TSrcPixel, float, TDstPixel, ComponentConverterFloatFloat>(sourceFmt.Components, targetFmt.Components, initPixels);
-            }
-
-            throw new NotImplementedException($"{typeof(TSrc).Name} to {typeof(TDst).Name}");
+            // converter using integer:
+            
+            return new ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, ComponentConverterInteger<TSrc, TDst>>(sourceFmt.Components, targetFmt.Components, initPixels);            
         }
     }
 
@@ -60,7 +61,7 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     /// <typeparam name="TSrcPixel"></typeparam>
     /// <typeparam name="TDstPixel"></typeparam>
-    sealed class DirectConverter<TSrcPixel, TDstPixel> : IPixelConverter<TSrcPixel, TDstPixel>
+    sealed class DirectPixelConverter<TSrcPixel, TDstPixel> : IPixelConverter<TSrcPixel, TDstPixel>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
@@ -75,19 +76,16 @@ namespace InteropTypes.TensorBitmaps
 
 
     /// <summary>
-    /// this is a naive, component by component pixel converter
-    /// </summary>
-    /// <remarks>
-    /// A more complex converter could take advantage of SIMD to convert entire pixel rows, but having this now is better than nothing.
-    /// </remarks>    
-    sealed class PixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, TConverter> : IPixelConverter<TSrcPixel,TDstPixel>
-        where TSrc: unmanaged
+    /// Naive Component per component pixel converter
+    /// </summary>    
+    sealed class ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, TConverter> : IPixelConverter<TSrcPixel,TDstPixel>
+        where TSrc: unmanaged, INumber<TSrc>
         where TSrcPixel: unmanaged
-        where TDst: unmanaged
+        where TDst: unmanaged, INumber<TDst>
         where TDstPixel: unmanaged
         where TConverter : IComponentConverter<TSrc, TDst>
     {
-        public PixelConverter(IReadOnlyList<TensorPixelComponent> src, IReadOnlyList<TensorPixelComponent> dst, bool initPixels)
+        public ComponentWisePixelConverter(IReadOnlyList<TensorPixelComponent> src, IReadOnlyList<TensorPixelComponent> dst, bool initPixels)
         {
             var ccc = new List<TConverter>();
             var uuu = new List<(int, TDst)>();
@@ -112,7 +110,7 @@ namespace InteropTypes.TensorBitmaps
                 var sc = src[srcIdx] as TensorPixelComponent<TSrc>;
                 if (sc == null) continue;
 
-                var c = (TConverter)IComponentConverter<TSrc, TDst>.CreateFrom(sc, dc, srcIdx, i);
+                var c = CreateComponentConverter(sc, dc, srcIdx, i);
                 ccc.Add(c);
             }
 
@@ -120,7 +118,32 @@ namespace InteropTypes.TensorBitmaps
 
             _Converters = ccc.ToArray();
             if (uuu.Count > 0) _Unfilled = uuu.ToArray();
-        }        
+        }
+
+        private static TConverter CreateComponentConverter(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx, int tgtIdx)
+        {
+            if (typeof(TConverter) == typeof(ComponentConverterInteger<TSrc, TDst>))
+            {
+                return (TConverter)(object)new ComponentConverterInteger<TSrc, TDst>(src, dst, srcIdx, tgtIdx);
+            }
+
+            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, Half, TDst>))
+            {
+                return (TConverter)(object)new ComponentConverter<TSrc, Half, TDst>(src, dst, srcIdx, tgtIdx);
+            }
+
+            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, float, TDst>))
+            {
+                return (TConverter)(object)new ComponentConverter<TSrc, float, TDst>(src, dst, srcIdx, tgtIdx);
+            }
+
+            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, double, TDst>))
+            {
+                return (TConverter)(object)new ComponentConverter<TSrc, double, TDst>(src, dst, srcIdx, tgtIdx);
+            }
+
+            throw new NotImplementedException(typeof(TConverter).Name);
+        }
 
         private readonly TConverter[] _Converters;
 
@@ -156,8 +179,7 @@ namespace InteropTypes.TensorBitmaps
                     dstc = dstc.Slice(dststride);
                 }
             }
-        }
-
+        }        
 
         [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private void CopyPixel(ReadOnlySpan<TSrc> srcPixel, Span<TDst> dstPixel)
@@ -172,33 +194,9 @@ namespace InteropTypes.TensorBitmaps
     }
 
     interface IComponentConverter<TSrc, TDst>
-        where TSrc:unmanaged
-        where TDst:unmanaged
+        where TSrc:unmanaged, INumber<TSrc>
+        where TDst:unmanaged, INumber<TDst>
     {
-        public static IComponentConverter<TSrc,TDst> CreateFrom(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx,int tgtIdx)
-        {
-            if (src is TensorPixelComponent<byte> srcB)
-            {
-                switch(dst)
-                {
-                    case TensorPixelComponent<byte> dstB: return new ComponentConverterByteByte(srcB, dstB, srcIdx,tgtIdx) as IComponentConverter<TSrc, TDst>;
-                    case TensorPixelComponent<float> dstF: return new ComponentConverterByteFloat(srcB, dstF, srcIdx, tgtIdx) as IComponentConverter<TSrc, TDst>;
-                }
-
-            }
-
-            if (src is TensorPixelComponent<float> srcF)
-            {
-                switch (dst)
-                {
-                    case TensorPixelComponent<byte> dstB: return new ComponentConverterFloatByte(srcF, dstB, srcIdx, tgtIdx) as IComponentConverter<TSrc, TDst>;
-                    case TensorPixelComponent<float> dstF: return new ComponentConverterFloatFloat(srcF, dstF, srcIdx, tgtIdx) as IComponentConverter<TSrc, TDst>;
-                }
-            }
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Index to the component in the source pixel.
         /// </summary>
@@ -213,120 +211,100 @@ namespace InteropTypes.TensorBitmaps
         /// Converts the component from src to dst
         /// </summary>
         TDst Convert(TSrc value);
-    }
+    }    
 
-    sealed class ComponentConverterFloatFloat : IComponentConverter<float, float>
+    /// <summary>
+    /// Generic converter that uses an intermediate type to convert between src and dst
+    /// </summary>
+    /// <typeparam name="TSrc"></typeparam>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TDst"></typeparam>
+    sealed class ComponentConverter<TSrc, T, TDst> : IComponentConverter<TSrc, TDst>
+        where TSrc : unmanaged, INumber<TSrc>
+        where T : unmanaged, INumber<T>
+        where TDst : unmanaged, INumber<TDst>
     {
-        public ComponentConverterFloatFloat(TensorPixelComponent<float> src, TensorPixelComponent<float> dst, int srcIdx, int tgtIdx)
+        public ComponentConverter(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx, int tgtIdx)
         {
-            _SrcOffset = -src.MinValue;
-            _Scale = (dst.MaxValue - dst.MinValue) / (src.MaxValue - src.MinValue);
-            _DstOffset = dst.MinValue;
             SourceIndex = srcIdx;
+
+            _SrcOffset = -T.CreateChecked(src.MinValue);
+
+            var s = T.CreateChecked(src.MaxValue - src.MinValue);
+            var d = T.CreateChecked(dst.MaxValue - dst.MinValue);
+
+            _Scale = T.IsZero(s) ? T.CreateChecked(0) : d / s;
+
+            _DstOffset = T.CreateChecked(dst.MinValue);
+
             TargetIndex = tgtIdx;
         }
 
         public int SourceIndex { get; }
         public int TargetIndex { get; }
 
-        private readonly float _SrcOffset;
-        private readonly float _Scale;                
-        private readonly float _DstOffset;
+        private readonly T _SrcOffset;
+        private readonly T _Scale;
+        private readonly T _DstOffset;
 
         [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public float Convert(float value)
+        public TDst Convert(TSrc value)
         {
-            value += _SrcOffset;
-            value *= _Scale;
-            value += _DstOffset;
-            return value;            
-        }        
+            var v = T.CreateChecked(value);
+
+            v += _SrcOffset;
+            v *= _Scale;            
+            v += _DstOffset;
+
+            return TDst.CreateChecked(v);
+        }
     }
 
-    sealed class ComponentConverterFloatByte : IComponentConverter<float, byte>
+    /// <summary>
+    /// Specialised converter for integer to integer
+    /// </summary>
+    /// <typeparam name="TSrc"></typeparam>
+    /// <typeparam name="TDst"></typeparam>
+    sealed class ComponentConverterInteger<TSrc, TDst> : IComponentConverter<TSrc, TDst>
+        where TSrc : unmanaged, INumber<TSrc>
+        where TDst : unmanaged, INumber<TDst>
     {
-        public ComponentConverterFloatByte(TensorPixelComponent<float> src, TensorPixelComponent<byte> dst, int srcIdx, int tgtIdx)
+        public ComponentConverterInteger(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx, int tgtIdx)
         {
-            _SrcOffset = -src.MinValue;
-            _Scale = (dst.MaxValue - dst.MinValue) / (src.MaxValue - src.MinValue);
-            _DstOffset = dst.MinValue;
             SourceIndex = srcIdx;
+
+            _SrcOffset = -nint.CreateChecked(src.MinValue);
+
+            var s = nint.CreateChecked(src.MaxValue - src.MinValue);
+            var d = nint.CreateChecked(dst.MaxValue - dst.MinValue);
+
+            d <<= 16;
+
+            _Scale = s == 0 ? 0 : d / s;
+
+            _DstOffset = nint.CreateChecked(dst.MinValue);
+
             TargetIndex = tgtIdx;
         }
 
         public int SourceIndex { get; }
         public int TargetIndex { get; }
 
-        private readonly float _SrcOffset;
-        private readonly float _Scale;
-        private readonly float _DstOffset;
+        private readonly nint _SrcOffset;
+        private readonly nint _Scale;
+        private readonly nint _DstOffset;
 
         [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public byte Convert(float value)
+        public TDst Convert(TSrc value)
         {
-            value += _SrcOffset;
-            value *= _Scale;
-            value += _DstOffset;
-            return (byte)value;
-        }
-    }
+            var v = nint.CreateChecked(value);
 
-    sealed class ComponentConverterByteFloat : IComponentConverter<byte, float>
-    {
-        public ComponentConverterByteFloat(TensorPixelComponent<byte> src, TensorPixelComponent<float> dst, int srcIdx, int tgtIdx)
-        {
-            _SrcOffset = -src.MinValue;
-            _Scale = (dst.MaxValue - dst.MinValue) / (src.MaxValue - src.MinValue);
-            _DstOffset = dst.MinValue;
-            SourceIndex = srcIdx;
-            TargetIndex = tgtIdx;
-        }
+            v += _SrcOffset;
+            v *= _Scale;
+            v >>= 16;
+            v += _DstOffset;
 
-        public int SourceIndex { get; }
-        public int TargetIndex { get; }
-
-        private readonly float _SrcOffset;
-        private readonly float _Scale;
-        private readonly float _DstOffset;
-
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public float Convert(byte value)
-        {
-            float t = value;
-            t += _SrcOffset;
-            t *= _Scale;
-            t += _DstOffset;
-            return t;
-        }
-    }
-
-    sealed class ComponentConverterByteByte : IComponentConverter<byte, byte>
-    {
-        public ComponentConverterByteByte(TensorPixelComponent<byte> src, TensorPixelComponent<byte> dst, int srcIdx,int tgtIdx)
-        {
-            _SrcOffset = -(int)src.MinValue;
-            _Scale = ((int)dst.MaxValue - (int)dst.MinValue) * 65536 / ((int)src.MaxValue - (int)src.MinValue);
-            _DstOffset = (int)dst.MinValue;
-            SourceIndex = srcIdx;
-            TargetIndex = tgtIdx;
-        }
-
-        public int SourceIndex { get; }
-        public int TargetIndex { get; }
-
-        private readonly int _SrcOffset;
-        private readonly int _Scale;
-        private readonly int _DstOffset;
-
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public byte Convert(byte value)
-        {
-            int t = value;
-            t += _SrcOffset;
-            t *= _Scale;
-            t >>= 16;
-            t += _DstOffset;
-            return (byte)t;
+            return TDst.CreateChecked(v);
         }
     }
 }

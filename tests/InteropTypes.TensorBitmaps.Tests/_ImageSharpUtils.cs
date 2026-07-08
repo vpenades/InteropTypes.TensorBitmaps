@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace InteropTypes.TensorBitmaps
     static class _ImageSharpUtils
     {
         public static SixLabors.ImageSharp.Image<TPixel> ToImageSharp<TElement, TPixel>(this TensorBitmap<TElement, TPixel> srcBitmap)
-            where TElement : unmanaged
+            where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged, IPixel<TPixel>
         {
             var dstImage = new SixLabors.ImageSharp.Image<TPixel>(srcBitmap.Width, srcBitmap.Height);
@@ -32,7 +33,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         public static SixLabors.ImageSharp.Image<TPixel> ToImageSharp<TElement, TPixel>(this ReadOnlyTensorSpanBitmap<TElement, TPixel> srcBitmap)
-            where TElement : unmanaged
+            where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged, IPixel<TPixel>
         {
             var dstImage = new SixLabors.ImageSharp.Image<TPixel>(srcBitmap.Width, srcBitmap.Height);
@@ -48,7 +49,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         public static TensorBitmap<TElement, TPixel> ToTensorBitmap<TElement, TPixel>(this SixLabors.ImageSharp.Image<TPixel> srcImage)
-            where TElement : unmanaged
+            where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged, IPixel<TPixel>
         {
             var dstFmt = ToTensorPixelFormat(typeof(TPixel));

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,7 +33,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         private static void ConvertAndSave<TElement, TPixel>(ReadOnlyTensorSpanBitmap<byte, Rgb24> src)
-            where TElement: unmanaged
+            where TElement: unmanaged, INumber<TElement>
             where TPixel: unmanaged, IPixel<TPixel>
         {
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, _ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel)));
