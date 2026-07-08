@@ -19,7 +19,10 @@ namespace InteropTypes.TensorBitmaps
         {
             using var img = Image.Load<Rgb24>(ResourceInfo.From("shannon.jpg"));
 
-            var tbmp = img.ToTensorBitmap<byte, Rgb24>().AsReadOnlyTensorSpanBitmap().GetCropped(new System.Drawing.Rectangle(200,100,280,280));
+            var tbmp = img
+                .ToTensorBitmap<byte, Rgb24>()
+                .AsReadOnlyTensorSpanBitmap()
+                .GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
             ConvertAndSave<byte, Rgb24>(tbmp);
 
@@ -36,7 +39,8 @@ namespace InteropTypes.TensorBitmaps
             where TElement: unmanaged, INumber<TElement>
             where TPixel: unmanaged, IPixel<TPixel>
         {
-            var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, _ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel)));
+            var fmt = _ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel));
+            var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, fmt);
 
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
             src.CopyPixelsTo(dst);
