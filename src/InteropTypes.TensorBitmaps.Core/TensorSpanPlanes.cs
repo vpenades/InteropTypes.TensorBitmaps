@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Numerics.Tensors;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("TensorSpanPlanes3 {Width}x{Height}")]
     public readonly ref struct TensorSpanPlanes3<TElement>
-        where TElement : unmanaged        
+        where TElement : unmanaged , INumber<TElement>
     {
         public static TensorSpanPlanes3<TElement> Create(int width, int height, TensorPixelFormat format)
         {
@@ -81,7 +82,7 @@ namespace InteropTypes.TensorBitmaps
         public TensorSpanBitmap<TElement, TElement> PlaneZ => _PlaneZ;
 
         public void CopyPixelsFrom<TSrcElement, TSrcPixel>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> srcBitmap)
-            where TSrcElement : unmanaged
+            where TSrcElement : unmanaged, INumber<TSrcElement>
             where TSrcPixel : unmanaged
         {
             srcBitmap.CopyPixelsTo(_PlaneX);
@@ -90,14 +91,14 @@ namespace InteropTypes.TensorBitmaps
         }
 
         public void CopyPixelsTo<TDstElement, TDstPixel>(TensorBitmap<TDstElement, TDstPixel> dstBitmap)
-            where TDstElement : unmanaged
+            where TDstElement : unmanaged, INumber<TDstElement>
             where TDstPixel : unmanaged
         {
             CopyPixelsTo(dstBitmap.AsTensorSpanBitmap());
         }
 
         public void CopyPixelsTo<TDstElement,TDstPixel>(TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap)
-            where TDstElement:unmanaged
+            where TDstElement:unmanaged, INumber<TDstElement>
             where TDstPixel:unmanaged
         {
             _PlaneX.CopyPixelsTo(dstBitmap, false);

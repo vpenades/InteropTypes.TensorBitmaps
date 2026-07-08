@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,7 +15,7 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>
-        where TElement : unmanaged
+        where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
         public static implicit operator ReadOnlyTensorSpanBitmap<TElement, TPixel>(TensorBitmap<TElement, TPixel> bitmap)
@@ -98,7 +99,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
-            where TOtherElement : unmanaged
+            where TOtherElement : unmanaged, INumber<TOtherElement>
             where TOtherPixel: unmanaged
         {
             var pixelConverter = PixelConverters.Create<TElement, TPixel, TOtherElement, TOtherPixel>(this.Format, dstBitmap.Format, initPixels);
@@ -107,7 +108,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, IPixelConverter<TPixel,TOtherPixel> pixelConverter)
-            where TOtherElement : unmanaged
+            where TOtherElement : unmanaged, INumber<TOtherElement>
             where TOtherPixel : unmanaged
         {
             var h = Math.Min(this.Height, dstBitmap.Height);            

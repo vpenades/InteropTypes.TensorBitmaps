@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Numerics;
 using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public class TensorBitmap<TElement,TPixel> : ITensorBitmap
-        where TElement: unmanaged
+        where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {
         public static TensorBitmap<TElement, TPixel> Create(int width, int height, TensorPixelFormat format)
