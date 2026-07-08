@@ -25,7 +25,7 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanBitmap<TElement, TPixel>(tensor, bitmap._Info, bitmap.Format);
         }
 
-        private TensorSpanBitmap(System.Numerics.Tensors.TensorSpan<TElement> tensor, _TensorBitmapInfo info, TensorPixelFormat format)
+        private TensorSpanBitmap(TensorSpan<TElement> tensor, _TensorBitmapInfo info, TensorPixelFormat format)
         {
             _Info = info;
             Format = format;
@@ -34,7 +34,7 @@ namespace InteropTypes.TensorBitmaps
             Tensor = tensor;
         }
 
-        public TensorSpanBitmap(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format)
+        public TensorSpanBitmap(TensorSpan<TElement> tensor, TensorPixelFormat format)
         {
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
 
@@ -54,11 +54,11 @@ namespace InteropTypes.TensorBitmaps
         public int Width { get; }
         public int Height { get; }
 
-        public System.Numerics.Tensors.TensorSpan<TElement> Tensor { get; }
+        public TensorSpan<TElement> Tensor { get; }
 
         private readonly TensorDimensionSpan<TElement> _Rows;
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
             var trow = _Rows[y];

@@ -21,21 +21,14 @@ namespace InteropTypes.TensorBitmaps
     {
         public static TensorBitmap<TElement, TPixel> Create(int width, int height, TensorPixelFormat format)
         {
-            var channels = _TensorBitmapInfo.GetChannelsFrom<TElement, TPixel>();            
-
-            var buffer = new TElement[width * height * channels];
-
-            var lengths = new nint[3];
-            lengths[0] = height;
-            lengths[1] = width;
-            lengths[2] = channels;
-
-            var tensor = System.Numerics.Tensors.Tensor.Create(buffer, lengths);
+            var channels = _TensorBitmapInfo.GetChannelsFrom<TElement, TPixel>();
+            var buffer = new TElement[height * width * channels];
+            var tensor = System.Numerics.Tensors.Tensor.Create(buffer, [height, width, channels]);
 
             return new TensorBitmap<TElement, TPixel>(tensor, format);
         }
 
-        public TensorBitmap(System.Numerics.Tensors.Tensor<TElement> tensor, TensorPixelFormat format)
+        public TensorBitmap(Tensor<TElement> tensor, TensorPixelFormat format)
         {
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
 
@@ -61,20 +54,20 @@ namespace InteropTypes.TensorBitmaps
         IReadOnlyTensor IReadOnlyTensorBitmap.Tensor => Tensor;
         public Tensor<TElement> Tensor { get; }
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         ReadOnlySpan<byte> IReadOnlyTensorBitmap.GetRowSpan(int y)
         {
             return GetRowSpan(y);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<byte> GetRowSpan(int y)
         {
             var pixels = GetRowPixelsSpan(y);
             return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, byte>(pixels);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
             var row = _Info.GetRow(Tensor,y);

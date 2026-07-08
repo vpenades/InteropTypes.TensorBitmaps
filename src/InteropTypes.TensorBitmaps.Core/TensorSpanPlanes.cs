@@ -18,12 +18,12 @@ namespace InteropTypes.TensorBitmaps
     {
         public static TensorSpanPlanes3<TElement> Create(int width, int height, TensorPixelFormat format)
         {
-            var t = System.Numerics.Tensors.Tensor.Create(new TElement[3 * height * width], [3, height, width]);
+            var t = Tensor.Create(new TElement[3 * height * width], [3, height, width]);
 
             return Create(t, format);
         }
 
-        public static TensorSpanPlanes3<TElement> Create(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format)
+        public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, TensorPixelFormat format)
         {
             if (tensor.Lengths[0] < 3) throw new ArgumentOutOfRangeException("the tensor has less than 3 planes", nameof(tensor));
             if (format.Components.Count < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
@@ -31,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanPlanes3<TElement>(tensor, format, 0, 1, 2);
         }
 
-        public static TensorSpanPlanes3<TElement> Create(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format, string fx, string fy, string fz)
+        public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, TensorPixelFormat format, string fx, string fy, string fz)
         {
             if (tensor.Lengths[0] < 3) throw new ArgumentOutOfRangeException("the tensor has less than 3 planes", nameof(tensor));
             if (format.Components.Count < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
@@ -48,7 +48,7 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanPlanes3<TElement>(tensor, format, x_idx, y_idx, z_idx);
         }
 
-        private TensorSpanPlanes3(System.Numerics.Tensors.TensorSpan<TElement> tensor, TensorPixelFormat format, int x,int y, int z)
+        private TensorSpanPlanes3(TensorSpan<TElement> tensor, TensorPixelFormat format, int x,int y, int z)
         {
             var planes = tensor.GetDimensionSpan(0);
 

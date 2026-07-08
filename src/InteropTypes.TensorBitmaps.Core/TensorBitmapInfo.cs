@@ -98,7 +98,7 @@ namespace InteropTypes.TensorBitmaps
 
         #region TensorSpan
 
-        public void _Validate<TElement, TPixel>(TensorSpan<TElement> tensor, TensorPixelFormat format)
+        public void _Validate<TElement, TPixel>(in TensorSpan<TElement> tensor, TensorPixelFormat format)
            where TElement : unmanaged
            where TPixel : unmanaged
         {
@@ -110,18 +110,18 @@ namespace InteropTypes.TensorBitmaps
             _ValidateFormat<TElement, TPixel>(GetChannelsCountFrom(tensor), format);
         }
 
-        public int GetWidthFrom<T>(TensorSpan<T> tensor) { return (int)tensor.Lengths[_WidthIndex]; }
-        public int GetHeightFrom<T>(TensorSpan<T> tensor) { return (int)tensor.Lengths[_HeightIndex]; }
-        public int GetChannelsCountFrom<T>(TensorSpan<T> tensor) { return _ChannelsIndex < 0 ? 1 : (int)tensor.Lengths[_ChannelsIndex]; }
+        public int GetWidthFrom<T>(in TensorSpan<T> tensor) { return (int)tensor.Lengths[_WidthIndex]; }
+        public int GetHeightFrom<T>(in TensorSpan<T> tensor) { return (int)tensor.Lengths[_HeightIndex]; }
+        public int GetChannelsCountFrom<T>(in TensorSpan<T> tensor) { return _ChannelsIndex < 0 ? 1 : (int)tensor.Lengths[_ChannelsIndex]; }
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public Span<T> GetRow<T>(TensorSpan<T> tensor, int y)
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public Span<T> GetRow<T>(in TensorSpan<T> tensor, int y)
         {
             var row = GetRows(tensor)[y];
             return row.GetSpan(_RowIndices, (int)row.FlattenedLength);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public TensorDimensionSpan<T> GetRows<T>(TensorSpan<T> tensor)
         {
             return tensor.GetDimensionSpan(_HeightIndex);
@@ -131,7 +131,7 @@ namespace InteropTypes.TensorBitmaps
 
         #region ReadOnlyTensorSpan
 
-        public void _Validate<TElement, TPixel>(ReadOnlyTensorSpan<TElement> tensor, TensorPixelFormat format)
+        public void _Validate<TElement, TPixel>(in ReadOnlyTensorSpan<TElement> tensor, TensorPixelFormat format)
            where TElement : unmanaged
            where TPixel : unmanaged
         {
@@ -142,19 +142,18 @@ namespace InteropTypes.TensorBitmaps
 
             _ValidateFormat<TElement, TPixel>(GetChannelsCountFrom(tensor), format);
         }
+        public int GetWidthFrom<T>(in ReadOnlyTensorSpan<T> tensor) { return (int)tensor.Lengths[_WidthIndex]; }
+        public int GetHeightFrom<T>(in ReadOnlyTensorSpan<T> tensor) { return (int)tensor.Lengths[_HeightIndex]; }
+        public int GetChannelsCountFrom<T>(in ReadOnlyTensorSpan<T> tensor) { return _ChannelsIndex < 0 ? 1 : (int)tensor.Lengths[_ChannelsIndex]; }
 
-        public int GetWidthFrom<T>(ReadOnlyTensorSpan<T> tensor) { return (int)tensor.Lengths[_WidthIndex]; }
-        public int GetHeightFrom<T>(ReadOnlyTensorSpan<T> tensor) { return (int)tensor.Lengths[_HeightIndex]; }
-        public int GetChannelsCountFrom<T>(ReadOnlyTensorSpan<T> tensor) { return _ChannelsIndex < 0 ? 1 : (int)tensor.Lengths[_ChannelsIndex]; }
-
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public ReadOnlySpan<T> GetRow<T>(ReadOnlyTensorSpan<T> tensor, int y)
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public ReadOnlySpan<T> GetRow<T>(in ReadOnlyTensorSpan<T> tensor, int y)
         {
             var row = GetRows(tensor)[y];
             return row.GetSpan(_RowIndices, (int)row.FlattenedLength);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public ReadOnlyTensorDimensionSpan<T> GetRows<T>(ReadOnlyTensorSpan<T> tensor)
         {
             return tensor.GetDimensionSpan(_HeightIndex);
