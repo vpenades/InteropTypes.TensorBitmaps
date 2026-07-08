@@ -15,6 +15,9 @@ jobs:
       id-token: write # enable GitHub OIDC token issuance for this job
 
     steps:
+      - name: Set current date and time
+        run: echo "DATETIMENOW=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v6
 
@@ -33,8 +36,8 @@ jobs:
             tag=${tag#v}
             echo "PACKAGE_VERSION=$tag" >> $GITHUB_ENV
           else
-            # fallback CI version if not a tag
-            echo "PACKAGE_VERSION=0.0.0-ci-${GITHUB_SHA::7}" >> $GITHUB_ENV
+            # fallback
+            echo "PACKAGE_VERSION=1.0.0-prv-${DATETIMENOW}" >> $GITHUB_ENV
           fi
           echo "Determined PACKAGE_VERSION=$PACKAGE_VERSION"
 
