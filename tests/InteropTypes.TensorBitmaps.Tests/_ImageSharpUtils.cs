@@ -72,7 +72,7 @@ namespace InteropTypes.TensorBitmaps
 
         public static TensorPixelFormat ToTensorPixelFormat(Type type)
         {
-            if (type == typeof(L8)) return new TensorPixelFormat(TensorPixelComponent.Luminance255);
+            if (type == typeof(L8)) return new TensorPixelFormat(TensorPixelComponent.LuminanceByte);
 
             if (type == typeof(Rgb24)) return TensorPixelFormat.Rgb24;
             if (type == typeof(Rgba32)) return TensorPixelFormat.Rgba32;
@@ -82,7 +82,16 @@ namespace InteropTypes.TensorBitmaps
             if (type == typeof(Bgra32)) return TensorPixelFormat.Bgra32;
 
             if (type == typeof(Argb32)) return TensorPixelFormat.Argb32;
-            if (type == typeof(Abgr32)) return new TensorPixelFormat(TensorPixelComponent.Alpha255, TensorPixelComponent.Blue255, TensorPixelComponent.Green255, TensorPixelComponent.Red255);
+            if (type == typeof(Abgr32)) return TensorPixelFormat.Abgr32;
+
+
+            if (type == typeof(Rg32)) return TensorPixelFormat.Rg32;
+            if (type == typeof(HalfVector2))
+            {
+                var r = new TensorPixelComponent<Half>("Red", -Half.One, Half.One);
+                var g = new TensorPixelComponent<Half>("Green", -Half.One, Half.One);
+                return new TensorPixelFormat(r, g);
+            }
 
             throw new NotImplementedException(type.Name);
         }

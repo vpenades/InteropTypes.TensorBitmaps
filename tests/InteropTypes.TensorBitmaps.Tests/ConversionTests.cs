@@ -32,6 +32,10 @@ namespace InteropTypes.TensorBitmaps
 
             ConvertAndSave<byte, Argb32>(tbmp);
 
+            ConvertAndSave<ushort, Rg32>(tbmp); // blue channel will be lost;
+
+            ConvertAndSave<Half, HalfVector2>(tbmp); // blue channel will be lost;
+
             ConvertAndSave<float, RgbaVector>(tbmp);
         }
 

@@ -77,7 +77,7 @@ Where `TensorPixelComponent` is just a collection of `TensorPixelComponent` plus
 - `TensorPixelFormat.Rgba32`
 - etc
 
-But defining a custom format is extremely simple:
+With this architecture, defining a custom format is extremely simple:
 
 ```c#
 var infrared = new TensorPixelComponent<float>("Infrared",0,1);
@@ -85,20 +85,24 @@ var depth = new TensorPixelComponent<float>("Depth",0,500);
 var customFormat = new TensorPixelFormat(infrared, depth);
 ```
 
+The data type is an INumber<T>, so it supports, Byte, UShort, Half, Float and so on.
+
+Using this approach, it is possible to handle pixel conversions between a wide range
+of pixel formats.
+
 The component class also defines a minimum and maximum value,
 which can be useful to automate the conversion between tensors
-that require aplying a standard-deviation ramp for each pixels, for example:
+that require aplying a std-mean ramp for each pixel, for example:
 
 ```csharp
-var red = new TensorPixelComponent("Red", -0.823, +0.7432);
-var green = new TensorPixelComponent("Green", -0.923, +0.9432);
-var blue = new TensorPixelComponent("Blue", -0.623, +0.5432);
+var red = new TensorPixelComponent<float>("Red", -0.823, +0.7432);
+var green = new TensorPixelComponent<float>("Green", -0.923, +0.9432);
+var blue = new TensorPixelComponent<float>("Blue", -0.623, +0.5432);
 var tensorFormat = new TensorPixelFormat(red,green,blue);
 ```
 
 The only drawback of this API is that it's not easy to declare
 packed pixels formats like RGB565.
-
 
 This pixel format design also has the advantage to seamlessly translate
 to CHW tensors that store each component per plane, where we would have

@@ -103,5 +103,29 @@ namespace InteropTypes.TensorBitmaps
         {
             this.AsReadOnlyTensorSpanBitmap().CopyPixelsTo(dstBitmap, initPixels);
         }
+
+        /// <summary>
+        /// Ensures that each pixel component falls inside the range defined by the format.
+        /// </summary>
+        public void ClampPixelComponents()
+        {
+            var components = Format.Components.Cast<TensorPixelComponent<TElement>>().ToArray();
+
+            // todo: if all components have the same min and max value, apply a raw clamp
+
+            var h = this.Height;
+            for (int y = 0; y < h; ++y)
+            {
+                var srcRow = this.GetRowPixelsSpan(y);
+                var cmpRow = System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel,TElement>(srcRow);
+
+                for (int i = 0; i < components.Length; ++i)
+                {
+                    var c = components[i];
+                    cmpRow[0] = TElement.Clamp(cmpRow[0], c.MinValue, c.MaxValue);
+                    cmpRow = cmpRow.Slice(1);
+                }                
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -46,9 +47,16 @@ namespace InteropTypes.TensorBitmaps
         internal readonly nint[] _RowIndices; // we could avoid this with a stackalloc        
 
         private void _ValidateFormat<TElement, TPixel>(nint tensorChannelCount, TensorPixelFormat format)
-            where TElement : unmanaged
+            where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged
         {
+            var cmp = format.Components.FirstOrDefault(item => item is not TensorPixelComponent<TElement>);
+
+            if (cmp != null)
+            {
+                throw new ArgumentException($"Component type mismatch; Tensor is {typeof(TElement).Name} and {nameof(format)}.{cmp.Semantic} is {cmp.ComponentType.Name}\"h", nameof(format));
+            }
+
             if (format.Components.Count != tensorChannelCount)
             {
                 throw new ArgumentException($"Channels count mismatch; Tensor is {tensorChannelCount} and {nameof(format)} is {format.Components.Count}\"h", nameof(tensorChannelCount));
@@ -72,7 +80,7 @@ namespace InteropTypes.TensorBitmaps
         #region Tensor
 
         public void _Validate<TElement, TPixel>(Tensor<TElement> tensor, TensorPixelFormat format)
-            where TElement : unmanaged
+            where TElement : unmanaged , INumber<TElement>
             where TPixel : unmanaged
         {
             if (!tensor.GetDimensionSpan(_HeightIndex)[0].IsDense)
@@ -99,7 +107,7 @@ namespace InteropTypes.TensorBitmaps
         #region TensorSpan
 
         public void _Validate<TElement, TPixel>(in TensorSpan<TElement> tensor, TensorPixelFormat format)
-           where TElement : unmanaged
+           where TElement : unmanaged, INumber<TElement>
            where TPixel : unmanaged
         {
             if (!tensor.GetDimensionSpan(_HeightIndex)[0].IsDense)
@@ -132,7 +140,7 @@ namespace InteropTypes.TensorBitmaps
         #region ReadOnlyTensorSpan
 
         public void _Validate<TElement, TPixel>(in ReadOnlyTensorSpan<TElement> tensor, TensorPixelFormat format)
-           where TElement : unmanaged
+           where TElement : unmanaged, INumber<TElement>
            where TPixel : unmanaged
         {
             if (!tensor.GetDimensionSpan(_HeightIndex)[0].IsDense)
