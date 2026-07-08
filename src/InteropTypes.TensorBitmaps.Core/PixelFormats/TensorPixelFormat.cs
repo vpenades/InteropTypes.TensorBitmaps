@@ -9,28 +9,20 @@ namespace InteropTypes.TensorBitmaps
     /// <summary>
     /// Represents a pixel format
     /// </summary>
-    public record TensorPixelFormat
+    [System.Diagnostics.DebuggerDisplay("{ToDebuggerDisplayString(),nq}")]
+    public sealed record TensorPixelFormat
     {
-        public static TensorPixelFormat Rgb24 = new TensorPixelFormat(TensorPixelComponent.RedByte, TensorPixelComponent.GreenByte, TensorPixelComponent.BlueByte);
-        public static TensorPixelFormat Rgbx32 = new TensorPixelFormat(TensorPixelComponent.RedByte, TensorPixelComponent.GreenByte, TensorPixelComponent.BlueByte, TensorPixelComponent.OpaqueAlphaByte);
-            
-        public static TensorPixelFormat Rgba32 = new TensorPixelFormat(TensorPixelComponent.RedByte, TensorPixelComponent.GreenByte, TensorPixelComponent.BlueByte, TensorPixelComponent.AlphaByte);
-        public static TensorPixelFormat Rgbp32 = new TensorPixelFormat(TensorPixelComponent.RedByte, TensorPixelComponent.GreenByte, TensorPixelComponent.BlueByte, TensorPixelComponent.PremulByte);
+        private string ToDebuggerDisplayString()
+        {
+            var sb = new StringBuilder();
 
-        public static TensorPixelFormat Bgr24 = new TensorPixelFormat(TensorPixelComponent.BlueByte, TensorPixelComponent.GreenByte, TensorPixelComponent.RedByte);
-        public static TensorPixelFormat Bgrx32 = new TensorPixelFormat(TensorPixelComponent.BlueByte, TensorPixelComponent.GreenByte, TensorPixelComponent.RedByte, TensorPixelComponent.OpaqueAlphaByte);
-        public static TensorPixelFormat Bgra32 = new TensorPixelFormat(TensorPixelComponent.BlueByte, TensorPixelComponent.GreenByte, TensorPixelComponent.RedByte, TensorPixelComponent.AlphaByte);
-        public static TensorPixelFormat Bgrp32 = new TensorPixelFormat(TensorPixelComponent.BlueByte, TensorPixelComponent.GreenByte, TensorPixelComponent.RedByte, TensorPixelComponent.PremulByte);
+            foreach(var c in Components)
+            {
+                sb.Append($"{c.Semantic}:{c.ComponentType.Name} ");
+            }
 
-        public static TensorPixelFormat Argb32 = new TensorPixelFormat(TensorPixelComponent.AlphaByte, TensorPixelComponent.RedByte, TensorPixelComponent.GreenByte, TensorPixelComponent.BlueByte);
-        public static TensorPixelFormat Abgr32 = new TensorPixelFormat(TensorPixelComponent.AlphaByte, TensorPixelComponent.BlueByte, TensorPixelComponent.GreenByte, TensorPixelComponent.RedByte);
-
-        public static TensorPixelFormat Rgb96f = new TensorPixelFormat(TensorPixelComponent.RedSingle, TensorPixelComponent.GreenSingle, TensorPixelComponent.BlueSingle);
-        public static TensorPixelFormat Bgr96f = new TensorPixelFormat(TensorPixelComponent.BlueSingle, TensorPixelComponent.GreenSingle, TensorPixelComponent.RedSingle);
-        public static TensorPixelFormat Rgba128f = new TensorPixelFormat(TensorPixelComponent.RedSingle, TensorPixelComponent.GreenSingle, TensorPixelComponent.BlueSingle, TensorPixelComponent.AlphaSingle);
-        public static TensorPixelFormat Rgbp128f = new TensorPixelFormat(TensorPixelComponent.RedSingle, TensorPixelComponent.GreenSingle, TensorPixelComponent.BlueSingle, TensorPixelComponent.PremulSingle);
-
-        public static TensorPixelFormat Rg32 = new TensorPixelFormat(TensorPixelComponent.RedShort, TensorPixelComponent.GreenShort);
+            return sb.ToString();
+        }
 
         public TensorPixelFormat(IReadOnlyList<TensorPixelComponent> components)
         {
@@ -67,6 +59,7 @@ namespace InteropTypes.TensorBitmaps
             BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
         public IReadOnlyList<TensorPixelComponent> Components { get; }
 
         public int BytesPerPixel { get; }

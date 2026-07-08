@@ -54,12 +54,12 @@ namespace InteropTypes.TensorBitmaps
 
             if (cmp != null)
             {
-                throw new ArgumentException($"Component type mismatch; Tensor is {typeof(TElement).Name} and {nameof(format)}.{cmp.Semantic} is {cmp.ComponentType.Name}\"h", nameof(format));
+                throw new ArgumentException($"Component type mismatch; Tensor is {typeof(TElement).Name} and {nameof(format)}.{cmp.Semantic} is {cmp.ComponentType.Name}", nameof(format));
             }
 
             if (format.Components.Count != tensorChannelCount)
             {
-                throw new ArgumentException($"Channels count mismatch; Tensor is {tensorChannelCount} and {nameof(format)} is {format.Components.Count}\"h", nameof(tensorChannelCount));
+                throw new ArgumentException($"Channels count mismatch; Tensor is {tensorChannelCount} and {nameof(format)} is {format.Components.Count}", nameof(tensorChannelCount));
             }
 
             if (Unsafe.SizeOf<TPixel>() != format.BytesPerPixel)

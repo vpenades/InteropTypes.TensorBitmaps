@@ -104,6 +104,16 @@ namespace InteropTypes.TensorBitmaps
             this.AsReadOnlyTensorSpanBitmap().CopyPixelsTo(dstBitmap, initPixels);
         }
 
+        public void FillPixels(TPixel value)
+        {
+            var h = this.Height;
+            for (int y = 0; y < h; ++y)
+            {
+                var srcRow = this.GetRowPixelsSpan(y);
+                srcRow.Fill(value);
+            }
+        }
+
         /// <summary>
         /// Ensures that each pixel component falls inside the range defined by the format.
         /// </summary>
