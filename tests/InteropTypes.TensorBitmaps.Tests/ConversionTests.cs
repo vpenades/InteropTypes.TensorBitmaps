@@ -38,7 +38,8 @@ namespace InteropTypes.TensorBitmaps
         {
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, _ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel)));
 
-            src.CopyPixelsTo(dst.AsTensorSpanBitmap());
+            // copies the pixels from src to dst, taking into account the pixel layout and each component range.
+            src.CopyPixelsTo(dst);
 
             using var result = dst.ToImageSharp();
 

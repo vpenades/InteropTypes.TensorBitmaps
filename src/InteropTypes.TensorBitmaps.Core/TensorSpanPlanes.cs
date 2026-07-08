@@ -101,6 +101,8 @@ namespace InteropTypes.TensorBitmaps
             where TDstElement:unmanaged, INumber<TDstElement>
             where TDstPixel:unmanaged
         {
+            // we disable pixel init because we don't want each
+            // plane override the component of the previous plane copy.
             _PlaneX.CopyPixelsTo(dstBitmap, false);
             _PlaneY.CopyPixelsTo(dstBitmap, false);
             _PlaneZ.CopyPixelsTo(dstBitmap, false);

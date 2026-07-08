@@ -98,20 +98,29 @@ namespace InteropTypes.TensorBitmaps
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
         }
 
+        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
+            where TOtherElement : unmanaged, INumber<TOtherElement>
+            where TOtherPixel : unmanaged
+        {
+            var pixelConverter = PixelConverters.Create<TElement, TPixel, TOtherElement, TOtherPixel>(this.Format, dstBitmap.Format, initPixels);
+
+            CopyPixelsTo(dstBitmap.AsTensorSpanBitmap(), pixelConverter);
+        }
+
         public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
             where TOtherElement : unmanaged, INumber<TOtherElement>
             where TOtherPixel: unmanaged
         {
             var pixelConverter = PixelConverters.Create<TElement, TPixel, TOtherElement, TOtherPixel>(this.Format, dstBitmap.Format, initPixels);
 
-            CopyPixelsTo<TOtherElement, TOtherPixel>(dstBitmap, pixelConverter);
+            CopyPixelsTo(dstBitmap, pixelConverter);
         }
 
         public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, IPixelConverter<TPixel,TOtherPixel> pixelConverter)
             where TOtherElement : unmanaged, INumber<TOtherElement>
             where TOtherPixel : unmanaged
         {
-            var h = Math.Min(this.Height, dstBitmap.Height);            
+            var h = Math.Min(this.Height, dstBitmap.Height);
 
             for (int y = 0; y < h; ++y)
             {
