@@ -52,7 +52,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)TensorBitmaps.png" Link="TensorBitmaps.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)TensorBitmaps.png" Link="TensorBitmaps.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
 
   <PropertyGroup>
