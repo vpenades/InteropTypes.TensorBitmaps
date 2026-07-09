@@ -62,47 +62,56 @@ class *Bitmap<TElement,TPixel>
 Bitmaps usually require declaring some kind of pixel format.
 
 The pixel format needs to be extremely flexible to support custom formats that fit
-all tensor configurations. It also needs to be simple enough to avoid defining an
-entire framework around pixel formats.
+all tensor configurations, also it needs to handle conversions between formats.
+
+So, pixel formats is a topic complex enough to deserve its own library, that's why
+pixel formats are located at `InteropTypes.Numerics.PixelFormats`
 
 Declaring a pixel type is done using two types:
 
-- `TensorPixelFormat`
-- `TensorPixelComponent<T>`
+- `PixelFormat`
+- `PixelComponent<T>`
 
-Where `TensorPixelComponent` is just a collection of `TensorPixelComponent` plus a few predefined formats like:
+Where `PixelFormat` is just a collection of `PixelComponent` , for example:
 
-- `TensorPixelFormat.Rgb24`
-- `TensorPixelFormat.Rgb96f`
-- `TensorPixelFormat.Rgba32`
+- `PixelFormat`
+  - `PixelComponent<Byte>("Red", 0, 255)`
+  - `PixelComponent<Byte>("Green", 0, 255)`
+  - `PixelComponent<Byte>("Blue", 0, 255)`
+
+Predefined formats are already defined at `KnownPixelFormats` 
+
+- `KnownPixelFormats.Rgb8`
+- `KnownPixelFormats.Rgba8`
+- `KnownPixelFormats.RgbF32`
 - etc
 
-With this architecture, defining a custom format is extremely simple:
-
-```c#
-var infrared = new TensorPixelComponent<float>("Infrared",0,1);
-var depth = new TensorPixelComponent<float>("Depth",0,500);
-var customFormat = new TensorPixelFormat(infrared, depth);
-```
-
-The data type is an INumber<T>, so it supports, Byte, UShort, Half, Float and so on.
-
-Using this approach, it is possible to handle pixel conversions between a wide range
-of pixel formats.
+Using this approach, it is possible to handle pixel conversions
+between a wide range of pixel formats.
 
 The component class also defines a minimum and maximum value,
 which can be useful to automate the conversion between tensors
 that require aplying a std-mean ramp for each pixel, for example:
 
 ```csharp
-var red = new TensorPixelComponent<float>("Red", -0.823, +0.7432);
-var green = new TensorPixelComponent<float>("Green", -0.923, +0.9432);
-var blue = new TensorPixelComponent<float>("Blue", -0.623, +0.5432);
-var tensorFormat = new TensorPixelFormat(red,green,blue);
+var infrared = new PixelComponent<double>("Infrared",0,1);
+var depth = new PixelComponent<double>("Depth", 0, 6000);
+var customFormat = new PixelFormat(infrared, depth);```
+
+```csharp
+var red = new PixelComponent<float>("Red", -0.823, +0.7432);
+var green = new PixelComponent<float>("Green", -0.923, +0.9432);
+var blue = new PixelComponent<float>("Blue", -0.623, +0.5432);
+var tensorFormat = new PixelFormat(red,green,blue);
 ```
 
-The only drawback of this API is that it's not easy to declare
-packed pixels formats like RGB565.
+This architecture has a few limitations I expect to address in
+the future:
+
+- Packed formats like Rgb565 are not supported yet
+- Conversions handling premultiplied values
+
+### Planar bitmaps
 
 This pixel format design also has the advantage to seamlessly translate
 to CHW tensors that store each component per plane, where we would have
@@ -121,16 +130,17 @@ var planeBlue = planes.PlaneZ;
 
 ```
 
-Where redPlane, greenPlane and bluePlane represent the thee componentized planes of the tensor.
+Where redPlane, greenPlane and bluePlane represent the thee componentized
+planes of the tensor.
 
 ### interop with third party libraries
 
-TensorBitmaps is only a data type to contain pixel bitmaps, so it lacks lots of features expected
-from full image libraries.
+TensorBitmaps is only a data type designed to store pixel bitmaps,
+so it lacks lots of features expected from full image libraries.
 
-In fact, it is expected to be used as long as other imaging libraries for tasks like load and save
-images from disk. As an example, the Unit Tests use ImageSharp as the backing library for load and
-save images
+In fact, it is expected to be used as long as other imaging libraries
+for tasks like load and save images from disk. As an example, the Unit
+Tests use ImageSharp as the backing library for load and save images
 
 
 

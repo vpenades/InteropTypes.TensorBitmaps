@@ -7,6 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 namespace InteropTypes.TensorBitmaps
 {
     /// <summary>
@@ -25,7 +27,7 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanBitmap<TElement, TPixel>(tensor, bitmap._Info, bitmap.Format);
         }
 
-        private TensorSpanBitmap(TensorSpan<TElement> tensor, _TensorBitmapInfo info, TensorPixelFormat format)
+        private TensorSpanBitmap(TensorSpan<TElement> tensor, _TensorBitmapInfo info, PixelFormat format)
         {
             _Info = info;
             Format = format;
@@ -34,7 +36,7 @@ namespace InteropTypes.TensorBitmaps
             Tensor = tensor;
         }
 
-        public TensorSpanBitmap(TensorSpan<TElement> tensor, TensorPixelFormat format)
+        public TensorSpanBitmap(TensorSpan<TElement> tensor, PixelFormat format)
         {
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
 
@@ -50,7 +52,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         internal readonly _TensorBitmapInfo _Info;
-        public TensorPixelFormat Format { get; }
+        public PixelFormat Format { get; }
         public int Width { get; }
         public int Height { get; }
 
@@ -119,7 +121,7 @@ namespace InteropTypes.TensorBitmaps
         /// </summary>
         public void ClampPixelComponents()
         {
-            var components = Format.Components.Cast<TensorPixelComponent<TElement>>().ToArray();
+            var components = Format.Components.Cast<PixelComponent<TElement>>().ToArray();
 
             // todo: if all components have the same min and max value, apply a raw clamp
 

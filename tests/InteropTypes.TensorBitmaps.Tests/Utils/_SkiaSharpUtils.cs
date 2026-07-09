@@ -2,13 +2,15 @@
 using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 
+using InteropTypes.Numerics;
+
 using SkiaSharp;
 
 namespace InteropTypes.TensorBitmaps
 {
     internal static class _SkiaSharpUtils
     {
-        public static TensorBitmap<TElement, TPixel> ToResizedTensorBitmap<TElement, TPixel>(this SKBitmap srcImage, int newWidth, int newHeight, TensorPixelFormat dstFmt, SKSamplingOptions? options = null)
+        public static TensorBitmap<TElement, TPixel> ToResizedTensorBitmap<TElement, TPixel>(this SKBitmap srcImage, int newWidth, int newHeight, PixelFormat dstFmt, SKSamplingOptions? options = null)
             where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged
         {
@@ -22,7 +24,7 @@ namespace InteropTypes.TensorBitmaps
             }
         }
 
-        public static TensorBitmap<TElement, TPixel> ToTensorBitmap<TElement, TPixel>(this SKBitmap srcImage, TensorPixelFormat dstFmt)
+        public static TensorBitmap<TElement, TPixel> ToTensorBitmap<TElement, TPixel>(this SKBitmap srcImage, PixelFormat dstFmt)
             where TElement : unmanaged , INumber<TElement>
             where TPixel : unmanaged
         {
@@ -115,32 +117,29 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpan<byte>(srcBuffer, [srcBitmap.Height, srcBitmap.Width, srcBitmap.BytesPerPixel], strides);
         }
 
-        private static TensorPixelFormat _SkiaSharpToTensorPixelFormat(SKColorType ct, SKAlphaType at)
+        private static PixelFormat _SkiaSharpToTensorPixelFormat(SKColorType ct, SKAlphaType at)
         {
             switch (ct)
             {
                 case SKColorType.Alpha8: return KnownPixelFormats.Alpha8;
-                case SKColorType.Gray8: return KnownPixelFormats.Luminance8;
-                case SKColorType.Rgb888x: return KnownPixelFormats.Rgbx8888;
+                case SKColorType.Alpha16: return KnownPixelFormats.Alpha16;
+                case SKColorType.AlphaF16: return KnownPixelFormats.AlphaF16;
 
-                case SKColorType.Rgba8888 when at == SKAlphaType.Unpremul: return KnownPixelFormats.Rgba8888;
-                case SKColorType.Rgba8888 when at == SKAlphaType.Premul: return KnownPixelFormats.Rgbp8888;
-                case SKColorType.Rgba8888: return KnownPixelFormats.Rgba8888;
+                case SKColorType.Gray8: return KnownPixelFormats.Luminance8;                
 
-                case SKColorType.Bgra8888 when at == SKAlphaType.Unpremul: return KnownPixelFormats.Bgra8888;
-                case SKColorType.Bgra8888 when at == SKAlphaType.Premul: return KnownPixelFormats.Bgrp8888;
-                case SKColorType.Bgra8888: return KnownPixelFormats.Bgra8888;
+                case SKColorType.Rgb888x: return KnownPixelFormats.Rgbx8;                
+                case SKColorType.Rgba8888 when at == SKAlphaType.Premul: return KnownPixelFormats.RgbPremul8;
+                case SKColorType.Rgba8888: return KnownPixelFormats.Rgba8;                
+                
+                case SKColorType.Bgra8888 when at == SKAlphaType.Premul: return KnownPixelFormats.BgrPremul8;
+                case SKColorType.Bgra8888: return KnownPixelFormats.Bgra8;
 
-                case SKColorType.RgbaF32 when at == SKAlphaType.Unpremul: return KnownPixelFormats.RgbaF32;
-                case SKColorType.RgbaF32 when at == SKAlphaType.Premul: return KnownPixelFormats.RgbpF32;
+                case SKColorType.RgbaF32 when at == SKAlphaType.Premul: return KnownPixelFormats.RgbPremulF32;
                 case SKColorType.RgbaF32: return KnownPixelFormats.RgbaF32;
 
-                case SKColorType.Rg88:
-                    {
-                        var r = new TensorPixelComponent<byte>("Red", 0, 255);
-                        var g = new TensorPixelComponent<byte>("Green",0, 255);
-                        return new TensorPixelFormat(r, g);
-                    }
+                case SKColorType.Rg88: return KnownPixelFormats.Rg8;
+                case SKColorType.Rg1616: return KnownPixelFormats.Rg16;
+                case SKColorType.RgF16: return KnownPixelFormats.RgF16;                    
 
                 // add more pixel types here
 

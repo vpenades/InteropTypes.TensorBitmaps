@@ -6,10 +6,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InteropTypes.TensorBitmaps
+namespace InteropTypes.Numerics.Internal
 {
     /// <summary>
-    /// Naive Component per component pixel converter
+    /// Naive Component per Component pixel converter
     /// </summary>    
     sealed class ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, TConverter> : IPixelConverter<TSrcPixel, TDstPixel>
         where TSrc : unmanaged, INumber<TSrc>
@@ -18,7 +18,7 @@ namespace InteropTypes.TensorBitmaps
         where TDstPixel : unmanaged
         where TConverter : IComponentConverter<TSrc, TDst>
     {
-        public ComponentWisePixelConverter(IReadOnlyList<TensorPixelComponent> src, IReadOnlyList<TensorPixelComponent> dst, bool initPixels)
+        public ComponentWisePixelConverter(IReadOnlyList<PixelComponent> src, IReadOnlyList<PixelComponent> dst, bool initPixels)
         {
             var ccc = new List<TConverter>();
             var uuu = new List<(int, TDst)>();
@@ -31,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
                     if (src[j].Semantic == dst[i].Semantic) { srcIdx = j; break; }
                 }
 
-                var dc = dst[i] as TensorPixelComponent<TDst>;
+                var dc = dst[i] as PixelComponent<TDst>;
                 if (dc == null) continue;
 
                 if (srcIdx < 0)
@@ -40,7 +40,7 @@ namespace InteropTypes.TensorBitmaps
                     continue;
                 }
 
-                var sc = src[srcIdx] as TensorPixelComponent<TSrc>;
+                var sc = src[srcIdx] as PixelComponent<TSrc>;
                 if (sc == null) continue;
 
                 var c = CreateComponentConverter(sc, dc, srcIdx, i);
@@ -53,7 +53,7 @@ namespace InteropTypes.TensorBitmaps
             if (uuu.Count > 0) _Unfilled = uuu.ToArray();
         }
 
-        private static TConverter CreateComponentConverter(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx, int tgtIdx)
+        private static TConverter CreateComponentConverter(PixelComponent<TSrc> src, PixelComponent<TDst> dst, int srcIdx, int tgtIdx)
         {
             if (typeof(TConverter) == typeof(ComponentConverterInteger<TSrc, TDst>))
             {
@@ -65,14 +65,14 @@ namespace InteropTypes.TensorBitmaps
                 return (TConverter)(object)new ComponentConverter<TSrc, Half, TDst>(src, dst, srcIdx, tgtIdx);
             }
 
-            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, float, TDst>))
+            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, Single, TDst>))
             {
-                return (TConverter)(object)new ComponentConverter<TSrc, float, TDst>(src, dst, srcIdx, tgtIdx);
+                return (TConverter)(object)new ComponentConverter<TSrc, Single, TDst>(src, dst, srcIdx, tgtIdx);
             }
 
-            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, double, TDst>))
+            if (typeof(TConverter) == typeof(ComponentConverter<TSrc, Double, TDst>))
             {
-                return (TConverter)(object)new ComponentConverter<TSrc, double, TDst>(src, dst, srcIdx, tgtIdx);
+                return (TConverter)(object)new ComponentConverter<TSrc, Double, TDst>(src, dst, srcIdx, tgtIdx);
             }
 
             throw new NotImplementedException(typeof(TConverter).Name);
@@ -157,7 +157,7 @@ namespace InteropTypes.TensorBitmaps
         where T : unmanaged, INumber<T>
         where TDst : unmanaged, INumber<TDst>
     {
-        public ComponentConverter(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx, int tgtIdx)
+        public ComponentConverter(PixelComponent<TSrc> src, PixelComponent<TDst> dst, int srcIdx, int tgtIdx)
         {
             SourceIndex = srcIdx;
 
@@ -202,7 +202,7 @@ namespace InteropTypes.TensorBitmaps
         where TSrc : unmanaged, INumber<TSrc>
         where TDst : unmanaged, INumber<TDst>
     {
-        public ComponentConverterInteger(TensorPixelComponent<TSrc> src, TensorPixelComponent<TDst> dst, int srcIdx, int tgtIdx)
+        public ComponentConverterInteger(PixelComponent<TSrc> src, PixelComponent<TDst> dst, int srcIdx, int tgtIdx)
         {
             SourceIndex = srcIdx;
 

@@ -5,6 +5,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 using TUnit;
 
 namespace InteropTypes.TensorBitmaps
@@ -19,24 +21,24 @@ namespace InteropTypes.TensorBitmaps
             using var img = SkiaSharp.SKBitmap.Decode(ResourceInfo.From("shannon.jpg"));
 
             var tbmp = img
-                .ToTensorBitmap<byte, Pixel888>(KnownPixelFormats.Rgb888)
+                .ToTensorBitmap<byte, Pixel888>(KnownPixelFormats.Rgb8)
                 .AsReadOnlyTensorSpanBitmap()
                 .GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
-            ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8888);
+            ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8);
 
-            ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Bgra8888);
+            ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Bgra8);
 
-            ConvertAndSave<byte, Pixel888>(tbmp, KnownPixelFormats.Bgr888);
+            ConvertAndSave<byte, Pixel888>(tbmp, KnownPixelFormats.Bgr8);
 
             ConvertAndSave<float, Vector4>(tbmp, KnownPixelFormats.RgbaF32);
 
             ConvertAndSave<float, Vector3>(tbmp, KnownPixelFormats.RgbF32);
 
-            ConvertAndSave<ushort, int>(tbmp, KnownPixelFormats.Rg1616);
+            ConvertAndSave<ushort, int>(tbmp, KnownPixelFormats.Rg16);
         }
 
-        private static void ConvertAndSave<TElement, TPixel>(ReadOnlyTensorSpanBitmap<byte, Pixel888> src, TensorPixelFormat fmt)
+        private static void ConvertAndSave<TElement, TPixel>(ReadOnlyTensorSpanBitmap<byte, Pixel888> src, PixelFormat fmt)
             where TElement: unmanaged, INumber<TElement>
             where TPixel: unmanaged
         {            

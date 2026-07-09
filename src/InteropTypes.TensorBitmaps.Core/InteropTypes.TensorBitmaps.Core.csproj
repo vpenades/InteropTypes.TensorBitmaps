@@ -15,6 +15,10 @@
     <PackageReference Include="System.Numerics.Tensors" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\InteropTypes.Numerics.PixelFormats\InteropTypes.Numerics.PixelFormats.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <Description>
       Extends System.Numerics.Tensors with Bitmap types for tensor to bitmap interoperation.

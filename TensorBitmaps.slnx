@@ -6,6 +6,7 @@
   <Folder Name="/sources/">
     <File Path=".github/workflows/PublishVTagToNuget.yml" />
     <File Path="src/Directory.Build.props" />
+    <Project Path="src/InteropTypes.Numerics.PixelFormats/InteropTypes.Numerics.PixelFormats.csproj" />
     <Project Path="src/InteropTypes.TensorBitmaps.Core/InteropTypes.TensorBitmaps.Core.csproj" />
   </Folder>
   <Folder Name="/Tests/">

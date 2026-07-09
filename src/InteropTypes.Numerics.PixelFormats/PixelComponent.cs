@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace InteropTypes.TensorBitmaps
+namespace InteropTypes.Numerics
 {
     /// <summary>
-    /// Represents a pixel component within <see cref="TensorPixelFormat"/>
+    /// Represents a pixel component within <see cref="PixelFormat"/>
     /// </summary>
-    public abstract record TensorPixelComponent
+    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    public abstract record PixelComponent
     {
-        protected TensorPixelComponent(string semantic)
+        protected PixelComponent(string semantic)
         {
             Semantic = semantic;
         }
@@ -34,16 +31,21 @@ namespace InteropTypes.TensorBitmaps
         public abstract int ByteSize { get; }
 
         public bool HasAlphaComponent => Semantic == "Alpha" || Semantic == "Premultiplied" || Semantic == "Opacity";
+
+        public override string ToString()
+        {
+            return $"{Semantic}:{ComponentType.Name}";
+        }
     }
 
     /// <summary>
-    /// Represents a pixel component within <see cref="TensorPixelFormat"/>
+    /// Represents a pixel component within <see cref="PixelFormat"/>
     /// </summary>
     /// <typeparam name="T">The type of the pixel component, usually <see cref="byte"/> or <see cref="float"/></typeparam>
-    public sealed record TensorPixelComponent<T> : TensorPixelComponent
+    public sealed record PixelComponent<T> : PixelComponent
         where T:unmanaged, INumber<T>
     {
-        public TensorPixelComponent(string semantic, T minValue, T maxValue) : base(semantic)
+        public PixelComponent(string semantic, T minValue, T maxValue) : base(semantic)
         {            
             MinValue = minValue;
             MaxValue = maxValue;
@@ -67,12 +69,14 @@ namespace InteropTypes.TensorBitmaps
         /// </remarks>
         public T MaxValue { get; }
 
-
+        /// <summary>
+        /// The default value to be used for filling
+        /// </summary>
         public T DefaultValue { get; }
 
         public override Type ComponentType => typeof(T);
 
-        public override int ByteSize => Unsafe.SizeOf<T>();
+        public override int ByteSize => Unsafe.SizeOf<T>();        
     }
 
     

@@ -2,15 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace InteropTypes.TensorBitmaps
+namespace InteropTypes.Numerics
 {
+    public interface IPixelFormatSource
+    {
+        PixelFormat Format { get; }
+    }
+
     /// <summary>
     /// Represents a pixel format
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{ToDebuggerDisplayString(),nq}")]
-    public sealed record TensorPixelFormat
+    public sealed record PixelFormat
     {
         private string ToDebuggerDisplayString()
         {
@@ -24,35 +28,35 @@ namespace InteropTypes.TensorBitmaps
             return sb.ToString();
         }
 
-        public TensorPixelFormat(IReadOnlyList<TensorPixelComponent> components)
+        public PixelFormat(IReadOnlyList<PixelComponent> components)
         {
             Components = components;
 
             BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
-        public TensorPixelFormat(TensorPixelComponent x)
+        public PixelFormat(PixelComponent x)
         {
             Components = [x];
 
             BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
-        public TensorPixelFormat(TensorPixelComponent x, TensorPixelComponent y)
+        public PixelFormat(PixelComponent x, PixelComponent y)
         {
             Components = [x, y];
 
             BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
-        public TensorPixelFormat(TensorPixelComponent x, TensorPixelComponent y, TensorPixelComponent z)
+        public PixelFormat(PixelComponent x, PixelComponent y, PixelComponent z)
         {
             Components = [x, y, z];
 
             BytesPerPixel = Components.Sum(item => item.ByteSize);
         }
 
-        public TensorPixelFormat(TensorPixelComponent x, TensorPixelComponent y, TensorPixelComponent z, TensorPixelComponent w)
+        public PixelFormat(PixelComponent x, PixelComponent y, PixelComponent z, PixelComponent w)
         {
             Components = [x, y, z, w];
 
@@ -60,7 +64,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
-        public IReadOnlyList<TensorPixelComponent> Components { get; }
+        public IReadOnlyList<PixelComponent> Components { get; }
 
         public int BytesPerPixel { get; }
 
@@ -74,6 +78,18 @@ namespace InteropTypes.TensorBitmaps
             }
 
             return -1;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator, Components);
+        }
+
+        public bool TryGetCommonType(out Type componentType)
+        {
+            componentType = Components[0].ComponentType;
+            var ct = componentType;
+            return Components.Skip(1).All(c => c.ComponentType == ct);
         }
     }
 }

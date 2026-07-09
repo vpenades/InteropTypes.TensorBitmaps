@@ -6,6 +6,8 @@ using System.Numerics.Tensors;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 namespace InteropTypes.TensorBitmaps
 {
 
@@ -16,14 +18,14 @@ namespace InteropTypes.TensorBitmaps
     public readonly ref struct TensorSpanPlanes3<TElement>
         where TElement : unmanaged , INumber<TElement>
     {
-        public static TensorSpanPlanes3<TElement> Create(int width, int height, TensorPixelFormat format)
+        public static TensorSpanPlanes3<TElement> Create(int width, int height, PixelFormat format)
         {
             var t = Tensor.Create(new TElement[3 * height * width], [3, height, width]);
 
             return Create(t, format);
         }
 
-        public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, TensorPixelFormat format)
+        public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, PixelFormat format)
         {
             if (tensor.Lengths[0] < 3) throw new ArgumentOutOfRangeException("the tensor has less than 3 planes", nameof(tensor));
             if (format.Components.Count < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
@@ -31,7 +33,7 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanPlanes3<TElement>(tensor, format, 0, 1, 2);
         }
 
-        public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, TensorPixelFormat format, string fx, string fy, string fz)
+        public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, PixelFormat format, string fx, string fy, string fz)
         {
             if (tensor.Lengths[0] < 3) throw new ArgumentOutOfRangeException("the tensor has less than 3 planes", nameof(tensor));
             if (format.Components.Count < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
@@ -48,18 +50,18 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanPlanes3<TElement>(tensor, format, x_idx, y_idx, z_idx);
         }
 
-        private TensorSpanPlanes3(TensorSpan<TElement> tensor, TensorPixelFormat format, int x,int y, int z)
+        private TensorSpanPlanes3(TensorSpan<TElement> tensor, PixelFormat format, int x,int y, int z)
         {
             var planes = tensor.GetDimensionSpan(0);
 
-            _PlaneX = new TensorSpanBitmap<TElement, TElement>(planes[x], new TensorPixelFormat(format.Components[x]));
-            _PlaneY = new TensorSpanBitmap<TElement, TElement>(planes[y], new TensorPixelFormat(format.Components[y]));
-            _PlaneZ = new TensorSpanBitmap<TElement, TElement>(planes[z], new TensorPixelFormat(format.Components[z]));
+            _PlaneX = new TensorSpanBitmap<TElement, TElement>(planes[x], new PixelFormat(format.Components[x]));
+            _PlaneY = new TensorSpanBitmap<TElement, TElement>(planes[y], new PixelFormat(format.Components[y]));
+            _PlaneZ = new TensorSpanBitmap<TElement, TElement>(planes[z], new PixelFormat(format.Components[z]));
 
-            _Format = new TensorPixelFormat(format.Components[x], format.Components[y], format.Components[z]);
+            _Format = new PixelFormat(format.Components[x], format.Components[y], format.Components[z]);
         }
 
-        public TensorSpanPlanes3(TensorSpanBitmap<TElement, TElement> planeX, TensorSpanBitmap<TElement, TElement> planeY, TensorSpanBitmap<TElement, TElement> planeZ, TensorPixelFormat format)
+        public TensorSpanPlanes3(TensorSpanBitmap<TElement, TElement> planeX, TensorSpanBitmap<TElement, TElement> planeY, TensorSpanBitmap<TElement, TElement> planeZ, PixelFormat format)
         {
             _PlaneX = planeX;
             _PlaneY = planeY;
@@ -70,12 +72,12 @@ namespace InteropTypes.TensorBitmaps
         private readonly TensorSpanBitmap<TElement, TElement> _PlaneX;
         private readonly TensorSpanBitmap<TElement, TElement> _PlaneY;
         private readonly TensorSpanBitmap<TElement, TElement> _PlaneZ;
-        private readonly TensorPixelFormat _Format;
+        private readonly PixelFormat _Format;
 
         public int Width => _PlaneX.Width;
         public int Height => _PlaneX.Height;
 
-        public TensorPixelFormat Format => _Format;
+        public PixelFormat Format => _Format;
 
         public TensorSpanBitmap<TElement, TElement> PlaneX => _PlaneX;
         public TensorSpanBitmap<TElement, TElement> PlaneY => _PlaneY;

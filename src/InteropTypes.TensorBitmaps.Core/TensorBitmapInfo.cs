@@ -8,6 +8,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 namespace InteropTypes.TensorBitmaps
 {
     /// <summary>
@@ -46,11 +48,11 @@ namespace InteropTypes.TensorBitmaps
 
         internal readonly nint[] _RowIndices; // we could avoid this with a stackalloc        
 
-        private void _ValidateFormat<TElement, TPixel>(nint tensorChannelCount, TensorPixelFormat format)
+        private void _ValidateFormat<TElement, TPixel>(nint tensorChannelCount, PixelFormat format)
             where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged
         {
-            var cmp = format.Components.FirstOrDefault(item => item is not TensorPixelComponent<TElement>);
+            var cmp = format.Components.FirstOrDefault(item => item is not PixelComponent<TElement>);
 
             if (cmp != null)
             {
@@ -79,7 +81,7 @@ namespace InteropTypes.TensorBitmaps
 
         #region Tensor
 
-        public void _Validate<TElement, TPixel>(Tensor<TElement> tensor, TensorPixelFormat format)
+        public void _Validate<TElement, TPixel>(Tensor<TElement> tensor, PixelFormat format)
             where TElement : unmanaged , INumber<TElement>
             where TPixel : unmanaged
         {
@@ -106,7 +108,7 @@ namespace InteropTypes.TensorBitmaps
 
         #region TensorSpan
 
-        public void _Validate<TElement, TPixel>(in TensorSpan<TElement> tensor, TensorPixelFormat format)
+        public void _Validate<TElement, TPixel>(in TensorSpan<TElement> tensor, PixelFormat format)
            where TElement : unmanaged, INumber<TElement>
            where TPixel : unmanaged
         {
@@ -139,7 +141,7 @@ namespace InteropTypes.TensorBitmaps
 
         #region ReadOnlyTensorSpan
 
-        public void _Validate<TElement, TPixel>(in ReadOnlyTensorSpan<TElement> tensor, TensorPixelFormat format)
+        public void _Validate<TElement, TPixel>(in ReadOnlyTensorSpan<TElement> tensor, PixelFormat format)
            where TElement : unmanaged, INumber<TElement>
            where TPixel : unmanaged
         {

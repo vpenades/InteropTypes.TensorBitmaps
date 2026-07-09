@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Buffers;
+using System.Drawing;
 using System.Numerics;
 using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using System.Threading;
+
+using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -19,7 +22,7 @@ namespace InteropTypes.TensorBitmaps
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {
-        public static TensorBitmap<TElement, TPixel> Create(int width, int height, TensorPixelFormat format)
+        public static TensorBitmap<TElement, TPixel> Create(int width, int height, PixelFormat format)
         {
             var channels = _TensorBitmapInfo.GetChannelsFrom<TElement, TPixel>();
             var buffer = new TElement[height * width * channels];
@@ -28,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
             return new TensorBitmap<TElement, TPixel>(tensor, format);
         }
 
-        public TensorBitmap(Tensor<TElement> tensor, TensorPixelFormat format)
+        public TensorBitmap(Tensor<TElement> tensor, PixelFormat format)
         {
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
 
@@ -43,7 +46,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         internal readonly _TensorBitmapInfo _Info;
-        public TensorPixelFormat Format { get; }
+        public PixelFormat Format { get; }
 
         public int BytesPerPixel => Unsafe.SizeOf<TPixel>();
 
@@ -55,7 +58,7 @@ namespace InteropTypes.TensorBitmaps
         public Tensor<TElement> Tensor { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        ReadOnlySpan<byte> IReadOnlyTensorBitmap.GetRowSpan(int y)
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowSpan(int y)
         {
             return GetRowSpan(y);
         }
@@ -79,6 +82,16 @@ namespace InteropTypes.TensorBitmaps
             return pixels;            
         }
 
+        ITensorBitmap ITensorBitmap.GetCropped(Rectangle rectangle)
+        {
+            return GetCropped(rectangle);
+        }
+
+        IReadOnlyTensorBitmap IReadOnlyTensorBitmap.GetCropped(Rectangle rectangle)
+        {
+            return GetCropped(rectangle);
+        }
+
 
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
@@ -91,6 +104,13 @@ namespace InteropTypes.TensorBitmaps
             var ranges = _Info.CalculateSlice(Tensor.Rank, rectangle);
 
             return new TensorBitmap<TElement, TPixel>(Tensor.Slice(ranges), Format);
+        }
+
+        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
+            where TOtherElement : unmanaged, INumber<TOtherElement>
+            where TOtherPixel : unmanaged
+        {
+            this.AsReadOnlyTensorSpanBitmap().CopyPixelsTo(dstBitmap, initPixels);
         }
 
         public TensorBitmap<TElement,TPixelOut> Cast<TPixelOut>()
@@ -109,5 +129,6 @@ namespace InteropTypes.TensorBitmaps
         {
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
         }
+        
     }
 }

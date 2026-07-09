@@ -6,6 +6,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -28,10 +30,10 @@ namespace InteropTypes.TensorBitmaps
 
             // create a custom RGB format with a std-mean range
 
-            var biasedRed = new TensorPixelComponent<float>("Red", -1, 1);
-            var biasedGreen = new TensorPixelComponent<float>("Green", -1.3f, 1.3f);
-            var biasedBlue = new TensorPixelComponent<float>("Blue", -0.8f, 0.8f);
-            var biasedFormat = new TensorPixelFormat(biasedRed, biasedBlue, biasedGreen);
+            var biasedRed = new PixelComponent<float>("Red", -1, 1);
+            var biasedGreen = new PixelComponent<float>("Green", -1.3f, 1.3f);
+            var biasedBlue = new PixelComponent<float>("Blue", -0.8f, 0.8f);
+            var biasedFormat = new PixelFormat(biasedRed, biasedBlue, biasedGreen);
 
             // create a CWH bitmap and extract planar bitmaps
 
@@ -43,7 +45,7 @@ namespace InteropTypes.TensorBitmaps
 
             // merge planes back to a regular bitmap
 
-            var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, KnownPixelFormats.Rgb888);
+            var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, KnownPixelFormats.Rgb8);
             planes.CopyPixelsTo(dstBmp);
 
             using var result = dstBmp.ToImageSharp();

@@ -5,6 +5,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace InteropTypes.TensorBitmaps
@@ -70,27 +72,30 @@ namespace InteropTypes.TensorBitmaps
             return dstBitmap;
         }
 
-        public static TensorPixelFormat ToTensorPixelFormat(Type type)
+        public static PixelFormat ToTensorPixelFormat(Type type)
         {
             if (type == typeof(A8)) return KnownPixelFormats.Alpha8;
             if (type == typeof(L8)) return KnownPixelFormats.Luminance8;
 
-            if (type == typeof(Rgb24)) return KnownPixelFormats.Rgb888;
-            if (type == typeof(Rgba32)) return KnownPixelFormats.Rgba8888;
+            if (type == typeof(La16)) return KnownPixelFormats.La8;
+            if (type == typeof(La32)) return KnownPixelFormats.La16;            
+
+            if (type == typeof(Rgb24)) return KnownPixelFormats.Rgb8;
+            if (type == typeof(Rgba32)) return KnownPixelFormats.Rgba8;
             if (type == typeof(RgbaVector)) return KnownPixelFormats.RgbaF32;
 
-            if (type == typeof(Bgr24)) return KnownPixelFormats.Bgr888;
-            if (type == typeof(Bgra32)) return KnownPixelFormats.Bgra8888;
+            if (type == typeof(Bgr24)) return KnownPixelFormats.Bgr8;
+            if (type == typeof(Bgra32)) return KnownPixelFormats.Bgra8;
 
-            if (type == typeof(Argb32)) return KnownPixelFormats.Argb8888;
-            if (type == typeof(Abgr32)) return KnownPixelFormats.Abgr8888;
+            if (type == typeof(Argb32)) return KnownPixelFormats.Argb8;
+            if (type == typeof(Abgr32)) return KnownPixelFormats.Abgr8;
 
-            if (type == typeof(Rg32)) return KnownPixelFormats.Rg1616;
+            if (type == typeof(Rg32)) return KnownPixelFormats.Rg16;
             if (type == typeof(HalfVector2))
             {
-                var r = new TensorPixelComponent<Half>("Red", -Half.One, Half.One);
-                var g = new TensorPixelComponent<Half>("Green", -Half.One, Half.One);
-                return new TensorPixelFormat(r, g);
+                var r = new PixelComponent<Half>("Red", -Half.One, Half.One);
+                var g = new PixelComponent<Half>("Green", -Half.One, Half.One);
+                return new PixelFormat(r, g);
             }
 
             // add more pixel types here

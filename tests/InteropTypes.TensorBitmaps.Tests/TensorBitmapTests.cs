@@ -4,6 +4,8 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using InteropTypes.Numerics;
+
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

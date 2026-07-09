@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>InteropTypes.PixelFormats</RootNamespace>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="InteropTypes.TensorBitmaps.Tests" />
+	</ItemGroup>	
+
+	<PropertyGroup>
+		<Description>
+			Pixel format definitions and converters.
+
+			Example:
+
+			struct Rgba32 { Byte red; Byte green; Byte blue; Byte alpha; }
+			struct Bgr24 { Byte blue; Byte green; Byte red; }
+
+			var src = new Rgba32[100];
+			var dst = new Bgr24[100];
+
+			var converter = IPixelConverter&lt;Rgba32, Bgr24&gt;(KnownPixelFormats.Rgba8, KnownPixelFormats.Bgr8);
+
+			converter.Convert(src,dst);
+
+		</Description>
+	</PropertyGroup>
+
+</Project>

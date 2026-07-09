@@ -7,6 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 namespace InteropTypes.TensorBitmaps
 {
     /// <summary>
@@ -30,7 +32,7 @@ namespace InteropTypes.TensorBitmaps
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(tensor, bitmap._Info, bitmap.Format);
         }
 
-        private ReadOnlyTensorSpanBitmap(ReadOnlyTensorSpan<TElement> tensor, _TensorBitmapInfo info, TensorPixelFormat format)
+        private ReadOnlyTensorSpanBitmap(ReadOnlyTensorSpan<TElement> tensor, _TensorBitmapInfo info, PixelFormat format)
         {
             _Info = info;
             Format = format;
@@ -39,7 +41,7 @@ namespace InteropTypes.TensorBitmaps
             Tensor = tensor;
         }
 
-        public ReadOnlyTensorSpanBitmap(ReadOnlyTensorSpan<TElement> tensor, TensorPixelFormat format)
+        public ReadOnlyTensorSpanBitmap(ReadOnlyTensorSpan<TElement> tensor, PixelFormat format)
         {
             if (tensor == null) throw new ArgumentNullException(nameof(tensor));
 
@@ -55,7 +57,7 @@ namespace InteropTypes.TensorBitmaps
         }        
 
         internal readonly _TensorBitmapInfo _Info;
-        public TensorPixelFormat Format { get; }
+        public PixelFormat Format { get; }
         public int Width { get; }
         public int Height { get; }
 
@@ -102,7 +104,7 @@ namespace InteropTypes.TensorBitmaps
             where TOtherElement : unmanaged, INumber<TOtherElement>
             where TOtherPixel : unmanaged
         {
-            var pixelConverter = PixelConverters.Create<TElement, TPixel, TOtherElement, TOtherPixel>(this.Format, dstBitmap.Format, initPixels);
+            var pixelConverter = IPixelConverter<TPixel,TOtherPixel>.Create(this.Format, dstBitmap.Format, initPixels);
 
             CopyPixelsTo(dstBitmap.AsTensorSpanBitmap(), pixelConverter);
         }
@@ -111,7 +113,7 @@ namespace InteropTypes.TensorBitmaps
             where TOtherElement : unmanaged, INumber<TOtherElement>
             where TOtherPixel: unmanaged
         {
-            var pixelConverter = PixelConverters.Create<TElement, TPixel, TOtherElement, TOtherPixel>(this.Format, dstBitmap.Format, initPixels);
+            var pixelConverter = IPixelConverter<TPixel, TOtherPixel>.Create(this.Format, dstBitmap.Format, initPixels);
 
             CopyPixelsTo(dstBitmap, pixelConverter);
         }
