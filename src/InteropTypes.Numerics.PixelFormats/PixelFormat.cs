@@ -13,21 +13,9 @@ namespace InteropTypes.Numerics
     /// <summary>
     /// Represents a pixel format
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("{ToDebuggerDisplayString(),nq}")]
+    [type: System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public sealed record PixelFormat
     {
-        private string ToDebuggerDisplayString()
-        {
-            var sb = new StringBuilder();
-
-            foreach(var c in Components)
-            {
-                sb.Append($"{c.Semantic}:{c.ComponentType.Name} ");
-            }
-
-            return sb.ToString();
-        }
-
         public PixelFormat(IReadOnlyList<PixelComponent> components)
         {
             Components = components;
@@ -78,12 +66,7 @@ namespace InteropTypes.Numerics
             }
 
             return -1;
-        }
-
-        public override string ToString()
-        {
-            return string.Join(System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator, Components);
-        }
+        }            
 
         public bool TryGetCommonType(out Type componentType)
         {
@@ -91,5 +74,10 @@ namespace InteropTypes.Numerics
             var ct = componentType;
             return Components.Skip(1).All(c => c.ComponentType == ct);
         }
+
+        public override string ToString()
+        {
+            return string.Join(System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator, Components.Select(item => item.ToString()));
+        }        
     }
 }

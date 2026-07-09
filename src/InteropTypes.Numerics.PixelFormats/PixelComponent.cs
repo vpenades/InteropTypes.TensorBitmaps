@@ -7,7 +7,7 @@ namespace InteropTypes.Numerics
     /// <summary>
     /// Represents a pixel component within <see cref="PixelFormat"/>
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
+    [type: System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public abstract record PixelComponent
     {
         protected PixelComponent(string semantic)
@@ -21,7 +21,7 @@ namespace InteropTypes.Numerics
         public string Semantic { get; }
 
         /// <summary>
-        /// Gets the type of the component, usually Byte or Float.
+        /// Gets the type of the component, usually Byte UShort, Half or Float.
         /// </summary>
         public abstract Type ComponentType { get; }
 
@@ -35,13 +35,14 @@ namespace InteropTypes.Numerics
         public override string ToString()
         {
             return $"{Semantic}:{ComponentType.Name}";
-        }
+        }        
     }
 
     /// <summary>
     /// Represents a pixel component within <see cref="PixelFormat"/>
     /// </summary>
     /// <typeparam name="T">The type of the pixel component, usually <see cref="byte"/> or <see cref="float"/></typeparam>
+    [type: System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public sealed record PixelComponent<T> : PixelComponent
         where T:unmanaged, INumber<T>
     {
@@ -50,7 +51,9 @@ namespace InteropTypes.Numerics
             MinValue = minValue;
             MaxValue = maxValue;
 
-            DefaultValue = semantic == "Alpha" || semantic == "Premultiplied" ? maxValue : minValue;
+            DefaultValue = HasAlphaComponent
+                ? maxValue
+                : minValue;
         }        
 
         /// <summary>

@@ -1,8 +1,8 @@
 ﻿using System;
 
-using CMPK = InteropTypes.Numerics.KnownComponentFormats;
-
 using TPF = InteropTypes.Numerics.PixelFormat;
+
+using CMPK = InteropTypes.Numerics.KnownComponentFormats;
 using CMPBYTE = InteropTypes.Numerics.PixelComponent<byte>;
 using CMPSHORT = InteropTypes.Numerics.PixelComponent<ushort>;
 using CMPHALF = InteropTypes.Numerics.PixelComponent<System.Half>;
@@ -26,12 +26,16 @@ namespace InteropTypes.Numerics
 
         public static readonly TPF Rgb8 = new TPF(CMPK.RedByte, CMPK.GreenByte, CMPK.BlueByte);
         public static readonly TPF Bgr8 = new TPF(CMPK.BlueByte, CMPK.GreenByte, CMPK.RedByte);
+        public static readonly TPF RgbF32 = new TPF(CMPK.RedSingle, CMPK.GreenSingle, CMPK.BlueSingle);
+        public static readonly TPF BgrF32 = new TPF(CMPK.BlueSingle, CMPK.GreenSingle, CMPK.RedSingle);
 
         public static readonly TPF Rgbx8 = new TPF(CMPK.RedByte, CMPK.GreenByte, CMPK.BlueByte, CMPK.OpaqueAlphaByte);
-        public static readonly TPF Rgba8 = new TPF(CMPK.RedByte, CMPK.GreenByte, CMPK.BlueByte, CMPK.AlphaByte);        
+        public static readonly TPF Rgba8 = new TPF(CMPK.RedByte, CMPK.GreenByte, CMPK.BlueByte, CMPK.AlphaByte);
+        public static readonly TPF RgbaF32 = new TPF(CMPK.RedSingle, CMPK.GreenSingle, CMPK.BlueSingle, CMPK.AlphaSingle);
 
         public static readonly TPF Bgrx8 = new TPF(CMPK.BlueByte, CMPK.GreenByte, CMPK.RedByte, CMPK.OpaqueAlphaByte);
-        public static readonly TPF Bgra8 = new TPF(CMPK.BlueByte, CMPK.GreenByte, CMPK.RedByte, CMPK.AlphaByte);        
+        public static readonly TPF Bgra8 = new TPF(CMPK.BlueByte, CMPK.GreenByte, CMPK.RedByte, CMPK.AlphaByte);
+        public static readonly TPF BgraF32 = new TPF(CMPK.BlueSingle, CMPK.GreenSingle, CMPK.RedSingle, CMPK.AlphaSingle);
 
         public static readonly TPF Argb8 = new TPF(CMPK.AlphaByte, CMPK.RedByte, CMPK.GreenByte, CMPK.BlueByte);
         public static readonly TPF Abgr8 = new TPF(CMPK.AlphaByte, CMPK.BlueByte, CMPK.GreenByte, CMPK.RedByte);
@@ -39,12 +43,7 @@ namespace InteropTypes.Numerics
         public static readonly TPF Rg8 = new TPF(CMPK.RedByte, CMPK.GreenByte);
         public static readonly TPF Rg16 = new TPF(CMPK.RedShort, CMPK.GreenShort);
         public static readonly TPF RgF16 = new TPF(CMPK.RedHalf, CMPK.GreenHalf);
-        public static readonly TPF SignedRgF16 = new TPF(CMPK.SignedRedHalf, CMPK.SignedGreenHalf);
-
-        public static readonly TPF RgbF32 = new TPF(CMPK.RedSingle, CMPK.GreenSingle, CMPK.BlueSingle);
-        public static readonly TPF BgrF32 = new TPF(CMPK.BlueSingle, CMPK.GreenSingle, CMPK.RedSingle);
-
-        public static readonly TPF RgbaF32 = new TPF(CMPK.RedSingle, CMPK.GreenSingle, CMPK.BlueSingle, CMPK.AlphaSingle);
+        public static readonly TPF SignedRgF16 = new TPF(CMPK.SignedRedHalf, CMPK.SignedGreenHalf);        
 
         public static readonly TPF RgbPremul8 = new TPF(CMPK.RedByte, CMPK.GreenByte, CMPK.BlueByte, CMPK.PremulByte);
         public static readonly TPF BgrPremul8 = new TPF(CMPK.BlueByte, CMPK.GreenByte, CMPK.RedByte, CMPK.PremulByte);
