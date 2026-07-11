@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Numerics.Tensors;
@@ -18,6 +19,9 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public readonly ref struct TensorSpanBitmap<TElement, TPixel>
+        #if NET9_0_OR_GREATER
+        : InteropTypes.Numerics.BitmapOperators.IBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>
+        #endif
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
@@ -56,9 +60,14 @@ namespace InteropTypes.TensorBitmaps
         public int Width { get; }
         public int Height { get; }
 
+
         public TensorSpan<TElement> Tensor { get; }
 
         private readonly TensorDimensionSpan<TElement> _Rows;
+
+        #if NET9_0_OR_GREATER
+        ReadOnlySpan<TPixel> InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
+        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)
@@ -138,6 +147,6 @@ namespace InteropTypes.TensorBitmaps
                     cmpRow = cmpRow.Slice(1);
                 }                
             }
-        }
+        }        
     }
 }

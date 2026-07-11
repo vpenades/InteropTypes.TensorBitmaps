@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Numerics.Tensors;
@@ -16,7 +17,10 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
-    public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>
+    public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>        
+        #if NET9_0_OR_GREATER
+        : InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>
+        #endif
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
@@ -78,7 +82,7 @@ namespace InteropTypes.TensorBitmaps
             System.Diagnostics.Debug.Assert(pixels.Length == Width);
 
             return pixels;
-        }
+        }        
 
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
@@ -98,38 +102,48 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
-        }
+        }        
 
-        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
-            where TOtherElement : unmanaged, INumber<TOtherElement>
-            where TOtherPixel : unmanaged
+        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
+            where TDstElement : unmanaged, INumber<TDstElement>
+            where TDstPixel : unmanaged
         {
-            var pixelConverter = IPixelConverter<TPixel,TOtherPixel>.Create(this.Format, dstBitmap.Format, initPixels);
+            var pixelConverter = IPixelConverter<TPixel,TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
 
             CopyPixelsTo(dstBitmap.AsTensorSpanBitmap(), pixelConverter);
         }
 
-        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
-            where TOtherElement : unmanaged, INumber<TOtherElement>
-            where TOtherPixel: unmanaged
+        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
+            where TDstElement : unmanaged, INumber<TDstElement>
+            where TDstPixel: unmanaged
         {
-            var pixelConverter = IPixelConverter<TPixel, TOtherPixel>.Create(this.Format, dstBitmap.Format, initPixels);
+            var pixelConverter = IPixelConverter<TPixel, TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
 
             CopyPixelsTo(dstBitmap, pixelConverter);
         }
 
-        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, IPixelConverter<TPixel,TOtherPixel> pixelConverter)
-            where TOtherElement : unmanaged, INumber<TOtherElement>
-            where TOtherPixel : unmanaged
+        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, IPixelConverter<TPixel,TDstPixel> pixelConverter)
+            where TDstElement : unmanaged, INumber<TDstElement>
+            where TDstPixel : unmanaged
         {
-            var h = Math.Min(this.Height, dstBitmap.Height);
-
-            for (int y = 0; y < h; ++y)
-            {
-                var srcRow = this.GetRowPixelsSpan(y);
-                var dstRow = dstBitmap.GetRowPixelsSpan(y);
-                pixelConverter.ConvertPixels(srcRow, dstRow);
-            }
+            CopyPixelsTo(PixelsTransform.Copy, dstBitmap, pixelConverter);
         }
+
+        public void CopyPixelsTo<TDstElement, TDstPixel>(PixelsTransform transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
+            where TDstElement : unmanaged, INumber<TDstElement>
+            where TDstPixel : unmanaged
+        {
+            var pixelConverter = IPixelConverter<TPixel, TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
+            var transformer = transform.GetInstance<TPixel, TDstPixel>();
+            transformer.Execute(this, dstBitmap, pixelConverter);
+        }
+
+        public void CopyPixelsTo<TDstElement, TDstPixel>(PixelsTransform transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
+            where TDstElement : unmanaged, INumber<TDstElement>
+            where TDstPixel : unmanaged
+        {
+            var transformer = transform.GetInstance<TPixel, TDstPixel>();
+            transformer.Execute(this, dstBitmap, pixelConverter);
+        }        
     }
 }

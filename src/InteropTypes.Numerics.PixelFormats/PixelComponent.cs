@@ -52,9 +52,27 @@ namespace InteropTypes.Numerics
             MaxValue = maxValue;
 
             DefaultValue = HasAlphaComponent
-                ? maxValue
-                : minValue;
-        }        
+                ? MaxValue
+                : MinValue;
+        }
+
+        public PixelComponent(string semantic) : base(semantic)
+        {
+            if (typeof(T) == typeof(byte)) { MinValue = T.CreateChecked(byte.MinValue); MaxValue = T.CreateChecked(byte.MaxValue); }
+            else if (typeof(T) == typeof(ushort)) { MinValue = T.CreateChecked(ushort.MinValue); MaxValue = T.CreateChecked(ushort.MaxValue); }
+            else if (typeof(T) == typeof(uint)) { MinValue = T.CreateChecked(uint.MinValue); MaxValue = T.CreateChecked(uint.MaxValue); }
+            else if (typeof(T) == typeof(ulong)) { MinValue = T.CreateChecked(ulong.MinValue); MaxValue = T.CreateChecked(ulong.MaxValue); }
+
+            else if (typeof(T) == typeof(Half)) { MinValue = T.Zero; MaxValue = T.One; }
+            else if (typeof(T) == typeof(Single)) { MinValue = T.Zero; MaxValue = T.One; }
+            else if (typeof(T) == typeof(Double)) { MinValue = T.Zero; MaxValue = T.One; }
+
+            else throw new InvalidOperationException("Specify min and max values in constructor");
+
+            DefaultValue = HasAlphaComponent
+                ? MaxValue
+                : MinValue;
+        }
 
         /// <summary>
         /// the minimum value expected to be found in this component
@@ -84,3 +102,5 @@ namespace InteropTypes.Numerics
 
     
 }
+
+

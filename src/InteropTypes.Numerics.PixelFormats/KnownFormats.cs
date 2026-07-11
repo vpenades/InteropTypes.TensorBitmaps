@@ -54,26 +54,26 @@ namespace InteropTypes.Numerics
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
     public static class KnownComponentFormats
     {
-        public static readonly CMPBYTE RedByte = new CMPBYTE("Red", 0, 255);
-        public static readonly CMPBYTE GreenByte = new CMPBYTE("Green", 0, 255);
-        public static readonly CMPBYTE BlueByte = new CMPBYTE("Blue", 0, 255);
-        public static readonly CMPBYTE AlphaByte = new CMPBYTE("Alpha", 0, 255);
-        public static readonly CMPBYTE PremulByte = new CMPBYTE("Premultiplied", 0, 255);
-        public static readonly CMPBYTE LuminanceByte = new CMPBYTE("Luminance", 0, 255);
+        public static readonly CMPBYTE RedByte = new CMPBYTE("Red");
+        public static readonly CMPBYTE GreenByte = new CMPBYTE("Green");
+        public static readonly CMPBYTE BlueByte = new CMPBYTE("Blue");
+        public static readonly CMPBYTE AlphaByte = new CMPBYTE("Alpha");
+        public static readonly CMPBYTE PremulByte = new CMPBYTE("Premultiplied");
+        public static readonly CMPBYTE LuminanceByte = new CMPBYTE("Luminance");
 
-        public static readonly CMPSHORT RedShort = new CMPSHORT("Red", ushort.MinValue, ushort.MaxValue);
-        public static readonly CMPSHORT GreenShort = new CMPSHORT("Green", ushort.MinValue, ushort.MaxValue);
-        public static readonly CMPSHORT BlueShort = new CMPSHORT("Blue", ushort.MinValue, ushort.MaxValue);
-        public static readonly CMPSHORT AlphaShort = new CMPSHORT("Alpha", ushort.MinValue, ushort.MaxValue);
-        public static readonly CMPSHORT PremulShort = new CMPSHORT("Premultiplied", ushort.MinValue, ushort.MaxValue);
-        public static readonly CMPSHORT LuminanceShort = new CMPSHORT("Luminance", ushort.MinValue, ushort.MaxValue);
+        public static readonly CMPSHORT RedShort = new CMPSHORT("Red");
+        public static readonly CMPSHORT GreenShort = new CMPSHORT("Green");
+        public static readonly CMPSHORT BlueShort = new CMPSHORT("Blue");
+        public static readonly CMPSHORT AlphaShort = new CMPSHORT("Alpha");
+        public static readonly CMPSHORT PremulShort = new CMPSHORT("Premultiplied");
+        public static readonly CMPSHORT LuminanceShort = new CMPSHORT("Luminance");
 
-        public static readonly CMPHALF RedHalf = new CMPHALF("Red", Half.Zero, Half.One);
-        public static readonly CMPHALF GreenHalf = new CMPHALF("Green", Half.Zero, Half.One);
-        public static readonly CMPHALF BlueHalf = new CMPHALF("Blue", Half.Zero, Half.One);
-        public static readonly CMPHALF AlphaHalf = new CMPHALF("Alpha", Half.Zero, Half.One);
-        public static readonly CMPHALF PremulHalf = new CMPHALF("Premultiplied", Half.Zero, Half.One);
-        public static readonly CMPHALF LuminanceHalf = new CMPHALF("Luminance", Half.Zero, Half.One);
+        public static readonly CMPHALF RedHalf = new CMPHALF("Red");
+        public static readonly CMPHALF GreenHalf = new CMPHALF("Green");
+        public static readonly CMPHALF BlueHalf = new CMPHALF("Blue");
+        public static readonly CMPHALF AlphaHalf = new CMPHALF("Alpha");
+        public static readonly CMPHALF PremulHalf = new CMPHALF("Premultiplied");
+        public static readonly CMPHALF LuminanceHalf = new CMPHALF("Luminance");
 
         public static readonly CMPHALF SignedRedHalf = new CMPHALF("Red", -Half.One, Half.One);
         public static readonly CMPHALF SignedGreenHalf = new CMPHALF("Green", -Half.One, Half.One);
@@ -82,12 +82,12 @@ namespace InteropTypes.Numerics
         public static readonly CMPHALF SignedPremulHalf = new CMPHALF("Premultiplied", -Half.One, Half.One);
         public static readonly CMPHALF SignedLuminanceHalf = new CMPHALF("Luminance", -Half.One, Half.One);
 
-        public static readonly CMPSINGLE RedSingle = new CMPSINGLE("Red", 0, 1);
-        public static readonly CMPSINGLE GreenSingle = new CMPSINGLE("Green", 0, 1);
-        public static readonly CMPSINGLE BlueSingle = new CMPSINGLE("Blue", 0, 1);
-        public static readonly CMPSINGLE AlphaSingle = new CMPSINGLE("Alpha", 0, 1);
-        public static readonly CMPSINGLE PremulSingle = new CMPSINGLE("Premultiplied", 0, 1);
-        public static readonly CMPSINGLE LuminanceSingle = new CMPSINGLE("Luminance", 0, 1);
+        public static readonly CMPSINGLE RedSingle = new CMPSINGLE("Red");
+        public static readonly CMPSINGLE GreenSingle = new CMPSINGLE("Green");
+        public static readonly CMPSINGLE BlueSingle = new CMPSINGLE("Blue");
+        public static readonly CMPSINGLE AlphaSingle = new CMPSINGLE("Alpha");
+        public static readonly CMPSINGLE PremulSingle = new CMPSINGLE("Premultiplied");
+        public static readonly CMPSINGLE LuminanceSingle = new CMPSINGLE("Luminance");
 
         // these are special values for rgbX types where the X value is unused and usually
         // has a value of zero, but needs to be interpreted as opaque, which is Alpha=1
@@ -99,7 +99,7 @@ namespace InteropTypes.Numerics
 
         // packed formats (not supported yet)        
 
-        public static readonly CMPSHORT PackedRgb565 = new CMPSHORT("Rgb565", ushort.MinValue, ushort.MaxValue);
-        public static readonly CMPSHORT PackedBgr565 = new CMPSHORT("Bgr565", ushort.MinValue, ushort.MaxValue);
+        public static readonly CMPSHORT PackedRgb565 = new CMPSHORT("Rgb565");
+        public static readonly CMPSHORT PackedBgr565 = new CMPSHORT("Bgr565");
     }    
 }

@@ -10,15 +10,15 @@ using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps
 {
-    
-
     /// <summary>
     /// A bitmap backed by a <see cref="Tensor{TElement}"/>
     /// </summary>
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
-    public class TensorBitmap<TElement,TPixel> : ITensorBitmap
+    public class TensorBitmap<TElement,TPixel>
+        : ITensorBitmap
+        , InteropTypes.Numerics.BitmapOperators.IBitmapOperand<TensorBitmap<TElement, TPixel>, TPixel>        
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {
