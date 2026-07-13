@@ -12,11 +12,8 @@ namespace InteropTypes.Numerics.BitmapOperators
     /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
     /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
     public interface IReadOnlyBitmapOperand<TSelf, TPixel>
-        where TPixel : unmanaged
-        where TSelf: IReadOnlyBitmapOperand<TSelf, TPixel>
-        #if NET9_0_OR_GREATER
-        , allows ref struct
-        #endif        
+        where TSelf : IReadOnlyBitmapOperand<TSelf, TPixel>, allows ref struct
+        where TPixel : unmanaged        
     {
         /// <summary>
         /// The pixel layout
@@ -68,11 +65,8 @@ namespace InteropTypes.Numerics.BitmapOperators
     /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
     public interface IBitmapOperand<TSelf, TPixel>
         : IReadOnlyBitmapOperand<TSelf, TPixel>
-        where TPixel : unmanaged
-        where TSelf : IBitmapOperand<TSelf, TPixel>
-        #if NET9_0_OR_GREATER
-        , allows ref struct
-        #endif
+        where TSelf : IBitmapOperand<TSelf, TPixel>, allows ref struct
+        where TPixel : unmanaged        
     {
         /// <summary>
         /// Gets the pixels of a row.
@@ -82,24 +76,29 @@ namespace InteropTypes.Numerics.BitmapOperators
         new Span<TPixel> GetRowPixelsSpan(int y);
 
         ReadOnlySpan<TPixel> IReadOnlyBitmapOperand<TSelf, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
-    }   
-    
+    }
+
+    /// <summary>
+    /// Represents an interface to a disposable, read only bitmap
+    /// </summary>
+    /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
+    /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
     public interface IDisposableReadOnlyBitmapOperand<TSelf,TPixel>
         : IReadOnlyBitmapOperand<TSelf,TPixel>
         , IDisposable
-        where TPixel : unmanaged
         where TSelf : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
-        #if NET9_0_OR_GREATER
-        , allows ref struct
-        #endif
-    {
-
-    }
-
-    public interface IStretchedBitmapSource<TSelf, TPixel> : IDisposable
         where TPixel : unmanaged
-        where TSelf : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
-    {
-        TSelf CreateStretched(int width, int height);
-    }
+    { }
+
+    /// <summary>
+    /// Represents an interface to a disposable bitmap.
+    /// </summary>
+    /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
+    /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
+    public interface IDisposableBitmapOperand<TSelf, TPixel>
+        : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
+        , IBitmapOperand<TSelf, TPixel>
+        where TSelf : IDisposableBitmapOperand<TSelf, TPixel>
+        where TPixel : unmanaged
+    { }    
 }

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.Numerics.BitmapOperators;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -17,10 +18,8 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
-    public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>        
-        #if NET9_0_OR_GREATER
-        : InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>
-        #endif
+    public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>
+        : InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>        
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
@@ -138,8 +137,8 @@ namespace InteropTypes.TensorBitmaps
             return transformer.Execute(this, dstBitmap, pixelConverter);
         }
 
-        public TResult CopyPixelsTo<TDstElement, TDstPixel, TResult>(PixelsTransform<TResult> transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
-            where TDstElement : unmanaged, INumber<TDstElement>
+        public TResult CopyPixelsTo<TDstBitmap, TDstPixel, TResult>(PixelsTransform<TResult> transform, TDstBitmap dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
             where TDstPixel : unmanaged
         {
             var transformer = transform.GetInstance<TPixel, TDstPixel>();

@@ -24,7 +24,7 @@ namespace InteropTypes.Numerics.Internal
                 return false;
             }
 
-            if (srcFmt != dstFmt)
+            if (!srcFmt.Equals(dstFmt))
             {
                 converter = default;
                 return false;

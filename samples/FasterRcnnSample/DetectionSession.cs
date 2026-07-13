@@ -18,16 +18,17 @@ namespace FasterRcnnSample
         {
             // https://onnxruntime.ai/models
             // https://huggingface.co/onnxmodelzoo/FasterRCNN-12
+            // https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/faster-rcnn/model
 
-            modelPath ??= System.IO.Path.Combine(AppContext.BaseDirectory, "FasterRCNN-12.onnx");
+            modelPath ??= System.IO.Path.Combine(AppContext.BaseDirectory, "FasterRCNN-12-int8.onnx");
 
 
             _Session = new InferenceSession(modelPath);
 
             // model's mean enconded into the format:
-            var r = new PixelComponent<float>("Red", 102.9801f, 102.9801f + 255);
-            var g = new PixelComponent<float>("Green", 115.9465f, 115.9465f + 255);
-            var b = new PixelComponent<float>("Blue", 122.7717f, 122.7717f + 255);
+            var r = new PixelComponent<float>("Red", -102.9801f, -102.9801f + 255);
+            var g = new PixelComponent<float>("Green", -115.9465f, -115.9465f + 255);
+            var b = new PixelComponent<float>("Blue", -122.7717f, -122.7717f + 255);
             _InputFormat = new PixelFormat(b, g, r); // this model is BGR
         }
 
@@ -42,17 +43,24 @@ namespace FasterRcnnSample
 
         public float MinConfidence { get; set; } = 0.7f;
 
-        public IReadOnlyList<Prediction> Predict<TPixel, TBitmap>(TBitmap image)
-            where TBitmap: IReadOnlyBitmapOperand<TBitmap,TPixel>
+        public IReadOnlyList<Prediction> Predict<TBitmap>(TBitmap image)
+            where TBitmap : IReadOnlyBitmapOperand<TBitmap, uint>, allows ref struct            
+        {
+            return Predict<TBitmap, uint>(image);
+        }        
+
+        public IReadOnlyList<Prediction> Predict<TBitmap, TPixel>(TBitmap image)
+            where TBitmap: IReadOnlyBitmapOperand<TBitmap, TPixel>, allows ref struct
             where TPixel : unmanaged
         {
             // Preprocess image
 
             var paddedHeight = (int)(Math.Ceiling(image.Height / 32f) * 32f);
-            var paddedWidth = (int)(Math.Ceiling(image.Width / 32f) * 32f);
+            var paddedWidth = (int)(Math.Ceiling(image.Width / 32f) * 32f);            
+
             DenseTensor<float> input = new DenseTensor<float>([3, paddedHeight, paddedWidth]);
 
-            CopyImageGeneric<TPixel,TBitmap>(image, input);
+            var xform = CopyImageGeneric<TBitmap, TPixel>(image, input);
 
             // Setup inputs and outputs
             var inputs = new List<NamedOnnxValue>
@@ -65,40 +73,14 @@ namespace FasterRcnnSample
             using IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results = _Session.Run(inputs);
 
             // Postprocess to get predictions
-            List<Prediction> predictions = DecodePrediction(results);
+            List<Prediction> predictions = DecodePrediction(results, xform);
 
             return predictions;
         }
 
-        public IReadOnlyList<Prediction> Predict<TElement, TPixel>(ReadOnlyTensorSpanBitmap<TElement, TPixel> image)
-            where TElement : unmanaged, INumber<TElement>
-            where TPixel : unmanaged
-        {
-            // Preprocess image
+        
 
-            var paddedHeight = (int)(Math.Ceiling(image.Height / 32f) * 32f);
-            var paddedWidth = (int)(Math.Ceiling(image.Width / 32f) * 32f);
-            DenseTensor<float> input = new DenseTensor<float>([3, paddedHeight, paddedWidth]);
-
-            CopyImage(image, input);
-
-            // Setup inputs and outputs
-            var inputs = new List<NamedOnnxValue>
-            {
-                NamedOnnxValue.CreateFromTensor("image", input)
-            };
-
-            // run inference
-
-            using IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results = _Session.Run(inputs);
-
-            // Postprocess to get predictions
-            List<Prediction> predictions = DecodePrediction(results);
-
-            return predictions;
-        }
-
-        private List<Prediction> DecodePrediction(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results)
+        private List<Prediction> DecodePrediction(IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results, Matrix3x2 transform)
         {
             var resultsArray = results.ToArray();
             float[] boxes = resultsArray[0].AsEnumerable<float>().ToArray();
@@ -109,60 +91,43 @@ namespace FasterRcnnSample
             for (int i = 0; i < boxes.Length - 4; i += 4)
             {
                 var index = i / 4;
-                if (confidences[index] >= MinConfidence)
+                if (confidences[index] < MinConfidence) continue;
+
+                var a = new Vector2(boxes[i + 0], boxes[i + 1]);
+                var b = new Vector2(boxes[i + 2], boxes[i + 3]);
+                a = Vector2.Transform(a, transform);
+                b = Vector2.Transform(b, transform);
+                b -= a;
+
+                predictions.Add(new Prediction
                 {
-                    predictions.Add(new Prediction
-                    {
-                        Box = new System.Drawing.RectangleF(boxes[i], boxes[i + 1], boxes[i + 2] - boxes[i], boxes[i + 3] - boxes[i + 1]),
-                        Label = LabelMap.Labels[labels[index]],
-                        Confidence = confidences[index]
-                    });
-                }
+                    Box = new System.Drawing.RectangleF(a.X, a.Y, b.X, b.Y),
+                    Label = LabelMap.Labels[labels[index]],
+                    Confidence = confidences[index]
+                });
             }
 
             return predictions;
-        }
+        }        
 
-        private Matrix3x2 CopyImage<TElement, TPixel>(ReadOnlyTensorSpanBitmap<TElement, TPixel> image, DenseTensor<float> input)
-            where TElement : unmanaged, INumber<TElement>
+        private Matrix3x2 CopyImageGeneric<TBitmap, TPixel>(TBitmap image, DenseTensor<float> input)
+            where TBitmap : IReadOnlyBitmapOperand<TBitmap, TPixel>, allows ref struct
             where TPixel : unmanaged
         {
             // convert Onnx.Tensor to Numerics.TensorSpan
-
-            nint[] lengths = input.Dimensions.ToArray().Select(d => (nint)d).ToArray();
+            var lengths = input.Dimensions.ToArray().Select(d => (nint)d).ToArray();
             var inputSpan = new System.Numerics.Tensors.TensorSpan<float>(input.Buffer.Span, lengths);
 
             // convert Numerics.TensorSpan to TensorSpanPlanes3
             var planes = TensorSpanPlanes3<float>.Create(inputSpan, _InputFormat);
 
             // resize, convert, fit, and copy pixels
-            return planes.CopyPixelsFrom(PixelsTransform.ScaleToFit(0), image);
-        }
-
-        private Matrix3x2 CopyImageGeneric<TPixel, TBitmap>(TBitmap image, DenseTensor<float> input)
-            where TBitmap : IReadOnlyBitmapOperand<TBitmap, TPixel>
-            where TPixel : unmanaged
-        {
-            // convert Onnx.Tensor to Numerics.TensorSpan
-
-            nint[] lengths = input.Dimensions.ToArray().Select(d => (nint)d).ToArray();
-            var inputSpan = new System.Numerics.Tensors.TensorSpan<float>(input.Buffer.Span, lengths);
-
-            // convert Numerics.TensorSpan to TensorSpanPlanes3
-            var planes = TensorSpanPlanes3<float>.Create(inputSpan, _InputFormat);
-
-            // resize, convert, fit, and copy pixels
-            // return planes.CopyPixelsFrom(PixelsTransform.ScaleToFit(0), image);
-
-            
-            var resizer = IBinaryOperation<TPixel, float, Matrix3x2>.GetScaleToFit(0);
-            resizer.Execute(image, planes.PlaneX, IPixelConverter<TPixel, float>.Create(image.Format, planes.PlaneX.Format,true));
-            resizer.Execute(image, planes.PlaneY, IPixelConverter<TPixel, float>.Create(image.Format, planes.PlaneY.Format, true));
-            return resizer.Execute(image, planes.PlaneZ, IPixelConverter<TPixel, float>.Create(image.Format, planes.PlaneZ.Format, true));
+            return planes.CopyPixelsFrom<TBitmap,TPixel, Matrix3x2>(PixelsTransform.ScaleToFit(0), image);
         }
 
     }
 
+    [System.Diagnostics.DebuggerDisplay("{Label} {Confidence}")]
     public class Prediction
     {
         public System.Drawing.RectangleF Box { get; set; }
@@ -170,7 +135,7 @@ namespace FasterRcnnSample
         public float Confidence { get; set; }
     }
 
-    public class LabelMap
+    class LabelMap
     {
         public static readonly string[] Labels = new[] {"__background",
                                                         "person",

@@ -12,16 +12,38 @@ using SkiaSharp;
 namespace InteropTypes.TensorBitmaps
 {
     public class SkiaSharpBitmapOperand<TPixel>
-        : InteropTypes.Numerics.BitmapOperators.IDisposableReadOnlyBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>
-        , InteropTypes.Numerics.BitmapOperators.IStretchedBitmapSource<SkiaSharpBitmapOperand<TPixel>, TPixel>
+        : InteropTypes.Numerics.BitmapOperators.IDisposableBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
         , IDisposable
         where TPixel : unmanaged
     {
+        public static SkiaSharpBitmapOperand<TPixel> Read(Func<System.IO.Stream> stream)
+        {
+            using(var s = stream.Invoke())
+            {
+                return Read(s);
+            }
+        }
+
         public static SkiaSharpBitmapOperand<TPixel> Read(System.IO.Stream stream)
         {
             var skbmp = SKBitmap.Decode(stream);
 
             return new SkiaSharpBitmapOperand<TPixel>(skbmp, false);
+        }
+
+        public void Write(Func<System.IO.Stream> stream)
+        {
+            using(var s = stream.Invoke())
+            {
+                Write(s);
+            }
+        }
+
+        public void Write(System.IO.Stream stream)
+        {
+            if (!SkiaSharpForTensorBitmapsExtensions.TryGetSKEncodedImageFormat(stream, out var fmt)) fmt = SKEncodedImageFormat.Png;
+
+            _Bitmap.Encode(stream, fmt, 75);
         }
 
         public SkiaSharpBitmapOperand(SKBitmap bitmap, bool doNotDispose)
@@ -63,7 +85,7 @@ namespace InteropTypes.TensorBitmaps
         private SkiaSharp.SKBitmap _Bitmap;
         private readonly Rectangle _Region;
 
-        public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y)
+        public Span<TPixel> GetRowPixelsSpan(int y)
         {
             if (y < 0 || y >= _Region.Height) throw new ArgumentOutOfRangeException(nameof(y));
 

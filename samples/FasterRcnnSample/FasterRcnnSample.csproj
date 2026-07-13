@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\..\tests\Resources\shannon.jpg" Link="shannon.jpg" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\tests\Resources\frcnn_demo.jpg" Link="frcnn_demo.jpg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 	<!--

@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.Numerics.BitmapOperators;
+
+using static System.Net.Mime.MediaTypeNames;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -28,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
         public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, PixelFormat format)
         {
             if (tensor.Lengths[0] < 3) throw new ArgumentOutOfRangeException("the tensor has less than 3 planes", nameof(tensor));
-            if (format.Components.Count < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
+            if (format.Components.Length < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
 
             return new TensorSpanPlanes3<TElement>(tensor, format, 0, 1, 2);
         }
@@ -36,7 +39,7 @@ namespace InteropTypes.TensorBitmaps
         public static TensorSpanPlanes3<TElement> Create(TensorSpan<TElement> tensor, PixelFormat format, string fx, string fy, string fz)
         {
             if (tensor.Lengths[0] < 3) throw new ArgumentOutOfRangeException("the tensor has less than 3 planes", nameof(tensor));
-            if (format.Components.Count < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
+            if (format.Components.Length < 3) throw new ArgumentOutOfRangeException("the format has less than 3 components", nameof(format));
 
             int x_idx = format.IndexOf(fx);
             if (x_idx < 0) throw new ArgumentException($"semantic {fx} not found in format", nameof(fx));
@@ -101,6 +104,21 @@ namespace InteropTypes.TensorBitmaps
             srcBitmap.CopyPixelsTo(transform, _PlaneZ);
 
             return result;
+        }
+
+        public TResult CopyPixelsFrom<TSrcBitmap, TSrcPixel, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBitmap)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
+        {
+            var transformer = transform.GetInstance<TSrcPixel,TElement>();
+
+            var x = transformer.Execute(srcBitmap, PlaneX, IPixelConverter<TSrcPixel, TElement>.Create(srcBitmap.Format, PlaneX.Format, true));
+            var y = transformer.Execute(srcBitmap, PlaneY, IPixelConverter<TSrcPixel, TElement>.Create(srcBitmap.Format, PlaneY.Format, true));
+            var z = transformer.Execute(srcBitmap, PlaneZ, IPixelConverter<TSrcPixel, TElement>.Create(srcBitmap.Format, PlaneZ.Format, true));
+
+            // x,y and z should be the same
+
+            return x;
         }
 
         public void CopyPixelsTo<TDstElement, TDstPixel>(TensorBitmap<TDstElement, TDstPixel> dstBitmap)

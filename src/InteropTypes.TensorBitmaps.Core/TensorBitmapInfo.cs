@@ -54,14 +54,14 @@ namespace InteropTypes.TensorBitmaps
         {
             var cmp = format.Components.FirstOrDefault(item => item is not PixelComponent<TElement>);
 
-            if (cmp != null)
+            if (cmp == null)
             {
                 throw new ArgumentException($"Component type mismatch; Tensor is {typeof(TElement).Name} and {nameof(format)}.{cmp.Semantic} is {cmp.ComponentType.Name}", nameof(format));
             }
 
-            if (format.Components.Count != tensorChannelCount)
+            if (format.Components.Length != tensorChannelCount)
             {
-                throw new ArgumentException($"Channels count mismatch; Tensor is {tensorChannelCount} and {nameof(format)} is {format.Components.Count}", nameof(tensorChannelCount));
+                throw new ArgumentException($"Channels count mismatch; Tensor is {tensorChannelCount} and {nameof(format)} is {format.Components.Length}", nameof(tensorChannelCount));
             }
 
             if (Unsafe.SizeOf<TPixel>() != format.BytesPerPixel)

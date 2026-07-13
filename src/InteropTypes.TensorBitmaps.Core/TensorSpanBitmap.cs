@@ -18,10 +18,8 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
-    public readonly ref struct TensorSpanBitmap<TElement, TPixel>
-        #if NET9_0_OR_GREATER
-        : InteropTypes.Numerics.BitmapOperators.IBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>
-        #endif
+    public readonly ref struct TensorSpanBitmap<TElement, TPixel>        
+        : InteropTypes.Numerics.BitmapOperators.IBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>        
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
@@ -63,11 +61,8 @@ namespace InteropTypes.TensorBitmaps
 
         public TensorSpan<TElement> Tensor { get; }
 
-        private readonly TensorDimensionSpan<TElement> _Rows;
-
-        #if NET9_0_OR_GREATER
-        ReadOnlySpan<TPixel> InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
-        #endif
+        private readonly TensorDimensionSpan<TElement> _Rows;        
+        ReadOnlySpan<TPixel> InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)

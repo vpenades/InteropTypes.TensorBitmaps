@@ -11,7 +11,7 @@ using TUnit;
 
 namespace InteropTypes.TensorBitmaps
 {
-    internal class SkiaSharpConversionTests
+    internal class SkiaSharpTests
     {
         [Test]
         public async Task TestPixelConversions()
@@ -44,6 +44,18 @@ namespace InteropTypes.TensorBitmaps
             AttachmentInfo
                 .From($"shannon.{typeof(TPixel).Name}.jpg")
                 .WriteToStream(s=> s.WriteTensorBitmapWithSkiaSharp(dst.AsReadOnlyTensorSpanBitmap(), SkiaSharp.SKEncodedImageFormat.Jpeg, 75));
+        }
+
+        [Test]
+        public async Task TestAsBitmapOperand()
+        {
+            var resource = ResourceInfo.From("shannon.jpg");
+
+            using var bmp = SkiaSharpBitmapOperand<uint>.Read(resource.File.OpenRead);
+
+            using var stretched = bmp.CreateStretched(64, 48);
+
+            AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(stretched.Write);
         }
     }
 }

@@ -17,15 +17,8 @@ namespace InteropTypes.Numerics.BitmapOperators
         where TDstPixel : unmanaged        
     {
         TResult Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
-            ;
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct;
 
         public static IBinaryOperation<TSrcPixel, TDstPixel, int> DirectCopy { get; } = new _DirectCopyOperator<TSrcPixel, TDstPixel>();
         public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> StretchToFit { get; } = new _StretchToFitOperator<TSrcPixel, TDstPixel>();
@@ -46,14 +39,8 @@ namespace InteropTypes.Numerics.BitmapOperators
             where TDstPixel : unmanaged
     {
         public int Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
         {
             var h = Math.Min(src.Height, dst.Height);
 
@@ -92,14 +79,8 @@ namespace InteropTypes.Numerics.BitmapOperators
         public float OverflowAmount { get; }
 
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
         {
             // calculate aspect ratios:
             var srck = (float)src.Width / (float)src.Height;
@@ -122,11 +103,11 @@ namespace InteropTypes.Numerics.BitmapOperators
 
             var transform = IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.StretchToFit.Execute(src, dst, pixelConverter);
 
-            transform = Matrix3x2.CreateTranslation(-dstr.X, dstr.Y) * transform;
+            transform = Matrix3x2.CreateTranslation(-dstr.X, -dstr.Y) * transform;
 
             transform *= Matrix3x2.CreateTranslation(srcr.X, srcr.Y);
 
-            return default;
+            return transform;
         }
         
         private static System.Drawing.Rectangle _GetCenterCrop(int width, int height, float aspect)
@@ -162,14 +143,8 @@ namespace InteropTypes.Numerics.BitmapOperators
         where TDstPixel : unmanaged
     {
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>
-            #if NET9_0_OR_GREATER
-            , allows ref struct
-            #endif
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
         {
             Span<TSrcPixel> tmpRow = stackalloc TSrcPixel[dst.Width];
 
