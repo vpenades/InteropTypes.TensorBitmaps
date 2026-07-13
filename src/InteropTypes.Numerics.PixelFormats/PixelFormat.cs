@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -27,34 +28,35 @@ namespace InteropTypes.Numerics
 
         public PixelFormat(PixelComponent x)
         {
-            Components = [x];
-
-            BytesPerPixel = Components.Sum(item => item.ByteSize);
+            _Components = [x];
+            BytesPerPixel = _Components.Sum(item => item.ByteSize);
         }
 
         public PixelFormat(PixelComponent x, PixelComponent y)
         {
-            Components = [x, y];
-
-            BytesPerPixel = Components.Sum(item => item.ByteSize);
+            _Components = [x, y];
+            BytesPerPixel = _Components.Sum(item => item.ByteSize);
         }
 
         public PixelFormat(PixelComponent x, PixelComponent y, PixelComponent z)
         {
-            Components = [x, y, z];
-
-            BytesPerPixel = Components.Sum(item => item.ByteSize);
+            _Components = [x, y, z];
+            BytesPerPixel = _Components.Sum(item => item.ByteSize);
         }
 
         public PixelFormat(PixelComponent x, PixelComponent y, PixelComponent z, PixelComponent w)
         {
-            Components = [x, y, z, w];
-
-            BytesPerPixel = Components.Sum(item => item.ByteSize);
+            _Components = [x, y, z, w];
+            BytesPerPixel = _Components.Sum(item => item.ByteSize);
         }
 
+
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+        private readonly ImmutableArray<PixelComponent> _Components;
+
+
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.RootHidden)]
-        public IReadOnlyList<PixelComponent> Components { get; }
+        public IReadOnlyList<PixelComponent> Components => _Components;
 
         public int BytesPerPixel { get; }
 
