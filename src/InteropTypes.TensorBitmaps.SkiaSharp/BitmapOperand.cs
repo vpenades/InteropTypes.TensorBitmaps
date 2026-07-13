@@ -11,11 +11,17 @@ using SkiaSharp;
 
 namespace InteropTypes.TensorBitmaps
 {
+    /// <summary>
+    /// Represents a wrapper over a Skiasharp bitmap
+    /// </summary>
+    /// <typeparam name="TPixel">The pixel type, most of the time this will be <see cref="uint"/></typeparam>
     public class SkiaSharpBitmapOperand<TPixel>
         : InteropTypes.Numerics.BitmapOperators.IDisposableBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
         , IDisposable
         where TPixel : unmanaged
     {
+        #region IO
+
         public static SkiaSharpBitmapOperand<TPixel> Read(Func<System.IO.Stream> stream)
         {
             using(var s = stream.Invoke())
@@ -39,12 +45,18 @@ namespace InteropTypes.TensorBitmaps
             }
         }
 
-        public void Write(System.IO.Stream stream)
+        public void Write(System.IO.Stream stream, SKEncodedImageFormat? format = null)
         {
-            if (!SkiaSharpForTensorBitmapsExtensions.TryGetSKEncodedImageFormat(stream, out var fmt)) fmt = SKEncodedImageFormat.Png;
+            format ??= SkiaSharpForTensorBitmapsExtensions.TryGetSKEncodedImageFormat(stream, out var fmt)
+                    ? fmt
+                    : SKEncodedImageFormat.Png;            
 
-            _Bitmap.Encode(stream, fmt, 75);
+            _Bitmap.Encode(stream, format.Value, 75);
         }
+
+        #endregion
+
+        #region lifecycle
 
         public SkiaSharpBitmapOperand(SKBitmap bitmap, bool doNotDispose)
             : this(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height), doNotDispose) { }
@@ -81,9 +93,23 @@ namespace InteropTypes.TensorBitmaps
             bmp?.Dispose();
         }
 
+        #endregion
+
+        #region data
+
         private readonly bool _DoNotDispose;
         private SkiaSharp.SKBitmap _Bitmap;
         private readonly Rectangle _Region;
+
+        public PixelFormat Format { get; }
+
+        #endregion
+
+        #region API
+
+        public int Width => _Region.Width;
+
+        public int Height => _Region.Height;
 
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
@@ -95,13 +121,7 @@ namespace InteropTypes.TensorBitmaps
             buffer = buffer.Slice(y * _Bitmap.RowBytes, _Bitmap.BytesPerPixel * _Region.Width);
 
             return System.Runtime.InteropServices.MemoryMarshal.Cast<byte, TPixel>(buffer);
-        }
-
-        public PixelFormat Format { get; }
-
-        public int Width => _Region.Width;
-
-        public int Height => _Region.Height;
+        }        
 
         public SkiaSharpBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
         {
@@ -117,5 +137,7 @@ namespace InteropTypes.TensorBitmaps
 
             return new SkiaSharpBitmapOperand<TPixel>(newBitmap, false); // this is a new object, so DO dispose
         }
+
+        #endregion
     }
 }

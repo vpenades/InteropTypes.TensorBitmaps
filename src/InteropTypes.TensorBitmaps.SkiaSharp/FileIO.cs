@@ -14,11 +14,9 @@ namespace InteropTypes.TensorBitmaps
     {
         public static bool TryGetSKEncodedImageFormat(System.IO.Stream stream, out SKEncodedImageFormat format)
         {
-            if (stream is not FileStream fs)
-            {
-                format = SKEncodedImageFormat.Png;
-                return false;
-            }
+            format = SKEncodedImageFormat.Png;
+
+            if (stream is not FileStream fs) return false;
 
             bool hasExt(string ext) => fs.Name.EndsWith(ext, StringComparison.OrdinalIgnoreCase);
 
@@ -27,8 +25,7 @@ namespace InteropTypes.TensorBitmaps
             if (hasExt(".gif")) { format = SKEncodedImageFormat.Gif; return true; }
             if (hasExt(".avif")) { format = SKEncodedImageFormat.Avif; return true; }
             if (hasExt(".webp")) { format = SKEncodedImageFormat.Webp; return true; }
-
-            format = SKEncodedImageFormat.Png;
+            
             return false;
         }
 
