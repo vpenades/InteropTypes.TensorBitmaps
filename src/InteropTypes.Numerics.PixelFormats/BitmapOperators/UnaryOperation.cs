@@ -7,9 +7,15 @@ using System.Threading.Tasks;
 
 namespace InteropTypes.Numerics.BitmapOperators
 {
-    public interface IUnaryOperation<TPixel>        
+    public interface IReadOnlyUnaryOperation<TPixel, TResult>
+        where TPixel : unmanaged
+    {
+        TResult Execute<TBmp>(TBmp dst) where TBmp : IReadOnlyBitmapOperand<TBmp, TPixel>;
+    }
+
+    public interface IUnaryOperation<TPixel, TResult>
         where TPixel : unmanaged        
     {
-        void Execute<TBmp>(TBmp dst) where TBmp : IBitmapOperand<TBmp, TPixel>;
+        TResult Execute<TBmp>(TBmp dst) where TBmp : IBitmapOperand<TBmp, TPixel>;
     }
 }

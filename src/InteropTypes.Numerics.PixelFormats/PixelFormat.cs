@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace InteropTypes.Numerics
@@ -78,6 +80,31 @@ namespace InteropTypes.Numerics
         public override string ToString()
         {
             return string.Join(System.Globalization.CultureInfo.CurrentCulture.TextInfo.ListSeparator, Components.Select(item => item.ToString()));
-        }        
+        }
+
+        public void ThrowIfSizeMismatch<TPixel>() where TPixel: unmanaged
+        {
+            var s = Unsafe.SizeOf<TPixel>();
+            if (s != BytesPerPixel) throw new InvalidOperationException($"{typeof(TPixel).Name} Bytes per pixel mismatch; expected {BytesPerPixel} but found {s}");
+        }
+
+        public void ThrowIfComponentTypeMismatch<TComponent>() where TComponent: unmanaged, INumber<TComponent>
+        {
+            if (!TryGetCommonType(out var ctype)) throw new InvalidOperationException("Hybrid formats not supported");
+            if (ctype != typeof(TComponent)) throw new InvalidOperationException($"Component type mismatch, expected {ctype.Name} but found {typeof(TComponent).Name}");
+        }
+
+        public bool HasSameBytesPerPixelAs<TPixel>() where TPixel : unmanaged
+        {
+            var s = Unsafe.SizeOf<TPixel>();
+            return s == BytesPerPixel;
+        }
+
+        public bool HasSameCommonComponentTypeAs<TComponent>() where TComponent : unmanaged, INumber<TComponent>
+        {
+            if (!TryGetCommonType(out var ctype)) return false;
+            if (ctype != typeof(TComponent)) return false;
+            return true;
+        }
     }
 }

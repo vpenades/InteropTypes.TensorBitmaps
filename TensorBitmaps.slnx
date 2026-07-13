@@ -1,4 +1,13 @@
 <Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/samples/">
+    <Project Path="samples/FasterRcnnSample/FasterRcnnSample.csproj" Id="216afdae-e741-4349-96ea-e21d6459a34c">
+      <Platform Solution="*|x64" Project="x64" />
+    </Project>
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
@@ -8,6 +17,7 @@
     <File Path="src/Directory.Build.props" />
     <Project Path="src/InteropTypes.Numerics.PixelFormats/InteropTypes.Numerics.PixelFormats.csproj" />
     <Project Path="src/InteropTypes.TensorBitmaps.Core/InteropTypes.TensorBitmaps.Core.csproj" />
+    <Project Path="src/InteropTypes.TensorBitmaps.SkiaSharp/InteropTypes.TensorBitmaps.SkiaSharp.csproj" Id="2c10c851-1d0e-42a5-902e-57c477596908" />
   </Folder>
   <Folder Name="/Tests/">
     <File Path=".github/workflows/test.yml" />

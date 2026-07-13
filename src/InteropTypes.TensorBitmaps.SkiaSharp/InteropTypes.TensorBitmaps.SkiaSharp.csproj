@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>InteropTypes.TensorBitmaps</RootNamespace>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>		
+		<PackageReference Include="SkiaSharp" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\InteropTypes.TensorBitmaps.Core\InteropTypes.TensorBitmaps.Core.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<Description>
+			SkiaSharp bindings:
+			Convert SkBitmap to TensorBitmap and back.
+		</Description>
+	</PropertyGroup>
+
+</Project>

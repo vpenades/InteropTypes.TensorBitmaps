@@ -82,5 +82,24 @@ namespace InteropTypes.Numerics.BitmapOperators
         new Span<TPixel> GetRowPixelsSpan(int y);
 
         ReadOnlySpan<TPixel> IReadOnlyBitmapOperand<TSelf, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
-    }    
+    }   
+    
+    public interface IDisposableReadOnlyBitmapOperand<TSelf,TPixel>
+        : IReadOnlyBitmapOperand<TSelf,TPixel>
+        , IDisposable
+        where TPixel : unmanaged
+        where TSelf : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
+        #if NET9_0_OR_GREATER
+        , allows ref struct
+        #endif
+    {
+
+    }
+
+    public interface IStretchedBitmapSource<TSelf, TPixel> : IDisposable
+        where TPixel : unmanaged
+        where TSelf : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
+    {
+        TSelf CreateStretched(int width, int height);
+    }
 }

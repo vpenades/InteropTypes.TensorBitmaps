@@ -20,8 +20,8 @@
 		<PackageReference Include="SkiaSharp" />
 	</ItemGroup>	
 
-	<ItemGroup>
-	  <ProjectReference Include="..\..\src\InteropTypes.TensorBitmaps.Core\InteropTypes.TensorBitmaps.Core.csproj" />
+	<ItemGroup>	  
+	  <ProjectReference Include="..\..\src\InteropTypes.TensorBitmaps.SkiaSharp\InteropTypes.TensorBitmaps.SkiaSharp.csproj" />
 	</ItemGroup>	
 
 </Project>

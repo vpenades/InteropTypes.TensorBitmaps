@@ -10,15 +10,16 @@ using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps
 {
-    #if !NET9_0_OR_GREATER
+    #if !NET9_0_OR_GREATER   
+
     /// <summary>
-    /// Reimplementation of <see cref="Numerics.BitmapOperators.IBinaryOperation{TSrcPixel, TDstPixel}"/> for Net8.0
+    /// Reimplementation of <see cref="Numerics.BitmapOperators.IBinaryOperation{TSrcPixel, TDstPixel, TResult}"/> for Net8.0
     /// </summary>    
-    interface ITensorSpanBitmapBinaryOperation<TSrcPixel, TDstPixel>
+    interface ITensorSpanBitmapBinaryOperation<TSrcPixel, TDstPixel, TResult>        
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
-        void Execute<TSrcElement,TDstElement>(
+        TResult Execute<TSrcElement, TDstElement>(
             ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src,
             TensorSpanBitmap<TDstElement, TDstPixel> dst,
             IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
@@ -30,11 +31,11 @@ namespace InteropTypes.TensorBitmaps
     /// Operator that simply copies source over destination
     /// </summary>    
     readonly struct _DirectCopyOperator< TSrcPixel, TDstPixel>
-            : ITensorSpanBitmapBinaryOperation< TSrcPixel,  TDstPixel>            
+            : ITensorSpanBitmapBinaryOperation< TSrcPixel,  TDstPixel, int>            
             where TSrcPixel : unmanaged            
             where TDstPixel : unmanaged
     {
-        public void Execute<TSrcElement,TDstElement>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src, TensorSpanBitmap<TDstElement, TDstPixel> dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        public int Execute<TSrcElement,TDstElement>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src, TensorSpanBitmap<TDstElement, TDstPixel> dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcElement : unmanaged, INumber<TSrcElement>
             where TDstElement : unmanaged, INumber<TDstElement>
         {
@@ -46,6 +47,8 @@ namespace InteropTypes.TensorBitmaps
                 var dstRow = dst.GetRowPixelsSpan(y);
                 pixelConverter.ConvertPixels(srcRow, dstRow);
             }
+
+            return default;
         }
     }
 
@@ -53,7 +56,7 @@ namespace InteropTypes.TensorBitmaps
     /// Operator that resizes and crops the source so it fits into destination while preserving aspect ration.
     /// </summary>    
     readonly struct _ScaleToFitOperator<TSrcPixel, TDstPixel>
-        : ITensorSpanBitmapBinaryOperation< TSrcPixel,  TDstPixel>        
+        : ITensorSpanBitmapBinaryOperation< TSrcPixel,  TDstPixel, Matrix3x2>        
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
@@ -64,7 +67,7 @@ namespace InteropTypes.TensorBitmaps
 
         public float Overflow { get; }
 
-        public void Execute<TSrcElement, TDstElement>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src, TensorSpanBitmap<TDstElement, TDstPixel> dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        public Matrix3x2 Execute<TSrcElement, TDstElement>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src, TensorSpanBitmap<TDstElement, TDstPixel> dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcElement : unmanaged, INumber<TSrcElement>
             where TDstElement : unmanaged, INumber<TDstElement>
         {
@@ -82,6 +85,8 @@ namespace InteropTypes.TensorBitmaps
             dstk = (float)dst.Width / (float)dst.Height;
 
             new _ScaleToFitOperator<TSrcPixel, TDstPixel>().Execute(src, dst, pixelConverter);
+
+            return default;
         }
         
         private static System.Drawing.Rectangle _GetCenterCrop(int w, int h, float aspect)
@@ -112,11 +117,11 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TSrcPixel"></typeparam>
     /// <typeparam name="TDstPixel"></typeparam>
     readonly struct _StretchToFitOperator<TSrcPixel, TDstPixel>
-        : ITensorSpanBitmapBinaryOperation<TSrcPixel, TDstPixel>        
+        : ITensorSpanBitmapBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>        
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
-        public void Execute<TSrcElement, TDstElement>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src, TensorSpanBitmap<TDstElement, TDstPixel> dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        public Matrix3x2 Execute<TSrcElement, TDstElement>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> src, TensorSpanBitmap<TDstElement, TDstPixel> dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcElement : unmanaged, INumber<TSrcElement>
             where TDstElement : unmanaged, INumber<TDstElement>
         {
@@ -134,6 +139,8 @@ namespace InteropTypes.TensorBitmaps
                 var dstRow = dst.GetRowPixelsSpan(y);
                 pixelConverter.ConvertPixels(tmpRow, dstRow);
             }
+
+            return default;
         }
     }
 

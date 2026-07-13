@@ -12,11 +12,11 @@ namespace InteropTypes.Numerics.BitmapOperators
     /// </summary>
     /// <typeparam name="TSrcPixel">The pixel type of source</typeparam>
     /// <typeparam name="TDstPixel">The pixel type od destination</typeparam>
-    public interface IBinaryOperation<TSrcPixel, TDstPixel>
+    public interface IBinaryOperation<TSrcPixel, TDstPixel, TResult>
         where TSrcPixel : unmanaged        
-        where TDstPixel : unmanaged
+        where TDstPixel : unmanaged        
     {
-        void Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        TResult Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
             #if NET9_0_OR_GREATER
             , allows ref struct
@@ -27,21 +27,25 @@ namespace InteropTypes.Numerics.BitmapOperators
             #endif
             ;
 
-        public static IBinaryOperation<TSrcPixel, TDstPixel> DirectCopy { get; } = new _DirectCopyOperator<TSrcPixel, TDstPixel>();
-        public static IBinaryOperation<TSrcPixel, TDstPixel> StretchToFit { get; } = new _StretchToFitOperator<TSrcPixel, TDstPixel>();
-        public static IBinaryOperation<TSrcPixel, TDstPixel> ScaleToFit(float overflowAmount) => new _ScaleToFitOperator<TSrcPixel,TDstPixel>(overflowAmount);
-    }
+        public static IBinaryOperation<TSrcPixel, TDstPixel, int> DirectCopy { get; } = new _DirectCopyOperator<TSrcPixel, TDstPixel>();
+        public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> StretchToFit { get; } = new _StretchToFitOperator<TSrcPixel, TDstPixel>();
+
+        public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetScaleToFit(float overflowAmount)
+        {
+            return new _ScaleToFitOperator<TSrcPixel,TDstPixel>(overflowAmount);
+        }
+    }    
     
 
     /// <summary>
     /// Operator that simply copies source over destination
     /// </summary>    
     readonly struct _DirectCopyOperator<TSrcPixel, TDstPixel>
-            : IBinaryOperation<TSrcPixel, TDstPixel>
+            : IBinaryOperation<TSrcPixel, TDstPixel, int>
             where TSrcPixel : unmanaged            
             where TDstPixel : unmanaged
     {
-        public void Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        public int Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
             #if NET9_0_OR_GREATER
             , allows ref struct
@@ -59,6 +63,8 @@ namespace InteropTypes.Numerics.BitmapOperators
                 var dstRow = dst.GetRowPixelsSpan(y);
                 pixelConverter.ConvertPixels(srcRow, dstRow);
             }
+
+            return 0;
         }
     }
 
@@ -66,7 +72,7 @@ namespace InteropTypes.Numerics.BitmapOperators
     /// Operator that resizes and crops the source so it fits into destination while preserving aspect ration.
     /// </summary>    
     readonly struct _ScaleToFitOperator<TSrcPixel, TDstPixel>
-        : IBinaryOperation<TSrcPixel, TDstPixel>        
+        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>        
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
@@ -85,7 +91,7 @@ namespace InteropTypes.Numerics.BitmapOperators
         /// </remarks>
         public float OverflowAmount { get; }
 
-        public void Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
             #if NET9_0_OR_GREATER
             , allows ref struct
@@ -103,8 +109,10 @@ namespace InteropTypes.Numerics.BitmapOperators
             var k = srck * (1 - OverflowAmount) + dstk * OverflowAmount;
 
             // shrink both src and dst to ensure they have k aspect ratio:            
-            src = src.GetCropped(_GetCenterCrop(src.Width, src.Height, k));
-            dst = dst.GetCropped(_GetCenterCrop(dst.Width, dst.Height, k));
+            var srcr = _GetCenterCrop(src.Width, src.Height, k);
+            src = src.GetCropped(srcr);
+            var dstr = _GetCenterCrop(dst.Width, dst.Height, k);
+            dst = dst.GetCropped(dstr);
 
             #if DEBUG
             srck = (float)src.Width / (float)src.Height;
@@ -112,7 +120,13 @@ namespace InteropTypes.Numerics.BitmapOperators
             System.Diagnostics.Debug.Assert(Math.Abs(1f - srck / dstk) < 0.1f, "At this point the aspect ratio of both crops must be close enough");
             #endif
 
-            IBinaryOperation<TSrcPixel, TDstPixel>.StretchToFit.Execute(src, dst, pixelConverter);
+            var transform = IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.StretchToFit.Execute(src, dst, pixelConverter);
+
+            transform = Matrix3x2.CreateTranslation(-dstr.X, dstr.Y) * transform;
+
+            transform *= Matrix3x2.CreateTranslation(srcr.X, srcr.Y);
+
+            return default;
         }
         
         private static System.Drawing.Rectangle _GetCenterCrop(int width, int height, float aspect)
@@ -143,11 +157,11 @@ namespace InteropTypes.Numerics.BitmapOperators
     /// <typeparam name="TSrcPixel"></typeparam>
     /// <typeparam name="TDstPixel"></typeparam>
     readonly struct _StretchToFitOperator<TSrcPixel, TDstPixel>
-        : IBinaryOperation<TSrcPixel, TDstPixel>        
+        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>        
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
-        public void Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>
             #if NET9_0_OR_GREATER
             , allows ref struct
@@ -171,6 +185,8 @@ namespace InteropTypes.Numerics.BitmapOperators
                 var dstRow = dst.GetRowPixelsSpan(y);
                 pixelConverter.ConvertPixels(tmpRow, dstRow);
             }
+
+            return Matrix3x2.CreateScale(src.Width / (float)dst.Width, src.Height / (float)dst.Height);
         }
     }
 

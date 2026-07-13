@@ -92,6 +92,17 @@ namespace InteropTypes.TensorBitmaps
             srcBitmap.CopyPixelsTo(_PlaneZ);
         }
 
+        public TResult CopyPixelsFrom<TSrcElement, TSrcPixel, TResult>(PixelsTransform<TResult> transform, ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> srcBitmap)
+            where TSrcElement : unmanaged, INumber<TSrcElement>
+            where TSrcPixel : unmanaged
+        {
+            var result = srcBitmap.CopyPixelsTo(transform, _PlaneX);
+            srcBitmap.CopyPixelsTo(transform, _PlaneY);
+            srcBitmap.CopyPixelsTo(transform, _PlaneZ);
+
+            return result;
+        }
+
         public void CopyPixelsTo<TDstElement, TDstPixel>(TensorBitmap<TDstElement, TDstPixel> dstBitmap)
             where TDstElement : unmanaged, INumber<TDstElement>
             where TDstPixel : unmanaged

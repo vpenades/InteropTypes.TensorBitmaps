@@ -129,21 +129,21 @@ namespace InteropTypes.TensorBitmaps
             CopyPixelsTo(PixelsTransform.Copy, dstBitmap, pixelConverter);
         }
 
-        public void CopyPixelsTo<TDstElement, TDstPixel>(PixelsTransform transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
+        public TResult CopyPixelsTo<TDstElement, TDstPixel, TResult>(PixelsTransform<TResult> transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
             where TDstElement : unmanaged, INumber<TDstElement>
             where TDstPixel : unmanaged
         {
             var pixelConverter = IPixelConverter<TPixel, TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
             var transformer = transform.GetInstance<TPixel, TDstPixel>();
-            transformer.Execute(this, dstBitmap, pixelConverter);
+            return transformer.Execute(this, dstBitmap, pixelConverter);
         }
 
-        public void CopyPixelsTo<TDstElement, TDstPixel>(PixelsTransform transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
+        public TResult CopyPixelsTo<TDstElement, TDstPixel, TResult>(PixelsTransform<TResult> transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
             where TDstElement : unmanaged, INumber<TDstElement>
             where TDstPixel : unmanaged
         {
             var transformer = transform.GetInstance<TPixel, TDstPixel>();
-            transformer.Execute(this, dstBitmap, pixelConverter);
+            return transformer.Execute(this, dstBitmap, pixelConverter);
         }        
     }
 }
