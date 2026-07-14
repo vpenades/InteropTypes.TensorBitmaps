@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\InteropTypes.Numerics.PixelFormats\InteropTypes.Numerics.PixelFormats.csproj" />
+    <ProjectReference Include="..\InteropTypes.TensorBitmaps.Abstractions\InteropTypes.TensorBitmaps.Abstractions.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

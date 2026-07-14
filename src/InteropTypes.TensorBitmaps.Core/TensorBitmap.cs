@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -18,7 +19,7 @@ namespace InteropTypes.TensorBitmaps
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public class TensorBitmap<TElement,TPixel>
         : ITensorBitmap
-        , InteropTypes.Numerics.BitmapOperators.IBitmapOperand<TensorBitmap<TElement, TPixel>, TPixel>        
+        , IBitmapOperand<TensorBitmap<TElement, TPixel>, TPixel>        
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {

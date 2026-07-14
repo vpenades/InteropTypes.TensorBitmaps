@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.Numerics.BitmapOperators;
+using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -19,7 +19,7 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>
-        : InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>        
+        : IReadOnlyBitmapOperand<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>        
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {

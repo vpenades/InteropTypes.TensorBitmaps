@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InteropTypes.Numerics.BitmapOperators
+using InteropTypes.Numerics;
+
+namespace InteropTypes.TensorBitmaps.Operands
 {
     /// <summary>
     /// Represents an interface to a read only bitmap

@@ -21,6 +21,7 @@
 	</ItemGroup>	
 
 	<ItemGroup>	  
+	  <ProjectReference Include="..\..\src\InteropTypes.TensorBitmaps.Core\InteropTypes.TensorBitmaps.Core.csproj" />	  
 	  <ProjectReference Include="..\..\src\InteropTypes.TensorBitmaps.SkiaSharp\InteropTypes.TensorBitmaps.SkiaSharp.csproj" />
 	</ItemGroup>	
 

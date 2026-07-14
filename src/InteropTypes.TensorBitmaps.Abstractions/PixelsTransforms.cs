@@ -19,17 +19,17 @@ namespace InteropTypes.TensorBitmaps
 
         sealed class _DirectCopy : PixelsTransform<int>
         {
-            internal override InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, int> GetInstance<TSrcPixel, TDstPixel>()
+            public override BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, int> GetInstance<TSrcPixel, TDstPixel>()
             {
-                return InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, int>.DirectCopy;
+                return BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, int>.DirectCopy;
             }
         }
 
         private sealed class _StretchToFit : PixelsTransform<Matrix3x2>
         {
-            internal override InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+            public override BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
             {
-                return InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.StretchToFit;
+                return BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.StretchToFit;
             }
         }
 
@@ -42,9 +42,9 @@ namespace InteropTypes.TensorBitmaps
 
             private readonly float _overflowAmount;
 
-            internal override InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+            public override BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
             {
-                return InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.GetScaleToFit(_overflowAmount);
+                return BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.GetScaleToFit(_overflowAmount);
             }
         }        
     }
@@ -57,7 +57,7 @@ namespace InteropTypes.TensorBitmaps
     /// </remarks>
     public abstract class PixelsTransform<TResult>
     {
-        internal abstract InteropTypes.Numerics.BitmapOperators.IBinaryOperation<TSrcPixel, TDstPixel, TResult> GetInstance<TSrcPixel, TDstPixel>()
+        public abstract BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, TResult> GetInstance<TSrcPixel, TDstPixel>()
             where TSrcPixel : unmanaged
             where TDstPixel : unmanaged;
     }

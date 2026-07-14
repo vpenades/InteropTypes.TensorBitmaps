@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -19,7 +20,7 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public readonly ref struct TensorSpanBitmap<TElement, TPixel>        
-        : InteropTypes.Numerics.BitmapOperators.IBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>        
+        : IBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>        
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
@@ -62,7 +63,7 @@ namespace InteropTypes.TensorBitmaps
         public TensorSpan<TElement> Tensor { get; }
 
         private readonly TensorDimensionSpan<TElement> _Rows;        
-        ReadOnlySpan<TPixel> InteropTypes.Numerics.BitmapOperators.IReadOnlyBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);        
+        ReadOnlySpan<TPixel> IReadOnlyBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)

@@ -12,6 +12,7 @@ namespace InteropTypes.TensorBitmaps
 {
     public static partial class SkiaSharpForTensorBitmapsExtensions
     {
+        /*
         public static SKBitmap ToSkiaSharp<TElement, TPixel>(this TensorBitmap<TElement, TPixel> srcBitmap)
             where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged
@@ -45,6 +46,6 @@ namespace InteropTypes.TensorBitmaps
             }
 
             throw new NotImplementedException();
-        }
+        }*/
     }
 }

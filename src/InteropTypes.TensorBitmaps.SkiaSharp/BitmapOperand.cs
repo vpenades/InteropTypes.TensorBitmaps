@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Operands;
 
 using SkiaSharp;
 
@@ -16,7 +17,7 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     /// <typeparam name="TPixel">The pixel type, most of the time this will be <see cref="uint"/></typeparam>
     public class SkiaSharpBitmapOperand<TPixel>
-        : InteropTypes.Numerics.BitmapOperators.IDisposableBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
+        : IDisposableBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
         , IDisposable
         where TPixel : unmanaged
     {

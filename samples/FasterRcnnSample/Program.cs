@@ -5,8 +5,10 @@ using System.Numerics;
 using System.Text;
 
 using InteropTypes.Numerics;
-using InteropTypes.Numerics.BitmapOperators;
 using InteropTypes.TensorBitmaps;
+using InteropTypes.TensorBitmaps.Diagnostics;
+using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Operators;
 
 namespace FasterRcnnSample
 {

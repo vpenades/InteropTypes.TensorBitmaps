@@ -16,6 +16,7 @@
     <File Path=".github/workflows/PublishVTagToNuget.yml" />
     <File Path="src/Directory.Build.props" />
     <Project Path="src/InteropTypes.Numerics.PixelFormats/InteropTypes.Numerics.PixelFormats.csproj" />
+    <Project Path="src/InteropTypes.TensorBitmaps.Abstractions/InteropTypes.TensorBitmaps.Abstractions.csproj" />
     <Project Path="src/InteropTypes.TensorBitmaps.Core/InteropTypes.TensorBitmaps.Core.csproj" />
     <Project Path="src/InteropTypes.TensorBitmaps.SkiaSharp/InteropTypes.TensorBitmaps.SkiaSharp.csproj" Id="2c10c851-1d0e-42a5-902e-57c477596908" />
   </Folder>

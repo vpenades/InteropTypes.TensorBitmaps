@@ -29,6 +29,7 @@ namespace InteropTypes.TensorBitmaps
             return false;
         }
 
+        /*
         public static TensorBitmap<TElement, TPixel> LoadTensorBitmapWithSkiaSharp<TElement, TPixel>(this System.IO.FileInfo finfo, Numerics.PixelFormat fmt)
             where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged
@@ -70,6 +71,6 @@ namespace InteropTypes.TensorBitmaps
         {
             using var skbmp = bitmap.ToSkiaSharp();
             skbmp.Encode(stream, fmt, quality);
-        }
+        }*/
     }
 }

@@ -5,7 +5,9 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InteropTypes.Numerics.BitmapOperators
+using InteropTypes.TensorBitmaps.Operands;
+
+namespace InteropTypes.TensorBitmaps.Operators
 {
     public interface IReadOnlyUnaryOperation<TPixel, TResult>
         where TPixel : unmanaged

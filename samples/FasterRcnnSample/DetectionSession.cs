@@ -4,8 +4,9 @@ using System.Numerics;
 using System.Text;
 
 using InteropTypes.Numerics;
-using InteropTypes.Numerics.BitmapOperators;
 using InteropTypes.TensorBitmaps;
+using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Operators;
 
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
@@ -20,7 +21,7 @@ namespace FasterRcnnSample
             // https://huggingface.co/onnxmodelzoo/FasterRCNN-12
             // https://github.com/onnx/models/tree/main/validated/vision/object_detection_segmentation/faster-rcnn/model
 
-            modelPath ??= System.IO.Path.Combine(AppContext.BaseDirectory, "FasterRCNN-12-int8.onnx");
+            modelPath ??= System.IO.Path.Combine(AppContext.BaseDirectory, "FasterRCNN-12.onnx");
 
 
             _Session = new InferenceSession(modelPath);

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Numerics.Tensors;
+
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +9,7 @@ namespace InteropTypes.TensorBitmaps
 {
     public static partial class SkiaSharpForTensorBitmapsExtensions
     {
+        /*
         /// <summary>
         /// Gets a <see cref="TensorSpan{T}"/> representing the contents of the <see cref="SKBitmap"/>
         /// </summary>
@@ -26,6 +27,6 @@ namespace InteropTypes.TensorBitmaps
             nint bpp = srcBitmap.BytesPerPixel;
 
             return new TensorSpan<byte>(srcBuffer, [h, w, bpp], [stride, bpp, bpp > 1 ? 1 : 0]);
-        }
+        }*/
     }
 }

@@ -14,6 +14,7 @@ namespace InteropTypes.TensorBitmaps
 {
     public static partial class SkiaSharpForTensorBitmapsExtensions
     {
+        /*
         public static TensorBitmap<TElement, TPixel> ToResizedTensorBitmap<TElement, TPixel>(this SKBitmap srcImage, int newWidth, int newHeight, PixelFormat dstFmt, SKSamplingOptions? options = null)
             where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged
@@ -74,6 +75,6 @@ namespace InteropTypes.TensorBitmaps
             }
             
             return false;
-        }        
+        }*/
     }
 }

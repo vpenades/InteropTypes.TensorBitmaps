@@ -5,7 +5,10 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InteropTypes.Numerics.BitmapOperators
+using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Operands;
+
+namespace InteropTypes.TensorBitmaps.Operators
 {
     /// <summary>
     /// interface for operator that perform a pixel transfer between a source and destination bitmap

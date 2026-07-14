@@ -7,9 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.Numerics.BitmapOperators;
-
-using static System.Net.Mime.MediaTypeNames;
+using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps
 {
