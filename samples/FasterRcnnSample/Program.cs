@@ -25,7 +25,7 @@ namespace FasterRcnnSample
             using var sesion = new DetectionSession(null);
 
             // run session
-            var predictions = sesion.Predict(image);            
+            var predictions = sesion.Predict<SkiaSharpBitmapOperand<uint>, uint>(image);            
 
             // draw predictions
             var dc = new DiagnosticsDrawing<SkiaSharpBitmapOperand<uint>, uint>(image);

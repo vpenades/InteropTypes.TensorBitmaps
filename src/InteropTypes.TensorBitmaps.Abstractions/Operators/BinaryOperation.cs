@@ -19,6 +19,14 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged        
     {
+        TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
+        {
+            var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
+            return Execute(src, dst, pixelConverter);
+        }
+
         TResult Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct;

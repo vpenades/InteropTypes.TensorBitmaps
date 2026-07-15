@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 using InteropTypes.Numerics;
 
@@ -79,6 +80,9 @@ namespace InteropTypes.TensorBitmaps.Operands
         new Span<TPixel> GetRowPixelsSpan(int y);
 
         ReadOnlySpan<TPixel> IReadOnlyBitmapOperand<TSelf, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
+
+        public Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform)
+            where TSrcPixel : unmanaged;
     }
 
     /// <summary>

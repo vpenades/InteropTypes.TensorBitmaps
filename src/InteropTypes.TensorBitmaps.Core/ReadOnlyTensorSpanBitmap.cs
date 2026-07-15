@@ -68,7 +68,6 @@ namespace InteropTypes.TensorBitmaps
 
         private readonly ReadOnlyTensorDimensionSpan<TElement> _Rows;
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y)
         {
@@ -101,48 +100,6 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
-        }        
-
-        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
-            where TDstElement : unmanaged, INumber<TDstElement>
-            where TDstPixel : unmanaged
-        {
-            var pixelConverter = IPixelConverter<TPixel,TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
-
-            CopyPixelsTo(dstBitmap.AsTensorSpanBitmap(), pixelConverter);
-        }
-
-        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
-            where TDstElement : unmanaged, INumber<TDstElement>
-            where TDstPixel: unmanaged
-        {
-            var pixelConverter = IPixelConverter<TPixel, TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
-
-            CopyPixelsTo(dstBitmap, pixelConverter);
-        }
-
-        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, IPixelConverter<TPixel,TDstPixel> pixelConverter)
-            where TDstElement : unmanaged, INumber<TDstElement>
-            where TDstPixel : unmanaged
-        {
-            CopyPixelsTo(PixelsTransform.Copy, dstBitmap, pixelConverter);
-        }
-
-        public TResult CopyPixelsTo<TDstElement, TDstPixel, TResult>(PixelsTransform<TResult> transform, TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap, bool initPixels = true)
-            where TDstElement : unmanaged, INumber<TDstElement>
-            where TDstPixel : unmanaged
-        {
-            var pixelConverter = IPixelConverter<TPixel, TDstPixel>.Create(this.Format, dstBitmap.Format, initPixels);
-            var transformer = transform.GetInstance<TPixel, TDstPixel>();
-            return transformer.Execute(this, dstBitmap, pixelConverter);
-        }
-
-        public TResult CopyPixelsTo<TDstBitmap, TDstPixel, TResult>(PixelsTransform<TResult> transform, TDstBitmap dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
-            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
-            where TDstPixel : unmanaged
-        {
-            var transformer = transform.GetInstance<TPixel, TDstPixel>();
-            return transformer.Execute(this, dstBitmap, pixelConverter);
         }        
     }
 }

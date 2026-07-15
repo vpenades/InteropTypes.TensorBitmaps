@@ -38,11 +38,7 @@ namespace InteropTypes.TensorBitmaps
     {
         IReadOnlyTensor Tensor { get; }
 
-        IReadOnlyTensorBitmap GetCropped(System.Drawing.Rectangle rectangle);
-
-        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
-            where TOtherElement : unmanaged, INumber<TOtherElement>
-            where TOtherPixel : unmanaged;
+        IReadOnlyTensorBitmap GetCropped(System.Drawing.Rectangle rectangle);        
     }
 
 

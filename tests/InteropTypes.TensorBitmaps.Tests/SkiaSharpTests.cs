@@ -18,10 +18,7 @@ namespace InteropTypes.TensorBitmaps
         {
             if (OperatingSystem.IsLinux()) return; // skiasharp is failing me on linux            
 
-            var tbmp = ResourceInfo.From("shannon.jpg")
-                .File
-                .LoadTensorBitmapWithSkiaSharp<byte, Pixel888>(KnownPixelFormats.Rgb8)
-                .AsReadOnlyTensorSpanBitmap()
+            var tbmp = SkiaSharpBitmapOperand<uint>.Read(ResourceInfo.From("shannon.jpg").File.OpenRead)                
                 .GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
             ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8);
@@ -32,18 +29,20 @@ namespace InteropTypes.TensorBitmaps
             ConvertAndSave<ushort, int>(tbmp, KnownPixelFormats.Rg16); // blue channel will be missing in converted image
         }
 
-        private static void ConvertAndSave<TElement, TPixel>(ReadOnlyTensorSpanBitmap<byte, Pixel888> src, PixelFormat fmt)
+        private static void ConvertAndSave<TElement, TPixel>(SkiaSharpBitmapOperand<uint> src, PixelFormat fmt)
             where TElement: unmanaged, INumber<TElement>
             where TPixel: unmanaged
         {            
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, fmt);
 
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
-            src.CopyPixelsTo(dst);                     
+            dst.GetCopyContext<uint>().ApplyFrom(src);
+
+            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel, uint>(dst);
 
             AttachmentInfo
                 .From($"shannon.{typeof(TPixel).Name}.jpg")
-                .WriteToStream(s=> s.WriteTensorBitmapWithSkiaSharp(dst.AsReadOnlyTensorSpanBitmap(), SkiaSharp.SKEncodedImageFormat.Jpeg, 75));
+                .WriteToStream(s=> skiabmp.Write(s));
         }
 
         [Test]
@@ -55,7 +54,7 @@ namespace InteropTypes.TensorBitmaps
 
             using var stretched = bmp.CreateStretched(64, 48);
 
-            AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(stretched.Write);
+            AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(s=> stretched.Write(s) );
         }
     }
 }

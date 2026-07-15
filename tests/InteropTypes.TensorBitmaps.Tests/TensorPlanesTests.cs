@@ -41,12 +41,12 @@ namespace InteropTypes.TensorBitmaps
 
             // fill planes with shannon.jpg:
 
-            planes.CopyPixelsFrom(srcBmp);
+            planes.CopyPixelsFrom(PixelsTransform.CopyFrom<Bgr24>(),  srcBmp);
 
             // merge planes back to a regular bitmap
 
             var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, KnownPixelFormats.Rgb8);
-            planes.CopyPixelsTo(dstBmp);
+            planes.CopyPixelsTo(dstBmp, default(Rgb24));
 
             using var result = dstBmp.ToImageSharp();
 

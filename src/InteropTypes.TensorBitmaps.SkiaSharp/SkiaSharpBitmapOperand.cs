@@ -59,6 +59,20 @@ namespace InteropTypes.TensorBitmaps
 
         #region lifecycle
 
+        public static SkiaSharpBitmapOperand<TDstPixel> Create<TSrcBitmap, TSrcPixel, TDstPixel>(TSrcBitmap src)
+            where TSrcBitmap: IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
+            where TSrcPixel: unmanaged
+            where TDstPixel : unmanaged
+        {
+            var skbmp = new SKBitmap(src.Width, src.Height);
+            var dst = new SkiaSharpBitmapOperand<TDstPixel>(skbmp, false);
+
+            dst.GetContext<TSrcPixel, int>(PixelsTransform.Copy).ApplyFrom(src);
+
+            return dst;
+        }
+
+
         public SkiaSharpBitmapOperand(SKBitmap bitmap, bool doNotDispose)
             : this(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height), doNotDispose) { }
 
@@ -137,6 +151,11 @@ namespace InteropTypes.TensorBitmaps
             var newBitmap = _Bitmap.Resize(newSize, options);
 
             return new SkiaSharpBitmapOperand<TPixel>(newBitmap, false); // this is a new object, so DO dispose
+        }
+
+        public BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform) where TSrcPixel : unmanaged
+        {
+            return new BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel, TResult>(this, transform.GetInstance<TSrcPixel, TPixel>());
         }
 
         #endregion

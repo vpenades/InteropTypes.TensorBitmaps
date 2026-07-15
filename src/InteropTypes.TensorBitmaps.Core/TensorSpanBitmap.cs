@@ -104,12 +104,59 @@ namespace InteropTypes.TensorBitmaps
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
         }
 
-        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
-            where TOtherElement : unmanaged, INumber<TOtherElement>
-            where TOtherPixel : unmanaged
+        /*
+        public void CopyPixelsFrom<TSrcBitmap, TSrcPixel>(TSrcBitmap srcBitmap, bool initPixels = true)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
         {
-            this.AsReadOnlyTensorSpanBitmap().CopyPixelsTo(dstBitmap, initPixels);
+            PixelsTransform.Copy
+                .GetInstance<TSrcPixel, TPixel>()
+                .Execute(srcBitmap, this, initPixels);
         }
+
+        public TResult CopyPixelsFrom<TSrcBitmap, TSrcPixel, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBitmap, bool initPixels = true)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
+        {
+            return transform
+                .GetInstance<TSrcPixel, TPixel>()
+                .Execute(srcBitmap, this, initPixels);
+        }
+
+        public TResult CopyPixelsFrom<TSrcBitmap, TSrcPixel, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBitmap, IPixelConverter<TSrcPixel, TPixel> pixelConverter)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
+        {
+            return transform
+                .GetInstance<TSrcPixel, TPixel>()
+                .Execute(srcBitmap, this, pixelConverter);
+        }
+
+        public void CopyPixelsTo<TDstBitmap, TDstPixel>(TDstBitmap dstBitmap, bool initPixels = true)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
+            where TDstPixel : unmanaged
+        {
+            this.AsReadOnlyTensorSpanBitmap()
+                .CopyPixelsTo<TDstBitmap, TDstPixel>(dstBitmap, initPixels);
+        }
+
+        public TResult CopyPixelsTo<TDstBitmap, TDstPixel, TResult>(PixelsTransform<TResult> transform, TDstBitmap dstBitmap, bool initPixels = true)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
+            where TDstPixel : unmanaged
+        {
+            return this
+                .AsReadOnlyTensorSpanBitmap()
+                .CopyPixelsTo<TDstBitmap, TDstPixel, TResult>(transform, dstBitmap, initPixels);
+        }
+
+        public TResult CopyPixelsTo<TDstBitmap, TDstPixel, TResult>(PixelsTransform<TResult> transform, TDstBitmap dstBitmap, IPixelConverter<TPixel, TDstPixel> pixelConverter)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
+            where TDstPixel : unmanaged
+        {
+            return this
+                .AsReadOnlyTensorSpanBitmap()
+                .CopyPixelsTo(transform, dstBitmap, pixelConverter);
+        }*/
 
         public void FillPixels(TPixel value)
         {
@@ -143,6 +190,20 @@ namespace InteropTypes.TensorBitmaps
                     cmpRow = cmpRow.Slice(1);
                 }                
             }
-        }        
+        }
+
+        public BITMAPOPERATORS.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransformFrom<TSrcPixel,TResult> transform)
+            where TSrcPixel : unmanaged
+        {
+            var instance = transform.GetInstance<TPixel>();
+            return new Operators.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult>(this, instance);
+        }
+
+        public BITMAPOPERATORS.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform)
+            where TSrcPixel : unmanaged
+        {
+            var instance = transform.GetInstance<TSrcPixel, TPixel>();
+            return new Operators.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult>(this, instance);
+        }
     }
 }

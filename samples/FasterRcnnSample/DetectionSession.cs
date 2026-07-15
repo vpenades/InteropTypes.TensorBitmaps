@@ -42,13 +42,7 @@ namespace FasterRcnnSample
 
         private readonly PixelFormat _InputFormat;
 
-        public float MinConfidence { get; set; } = 0.7f;
-
-        public IReadOnlyList<Prediction> Predict<TBitmap>(TBitmap image)
-            where TBitmap : IReadOnlyBitmapOperand<TBitmap, uint>, allows ref struct            
-        {
-            return Predict<TBitmap, uint>(image);
-        }        
+        public float MinConfidence { get; set; } = 0.7f;        
 
         public IReadOnlyList<Prediction> Predict<TBitmap, TPixel>(TBitmap image)
             where TBitmap: IReadOnlyBitmapOperand<TBitmap, TPixel>, allows ref struct
@@ -59,7 +53,9 @@ namespace FasterRcnnSample
             var paddedHeight = (int)(Math.Ceiling(image.Height / 32f) * 32f);
             var paddedWidth = (int)(Math.Ceiling(image.Width / 32f) * 32f);            
 
-            DenseTensor<float> input = new DenseTensor<float>([3, paddedHeight, paddedWidth]);
+            var input = new DenseTensor<float>([3, paddedHeight, paddedWidth]);
+
+            // copy image from the input to the tensor
 
             var xform = CopyImageGeneric<TBitmap, TPixel>(image, input);
 
@@ -74,7 +70,8 @@ namespace FasterRcnnSample
             using IDisposableReadOnlyCollection<DisposableNamedOnnxValue> results = _Session.Run(inputs);
 
             // Postprocess to get predictions
-            List<Prediction> predictions = DecodePrediction(results, xform);
+
+            var predictions = DecodePrediction(results, xform);
 
             return predictions;
         }

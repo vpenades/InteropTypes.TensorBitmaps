@@ -93,6 +93,16 @@ namespace InteropTypes.TensorBitmaps
             return GetCropped(rectangle);
         }
 
+        public TensorSpanBitmap<TElement, TPixel> AsTensorSpanBitmap()
+        {
+            return new TensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
+        }
+
+        public ReadOnlyTensorSpanBitmap<TElement, TPixel> AsReadOnlyTensorSpanBitmap()
+        {
+            return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
+        }
+
 
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
@@ -105,14 +115,7 @@ namespace InteropTypes.TensorBitmaps
             var ranges = _Info.CalculateSlice(Tensor.Rank, rectangle);
 
             return new TensorBitmap<TElement, TPixel>(Tensor.Slice(ranges), Format);
-        }
-
-        public void CopyPixelsTo<TOtherElement, TOtherPixel>(TensorSpanBitmap<TOtherElement, TOtherPixel> dstBitmap, bool initPixels = true)
-            where TOtherElement : unmanaged, INumber<TOtherElement>
-            where TOtherPixel : unmanaged
-        {
-            this.AsReadOnlyTensorSpanBitmap().CopyPixelsTo(dstBitmap, initPixels);
-        }
+        }              
 
         public TensorBitmap<TElement,TPixelOut> Cast<TPixelOut>()
             where TPixelOut:unmanaged
@@ -121,15 +124,17 @@ namespace InteropTypes.TensorBitmaps
             return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
         }
 
-        public TensorSpanBitmap<TElement, TPixel> AsTensorSpanBitmap()
+        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel, int> GetCopyContext<TSrcPixel>()
+            where TSrcPixel : unmanaged
         {
-            return new TensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
+            return GetContext<TSrcPixel, int>(PixelsTransform.Copy);
         }
 
-        public ReadOnlyTensorSpanBitmap<TElement,TPixel> AsReadOnlyTensorSpanBitmap()
+        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform)
+            where TSrcPixel : unmanaged
         {
-            return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
+            var instance = transform.GetInstance<TSrcPixel, TPixel>();
+            return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult>(this, instance);
         }
-        
     }
 }

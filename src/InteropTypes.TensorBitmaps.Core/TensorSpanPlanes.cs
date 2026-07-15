@@ -84,59 +84,6 @@ namespace InteropTypes.TensorBitmaps
         public TensorSpanBitmap<TElement, TElement> PlaneY => _PlaneY;
         public TensorSpanBitmap<TElement, TElement> PlaneZ => _PlaneZ;
 
-        public void CopyPixelsFrom<TSrcElement, TSrcPixel>(ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> srcBitmap)
-            where TSrcElement : unmanaged, INumber<TSrcElement>
-            where TSrcPixel : unmanaged
-        {
-            srcBitmap.CopyPixelsTo(_PlaneX);
-            srcBitmap.CopyPixelsTo(_PlaneY);
-            srcBitmap.CopyPixelsTo(_PlaneZ);
-        }
-
-        public TResult CopyPixelsFrom<TSrcElement, TSrcPixel, TResult>(PixelsTransform<TResult> transform, ReadOnlyTensorSpanBitmap<TSrcElement, TSrcPixel> srcBitmap)
-            where TSrcElement : unmanaged, INumber<TSrcElement>
-            where TSrcPixel : unmanaged
-        {
-            var result = srcBitmap.CopyPixelsTo(transform, _PlaneX);
-            srcBitmap.CopyPixelsTo(transform, _PlaneY);
-            srcBitmap.CopyPixelsTo(transform, _PlaneZ);
-
-            return result;
-        }
-
-        public TResult CopyPixelsFrom<TSrcBitmap, TSrcPixel, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBitmap)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
-            where TSrcPixel : unmanaged
-        {
-            var transformer = transform.GetInstance<TSrcPixel,TElement>();
-
-            var x = transformer.Execute(srcBitmap, PlaneX, IPixelConverter<TSrcPixel, TElement>.Create(srcBitmap.Format, PlaneX.Format, true));
-            var y = transformer.Execute(srcBitmap, PlaneY, IPixelConverter<TSrcPixel, TElement>.Create(srcBitmap.Format, PlaneY.Format, true));
-            var z = transformer.Execute(srcBitmap, PlaneZ, IPixelConverter<TSrcPixel, TElement>.Create(srcBitmap.Format, PlaneZ.Format, true));
-
-            // x,y and z should be the same
-
-            return x;
-        }
-
-        public void CopyPixelsTo<TDstElement, TDstPixel>(TensorBitmap<TDstElement, TDstPixel> dstBitmap)
-            where TDstElement : unmanaged, INumber<TDstElement>
-            where TDstPixel : unmanaged
-        {
-            CopyPixelsTo(dstBitmap.AsTensorSpanBitmap());
-        }
-
-        public void CopyPixelsTo<TDstElement,TDstPixel>(TensorSpanBitmap<TDstElement, TDstPixel> dstBitmap)
-            where TDstElement:unmanaged, INumber<TDstElement>
-            where TDstPixel:unmanaged
-        {
-            // we disable pixel init because we don't want each
-            // plane override the component of the previous plane copy.
-            _PlaneX.CopyPixelsTo(dstBitmap, false);
-            _PlaneY.CopyPixelsTo(dstBitmap, false);
-            _PlaneZ.CopyPixelsTo(dstBitmap, false);
-        }
-
         public TensorSpanPlanes3<TElement> GetCropped(System.Drawing.Rectangle rectangle)
         {
             rectangle.Intersect(new System.Drawing.Rectangle(0, 0, Width, Height));
@@ -147,6 +94,54 @@ namespace InteropTypes.TensorBitmaps
             var z = _PlaneZ.GetCropped(rectangle);
 
             return new TensorSpanPlanes3<TElement>(x, y, z, Format);
+        }
+
+
+
+        public void CopyPixelsFrom<TSrcBitmap, TSrcPixel>(TSrcBitmap srcBitmap, TSrcPixel defVal)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
+        {
+            CopyPixelsFrom<TSrcBitmap, TSrcPixel, int>(PixelsTransform.Copy, srcBitmap);
+        }
+
+
+        public TResult CopyPixelsFrom<TSrcBitmap, TSrcPixel, TResult>(PixelsTransformFrom<TSrcPixel,TResult> xform, TSrcBitmap srcBitmap)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
+        {
+            var x = _PlaneX.GetContext(xform).ApplyFrom(srcBitmap, true);
+            var y = _PlaneY.GetContext(xform).ApplyFrom(srcBitmap, true);
+            var z = _PlaneZ.GetContext(xform).ApplyFrom(srcBitmap, true);
+
+            return z;
+        }
+
+        public TResult CopyPixelsFrom<TSrcBitmap, TSrcPixel, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBitmap)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
+            where TSrcPixel : unmanaged
+        {
+            var x = _PlaneX.GetContext<TSrcPixel, TResult>(transform).ApplyFrom(srcBitmap, true);
+            var y = _PlaneY.GetContext<TSrcPixel, TResult>(transform).ApplyFrom(srcBitmap, true);
+            var z = _PlaneZ.GetContext<TSrcPixel, TResult>(transform).ApplyFrom(srcBitmap, true);
+
+            return z;
+        }
+        public void CopyPixelsTo<TDstBitmap, TDstPixel>(TDstBitmap dstBitmap, TDstPixel defVal)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
+            where TDstPixel : unmanaged
+        {
+            CopyPixelsTo<TDstBitmap, TDstPixel, int>(PixelsTransform.Copy, dstBitmap);
+        }
+        public TResult CopyPixelsTo<TDstBitmap, TDstPixel, TResult>(PixelsTransform<TResult> transform, TDstBitmap dstBitmap)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
+            where TDstPixel : unmanaged
+        {
+            var x = dstBitmap.GetContext<TElement, TResult>(transform).ApplyFrom(_PlaneX, false);
+            var y = dstBitmap.GetContext<TElement, TResult>(transform).ApplyFrom(_PlaneY, false);
+            var z = dstBitmap.GetContext<TElement, TResult>(transform).ApplyFrom(_PlaneZ, false);
+
+            return x;
         }
 
     }
