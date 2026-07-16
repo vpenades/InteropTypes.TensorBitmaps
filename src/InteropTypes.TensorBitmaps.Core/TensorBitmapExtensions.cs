@@ -14,7 +14,7 @@ namespace InteropTypes.TensorBitmaps
         {
             var dst = TensorBitmap<byte, TPixel>.Create(src.Width, src.Height, src.Format);
 
-            dst.GetCopyContext<TPixel>().ApplyFrom(src);
+            dst.GetContext<TPixel>().Fill(PixelsTransform.Copy, src);
 
             return dst;
         }

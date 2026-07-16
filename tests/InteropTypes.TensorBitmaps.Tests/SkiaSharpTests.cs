@@ -36,7 +36,7 @@ namespace InteropTypes.TensorBitmaps
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, fmt);
 
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
-            dst.GetCopyContext<uint>().ApplyFrom(src);
+            dst.GetContext<uint>().Fill(PixelsTransform.Copy, src);
 
             using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel, uint>(dst);
 

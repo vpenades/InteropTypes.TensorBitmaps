@@ -120,7 +120,9 @@ namespace FasterRcnnSample
             var planes = TensorSpanPlanes3<float>.Create(inputSpan, _InputFormat);
 
             // resize, convert, fit, and copy pixels
-            return planes.CopyPixelsFrom<TBitmap,TPixel, Matrix3x2>(PixelsTransform.ScaleToFit(0), image);
+            return planes
+                .GetContext<TPixel>()
+                .Fill(PixelsTransform.ScaleToFit(0), image);
         }
 
     }

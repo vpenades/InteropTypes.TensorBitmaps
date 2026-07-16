@@ -7,32 +7,29 @@ using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps.Operators
 {
-    
-
-    public readonly ref struct BinaryOperatorContext<TDstBitmap, TDstPixel, TSrcPixel, TResult>
+    public readonly ref struct BinaryOperatorContext<TDstBitmap, TDstPixel, TSrcPixel>
         where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
         where TDstPixel : unmanaged
         where TSrcPixel : unmanaged
     {
-        public BinaryOperatorContext(TDstBitmap dstBitmap, IBinaryOperation<TSrcPixel, TDstPixel, TResult> operation)
+        public BinaryOperatorContext(TDstBitmap dstBitmap)
         {
-            _DstBitmap = dstBitmap;
-            _Operation = operation;
+            _DstBitmap = dstBitmap;            
         }
 
-        private readonly TDstBitmap _DstBitmap;
-        private readonly IBinaryOperation<TSrcPixel, TDstPixel, TResult> _Operation;        
+        private readonly TDstBitmap _DstBitmap;        
 
-        public TResult ApplyFrom<TSrcBitmap>(TSrcBitmap srcBmp, bool initPixels = true)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
-        {
-            return _Operation.Execute(srcBmp, _DstBitmap, initPixels);
-        }
-
-        public TResult ApplyFrom<TSrcBitmap>(TSrcBitmap srcBmp, IPixelConverter<TSrcPixel,TDstPixel> pixelConverter)
+        public TResult Fill<TSrcBitmap,TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, bool initPixels = true)
             where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
         {
-            return _Operation.Execute(srcBmp, _DstBitmap, pixelConverter);
+            return transform.GetInstance<TSrcPixel, TDstPixel>().Execute(srcBmp, _DstBitmap, initPixels);
+        }
+
+        public TResult Fill<TSrcBitmap, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+        {
+            return transform.GetInstance<TSrcPixel, TDstPixel>().Execute(srcBmp, _DstBitmap, pixelConverter);
         }
     }
+    
 }

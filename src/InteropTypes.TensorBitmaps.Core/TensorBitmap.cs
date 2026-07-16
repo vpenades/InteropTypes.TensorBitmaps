@@ -23,6 +23,8 @@ namespace InteropTypes.TensorBitmaps
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {
+        #region lifecycle
+
         public static TensorBitmap<TElement, TPixel> Create(int width, int height, PixelFormat format)
         {
             var channels = _TensorBitmapInfo.GetChannelsFrom<TElement, TPixel>();
@@ -46,6 +48,10 @@ namespace InteropTypes.TensorBitmaps
             Tensor = tensor;
         }
 
+        #endregion
+
+        #region dara
+
         internal readonly _TensorBitmapInfo _Info;
         public PixelFormat Format { get; }
 
@@ -58,10 +64,20 @@ namespace InteropTypes.TensorBitmaps
         IReadOnlyTensor IReadOnlyTensorBitmap.Tensor => Tensor;
         public Tensor<TElement> Tensor { get; }
 
+        #endregion
+
+        #region API - Rows
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowSpan(int y)
+        public Span<TPixel> GetRowPixelsSpan(int y)
         {
-            return GetRowSpan(y);
+            var row = _Info.GetRow(Tensor, y);
+
+            var pixels = System.Runtime.InteropServices.MemoryMarshal.Cast<TElement, TPixel>(row);
+
+            System.Diagnostics.Debug.Assert(pixels.Length == Width);
+
+            return pixels;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -72,16 +88,20 @@ namespace InteropTypes.TensorBitmaps
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public Span<TPixel> GetRowPixelsSpan(int y)
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y)
         {
-            var row = _Info.GetRow(Tensor,y);
+            return GetRowSpan(y);
+        }        
 
-            var pixels = System.Runtime.InteropServices.MemoryMarshal.Cast<TElement, TPixel>(row);
-
-            System.Diagnostics.Debug.Assert(pixels.Length == Width);
-
-            return pixels;            
+        Span<byte> IBitmap.GetRowBytesSpan(int y)
+        {
+            var pixels = GetRowPixelsSpan(y);
+            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(pixels);
         }
+
+        #endregion
+
+        #region API
 
         ITensorBitmap ITensorBitmap.GetCropped(Rectangle rectangle)
         {
@@ -122,19 +142,13 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
+        }        
+
+        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>() where TSrcPixel : unmanaged
+        {
+            return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel>(this);
         }
 
-        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel, int> GetCopyContext<TSrcPixel>()
-            where TSrcPixel : unmanaged
-        {
-            return GetContext<TSrcPixel, int>(PixelsTransform.Copy);
-        }
-
-        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform)
-            where TSrcPixel : unmanaged
-        {
-            var instance = transform.GetInstance<TSrcPixel, TPixel>();
-            return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel, TResult>(this, instance);
-        }
+        #endregion
     }
 }

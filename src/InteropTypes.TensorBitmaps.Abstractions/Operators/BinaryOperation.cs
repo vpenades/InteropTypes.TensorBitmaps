@@ -29,14 +29,11 @@ namespace InteropTypes.TensorBitmaps.Operators
 
         TResult Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct;
-
-        public static IBinaryOperation<TSrcPixel, TDstPixel, int> DirectCopy { get; } = new _DirectCopyOperator<TSrcPixel, TDstPixel>();
-        public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> StretchToFit { get; } = new _StretchToFitOperator<TSrcPixel, TDstPixel>();
+            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct;        
 
         public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetScaleToFit(float overflowAmount)
         {
-            return new _ScaleToFitOperator<TSrcPixel,TDstPixel>(overflowAmount);
+            return new _ScaleToFitOperator<TSrcPixel,TDstPixel>(overflowAmount, _StretchToFitOperator<TSrcPixel,TDstPixel>.Instance);
         }
     }    
     
@@ -49,6 +46,8 @@ namespace InteropTypes.TensorBitmaps.Operators
             where TSrcPixel : unmanaged            
             where TDstPixel : unmanaged
     {
+        public static _DirectCopyOperator<TSrcPixel, TDstPixel> Instance { get; } = new _DirectCopyOperator<TSrcPixel, TDstPixel>();
+
         public int Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
@@ -74,9 +73,12 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
-        public _ScaleToFitOperator(float overflowAmount)
+        
+
+        public _ScaleToFitOperator(float overflowAmount, IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> stretchOperator)
         {
-            this.OverflowAmount = overflowAmount;
+            _OverflowAmount = overflowAmount;
+            _StretchOperator = stretchOperator;
         }
 
         /// <summary>
@@ -87,7 +89,9 @@ namespace InteropTypes.TensorBitmaps.Operators
         /// A value of 1 menas full overflow is allowed, the source bitmap will shrink enough to completely fill the destination,
         /// allowing parts of the source bitmap to overflow the destination.
         /// </remarks>
-        public float OverflowAmount { get; }
+        private readonly float _OverflowAmount;
+
+        private readonly IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> _StretchOperator;
 
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
@@ -98,7 +102,7 @@ namespace InteropTypes.TensorBitmaps.Operators
             var dstk = (float)dst.Width / (float)dst.Height;
 
             // lerp aspect ratios using allowed overflow amount
-            var k = srck * (1 - OverflowAmount) + dstk * OverflowAmount;
+            var k = srck * (1 - _OverflowAmount) + dstk * _OverflowAmount;
 
             // shrink both src and dst to ensure they have k aspect ratio:            
             var srcr = _GetCenterCrop(src.Width, src.Height, k);
@@ -112,7 +116,7 @@ namespace InteropTypes.TensorBitmaps.Operators
             System.Diagnostics.Debug.Assert(Math.Abs(1f - srck / dstk) < 0.1f, "At this point the aspect ratio of both crops must be close enough");
             #endif
 
-            var transform = IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>.StretchToFit.Execute(src, dst, pixelConverter);
+            var transform = _StretchOperator.Execute(src, dst, pixelConverter);
 
             transform = Matrix3x2.CreateTranslation(-dstr.X, -dstr.Y) * transform;
 
@@ -153,6 +157,8 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
+        public static _StretchToFitOperator<TSrcPixel, TDstPixel> Instance { get; } = new _StretchToFitOperator<TSrcPixel, TDstPixel>();
+
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct

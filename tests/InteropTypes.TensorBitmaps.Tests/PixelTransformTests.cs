@@ -19,16 +19,21 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task BitmapFitTest()
         {
-            var bmp = TensorBitmap<byte, Rgb24>.Create(48,32,KnownPixelFormats.Rgb8);
+            // load image and convert it to a tensor bitmap
 
             using var img = Image.Load<Rgb24>(ResourceInfo.From("shannon.jpg"));
-            var bmp2 = img.ToTensorBitmap<byte, Rgb24>();
+            var imgTB = img.ToTensorBitmap<byte, Rgb24>();
 
-            bmp.GetContext<Rgb24, Matrix3x2>(PixelsTransform.StretchToFit).ApplyFrom(bmp2);
+            // create another tensor bitmao and fill it with the image we've loaded
 
-            using var img2 = bmp.Cast<Rgb24>().ToImageSharp();
+            var bmp = TensorBitmap<byte, Bgr24>.Create(48, 32, KnownPixelFormats.Rgb8);
+            bmp.GetContext<Rgb24>().Fill(PixelsTransform.StretchToFit, imgTB);
 
-            AttachmentInfo.From("shannon.transformed.jpg").WriteObject(img2.Save);
+            // save back
+
+            using var img2 = bmp.ToImageSharp();
+
+            AttachmentInfo.From("shannon.stretched.jpg").WriteObject(img2.Save);
         }
 
         [Test]
@@ -43,7 +48,7 @@ namespace InteropTypes.TensorBitmaps
             {
                 var bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
 
-                bmp.GetContext<Rgb24, Matrix3x2>(PixelsTransform.ScaleToFit(oa / 10f)).ApplyFrom(img1);                
+                bmp.GetContext<Rgb24>().Fill(PixelsTransform.ScaleToFit(oa / 10f), img1);                
 
                 using var img2 = bmp.Cast<Rgb24>().ToImageSharp();
 

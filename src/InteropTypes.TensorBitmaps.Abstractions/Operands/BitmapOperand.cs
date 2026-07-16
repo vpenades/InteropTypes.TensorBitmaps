@@ -11,39 +11,14 @@ using InteropTypes.Numerics;
 namespace InteropTypes.TensorBitmaps.Operands
 {
     /// <summary>
-    /// Represents an interface to a read only bitmap
+    /// Represents an ByRef read only bitmap
     /// </summary>
     /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
     /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
-    public interface IReadOnlyBitmapOperand<TSelf, TPixel>
+    public interface IReadOnlyBitmapOperand<TSelf, TPixel> : IReadOnlyBitmap<TPixel>
         where TSelf : IReadOnlyBitmapOperand<TSelf, TPixel>, allows ref struct
         where TPixel : unmanaged        
     {
-        /// <summary>
-        /// The pixel layout
-        /// </summary>
-        /// <remarks>
-        /// <typeparamref name="TPixel"/> ByteSize must match the format's bytesize
-        /// </remarks>
-        PixelFormat Format { get; }
-
-        /// <summary>
-        /// The width of the bitmap, in pixels
-        /// </summary>
-        int Width { get; }
-
-        /// <summary>
-        /// The height of the bitmap, in pixels
-        /// </summary>
-        int Height { get; }
-
-        /// <summary>
-        /// Gets the pixels of a row.
-        /// </summary>
-        /// <param name="y">The row index</param>
-        /// <returns>A span with pixels</returns>
-        ReadOnlySpan<TPixel> GetRowPixelsSpan(int y);
-
         /// <summary>
         /// Gets a cropped view of the bitmap.
         /// </summary>
@@ -59,29 +34,26 @@ namespace InteropTypes.TensorBitmaps.Operands
         /// </remarks>
         /// <param name="rect">The region to crop</param>
         /// <returns>A cropped bitmap</returns>
-        TSelf GetCropped(System.Drawing.Rectangle rectangle);
+        TSelf GetCropped(System.Drawing.Rectangle rectangle);        
     }
 
     /// <summary>
-    /// Represents an interface to a bitmap
+    /// Represents ByRef bitmap
     /// </summary>
     /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
     /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
     public interface IBitmapOperand<TSelf, TPixel>
         : IReadOnlyBitmapOperand<TSelf, TPixel>
+        , IBitmap<TPixel>
         where TSelf : IBitmapOperand<TSelf, TPixel>, allows ref struct
         where TPixel : unmanaged        
     {
         /// <summary>
-        /// Gets the pixels of a row.
+        /// Returns a context that can be used to perform bulk operations on this bitmap.
         /// </summary>
-        /// <param name="y">The row index</param>
-        /// <returns>A span with pixels</returns>
-        new Span<TPixel> GetRowPixelsSpan(int y);
-
-        ReadOnlySpan<TPixel> IReadOnlyBitmapOperand<TSelf, TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
-
-        public Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform)
+        /// <typeparam name="TSrcPixel"></typeparam>
+        /// <returns>It must return: <c>new Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel>(this);</c> </returns>
+        public Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel> GetContext<TSrcPixel>()
             where TSrcPixel : unmanaged;
     }
 

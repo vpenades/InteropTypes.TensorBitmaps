@@ -67,7 +67,7 @@ namespace InteropTypes.TensorBitmaps
             var skbmp = new SKBitmap(src.Width, src.Height);
             var dst = new SkiaSharpBitmapOperand<TDstPixel>(skbmp, false);
 
-            dst.GetContext<TSrcPixel, int>(PixelsTransform.Copy).ApplyFrom(src);
+            dst.GetContext<TSrcPixel>().Fill(PixelsTransform.Copy, src);
 
             return dst;
         }
@@ -124,19 +124,17 @@ namespace InteropTypes.TensorBitmaps
 
         public int Width => _Region.Width;
 
-        public int Height => _Region.Height;
+        public int Height => _Region.Height;        
 
-        public Span<TPixel> GetRowPixelsSpan(int y)
+        public Span<byte> GetRowBytesSpan(int y)
         {
             if (y < 0 || y >= _Region.Height) throw new ArgumentOutOfRangeException(nameof(y));
 
             y += _Region.Y;
 
             var buffer = _Bitmap.GetPixelSpan();
-            buffer = buffer.Slice(y * _Bitmap.RowBytes, _Bitmap.BytesPerPixel * _Region.Width);
-
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<byte, TPixel>(buffer);
-        }        
+            return buffer.Slice(y * _Bitmap.RowBytes, _Bitmap.BytesPerPixel * _Region.Width);
+        }
 
         public SkiaSharpBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
         {
@@ -153,10 +151,12 @@ namespace InteropTypes.TensorBitmaps
             return new SkiaSharpBitmapOperand<TPixel>(newBitmap, false); // this is a new object, so DO dispose
         }
 
-        public BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel, TResult> GetContext<TSrcPixel, TResult>(PixelsTransform<TResult> transform) where TSrcPixel : unmanaged
+        
+
+        public BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>() where TSrcPixel : unmanaged
         {
-            return new BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel, TResult>(this, transform.GetInstance<TSrcPixel, TPixel>());
-        }
+            return new BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel>(this);
+        }        
 
         #endregion
     }

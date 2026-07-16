@@ -23,6 +23,8 @@ namespace InteropTypes.TensorBitmaps
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {
+        #region lifecycle
+
         public static implicit operator ReadOnlyTensorSpanBitmap<TElement, TPixel>(TensorBitmap<TElement, TPixel> bitmap)
         {
             var tensor = bitmap.Tensor.AsReadOnlyTensorSpan();
@@ -57,7 +59,11 @@ namespace InteropTypes.TensorBitmaps
             Height = _Info.GetHeightFrom(tensor);
             Tensor = tensor;
             _Rows = _Info.GetRows(tensor);
-        }        
+        }
+
+        #endregion
+
+        #region data
 
         internal readonly _TensorBitmapInfo _Info;
         public PixelFormat Format { get; }
@@ -67,6 +73,10 @@ namespace InteropTypes.TensorBitmaps
         public ReadOnlyTensorSpan<TElement> Tensor { get; }
 
         private readonly ReadOnlyTensorDimensionSpan<TElement> _Rows;
+
+        #endregion
+
+        #region API - Rows
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y)
@@ -80,7 +90,17 @@ namespace InteropTypes.TensorBitmaps
             System.Diagnostics.Debug.Assert(pixels.Length == Width);
 
             return pixels;
-        }        
+        }
+
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y)
+        {
+            var pixels = GetRowPixelsSpan(y);
+            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(pixels);
+        }
+
+        #endregion
+
+        #region API
 
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
@@ -101,5 +121,7 @@ namespace InteropTypes.TensorBitmaps
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
         }        
+
+        #endregion
     }
 }

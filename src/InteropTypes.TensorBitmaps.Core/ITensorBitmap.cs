@@ -11,24 +11,7 @@ using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps
 {
-    /// <summary>
-    /// A bitmap interface to a bitmap backed by a <see cref="IReadOnlyTensor"/>
-    /// </summary>    
-    public interface IReadOnlyBitmap
-    {
-        PixelFormat Format { get; }
-        int BytesPerPixel { get; }
-        int Width { get; }
-        int Height { get; }
-
-        ReadOnlySpan<byte> GetRowSpan(int y);
-    }
-
     
-    public interface IBitmap : IReadOnlyBitmap
-    {
-        new Span<byte> GetRowSpan(int y);
-    }
 
 
     /// <summary>
@@ -37,7 +20,6 @@ namespace InteropTypes.TensorBitmaps
     public interface IReadOnlyTensorBitmap : IReadOnlyBitmap
     {
         IReadOnlyTensor Tensor { get; }
-
         IReadOnlyTensorBitmap GetCropped(System.Drawing.Rectangle rectangle);        
     }
 
@@ -45,10 +27,9 @@ namespace InteropTypes.TensorBitmaps
     /// <summary>
     /// A bitmap interface to a bitmap backed by a <see cref="ITensor"/>
     /// </summary>    
-    public interface ITensorBitmap : IReadOnlyTensorBitmap
+    public interface ITensorBitmap : IBitmap, IReadOnlyTensorBitmap
     {
         new ITensor Tensor { get; }
-
         new ITensorBitmap GetCropped(System.Drawing.Rectangle rectangle);
     }
 
