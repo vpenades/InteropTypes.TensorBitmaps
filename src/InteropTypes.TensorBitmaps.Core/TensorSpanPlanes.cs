@@ -120,26 +120,26 @@ namespace InteropTypes.TensorBitmaps
         #endregion
     }
 
-    public readonly ref struct TensorSpanPlanes3OperatorContext<TDstBitmap, TDstPixel, TSrcPixel>
-        where TDstBitmap : IBitmapOperand<TDstBitmap, TDstPixel>, allows ref struct
-        where TDstPixel : unmanaged
-        where TSrcPixel : unmanaged
+    public readonly ref struct TensorSpanPlanes3OperatorContext<TBitmap, TPixel, TContextPixel>
+        where TBitmap : IBitmapOperand<TBitmap, TPixel>, allows ref struct
+        where TPixel : unmanaged
+        where TContextPixel : unmanaged
     {
-        public TensorSpanPlanes3OperatorContext(TDstBitmap planex, TDstBitmap planey, TDstBitmap planez)
+        public TensorSpanPlanes3OperatorContext(TBitmap planex, TBitmap planey, TBitmap planez)
         {
             _DstPlaneX = planex;
             _DstPlaneY = planey;
             _DstPlaneZ = planez;
         }
 
-        private readonly TDstBitmap _DstPlaneX;
-        private readonly TDstBitmap _DstPlaneY;
-        private readonly TDstBitmap _DstPlaneZ;
+        private readonly TBitmap _DstPlaneX;
+        private readonly TBitmap _DstPlaneY;
+        private readonly TBitmap _DstPlaneZ;
 
         public TResult Fill<TSrcBitmap, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, bool initPixels = true)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TContextPixel>, allows ref struct
         {
-            var xform = transform.GetInstance<TSrcPixel, TDstPixel>();
+            var xform = transform.GetInstance<TContextPixel, TPixel>();
 
             var x = xform.Execute(srcBmp, _DstPlaneX, initPixels);
             var y = xform.Execute(srcBmp, _DstPlaneY, initPixels);
@@ -148,10 +148,10 @@ namespace InteropTypes.TensorBitmaps
             return x;
         }
 
-        public TResult Fill<TSrcBitmap, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+        public TResult Fill<TSrcBitmap, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, IPixelConverter<TContextPixel, TPixel> pixelConverter)
+            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TContextPixel>, allows ref struct
         {
-            var xform = transform.GetInstance<TSrcPixel, TDstPixel>();
+            var xform = transform.GetInstance<TContextPixel, TPixel>();
 
             var x = xform.Execute(srcBmp, _DstPlaneX, pixelConverter);
             var y = xform.Execute(srcBmp, _DstPlaneY, pixelConverter);
@@ -160,12 +160,12 @@ namespace InteropTypes.TensorBitmaps
             return x;
         }
 
-        public TResult CopyTo<TOtherBitmap, TResult>(PixelsTransform<TResult> transform, TOtherBitmap dst)
-            where TOtherBitmap : IBitmapOperand<TOtherBitmap, TSrcPixel>, allows ref struct
+        public TResult CopyTo<TDstBitmap, TResult>(PixelsTransform<TResult> transform, TDstBitmap dst)
+            where TDstBitmap : IBitmapOperand<TDstBitmap, TContextPixel>, allows ref struct
         {
-            var x = dst.GetContext<TDstPixel>().Fill(transform, _DstPlaneX, false);
-            var y = dst.GetContext<TDstPixel>().Fill(transform, _DstPlaneY, false);
-            var z = dst.GetContext<TDstPixel>().Fill(transform, _DstPlaneZ, false);
+            var x = dst.GetContext<TPixel>().Fill(transform, _DstPlaneX, false);
+            var y = dst.GetContext<TPixel>().Fill(transform, _DstPlaneY, false);
+            var z = dst.GetContext<TPixel>().Fill(transform, _DstPlaneZ, false);
             return x;
         }
     }    
