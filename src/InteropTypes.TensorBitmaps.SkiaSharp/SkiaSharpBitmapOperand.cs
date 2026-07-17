@@ -153,8 +153,8 @@ namespace InteropTypes.TensorBitmaps
 
         public SkiaSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
         {
-            var newSize = new SKImageInfo(width, height);
-            var options = new SKSamplingOptions(SKFilterMode.Linear);
+            var newSize = new SKImageInfo(width, height);            
+            var options = new SKSamplingOptions (SKCubicResampler.Mitchell);
 
             var newBitmap = _Bitmap.Resize(newSize, options);            
 
