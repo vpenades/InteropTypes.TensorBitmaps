@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 using InteropTypes.TensorBitmaps.Operands;
@@ -8,15 +9,14 @@ namespace InteropTypes.TensorBitmaps
 {
     public static class TensorBitmapExtensions
     {
-        public static TensorBitmap<byte, TPixel> ToBytesTensorBitmap<TBitmap,TPixel>(this TBitmap src)
-            where TBitmap: IReadOnlyBitmapOperand<TBitmap,TPixel>
-            where TPixel: unmanaged
+        public static void ToTensorBitmap<TSrcBitmap,TSrcPixel, TDstElement>(this TSrcBitmap src, out TensorBitmap<TDstElement, TSrcPixel> dst)
+            where TSrcBitmap: IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>
+            where TSrcPixel: unmanaged
+            where TDstElement: unmanaged, INumber<TDstElement>
         {
-            var dst = TensorBitmap<byte, TPixel>.Create(src.Width, src.Height, src.Format);
+            dst = TensorBitmap<TDstElement, TSrcPixel>.Create(src.Width, src.Height, src.Format);
 
-            dst.GetContext<TPixel>().Fill(PixelsTransform.Copy, src);
-
-            return dst;
+            dst.GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
         }
     }
 }

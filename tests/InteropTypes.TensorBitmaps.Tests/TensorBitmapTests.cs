@@ -39,25 +39,17 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task LoadSaveRoundtripTest()
         {
-            using var img = Image.Load<Rgb24>(ResourceInfo.From("shannon.jpg"));
+            using var img = ImageSharpBitmapOperand<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
+            using var imgCrop = img.GetCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
 
-            var tbmp = img.ToTensorBitmap<byte,Rgb24>().Cast<Pixel888>();
-
-            var crop = tbmp.GetCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
-
-            var fillColor = new Pixel888(0, 255, 0);
-            for (int i = 0; i < crop.Height; i++)
+            var fillColor = new Rgb24(0, 255, 0);
+            for (int i = 0; i < imgCrop.Height; i++)
             {
-                var row = crop.GetRowPixelsSpan(i); 
+                var row = imgCrop.GetRowPixelsSpan(i); 
                 row.Fill(fillColor);
-            }
+            }            
 
-            using var img2 = tbmp.Cast<Rgb24>().ToImageSharp();
-
-            AttachmentInfo.From("shannon.modified.jpg").WriteObject(img2.Save);
-        }
-
-
-        
+            AttachmentInfo.From("shannon.modified.jpg").WriteObjectEx(f => img.Write(f.Create));
+        }        
     }
 }

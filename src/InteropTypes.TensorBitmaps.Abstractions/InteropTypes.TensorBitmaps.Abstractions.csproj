@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="InteropTypes.TensorBitmaps.Tests" />
+		<InternalsVisibleTo Include="InteropTypes.TensorBitmaps.Core" />
 	</ItemGroup>	
 
 	<ItemGroup>

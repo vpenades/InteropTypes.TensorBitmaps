@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="InteropTypes.TensorBitmaps.Tests" />
+		<InternalsVisibleTo Include="InteropTypes.TensorBitmaps.Tests" />		
 	</ItemGroup>
 
   <ItemGroup>

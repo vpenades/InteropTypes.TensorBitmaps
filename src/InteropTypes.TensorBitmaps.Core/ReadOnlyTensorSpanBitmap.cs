@@ -120,7 +120,13 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
-        }        
+        }
+
+        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
+        {
+            stretchedBitmap = default;
+            return false;
+        }
 
         #endregion
     }

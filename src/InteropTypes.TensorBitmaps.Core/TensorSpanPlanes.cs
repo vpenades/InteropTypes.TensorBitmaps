@@ -9,10 +9,10 @@ using System.Xml.Linq;
 
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Operators;
 
 namespace InteropTypes.TensorBitmaps
 {
-
     /// <summary>
     /// A CHW 3 planar bitmap backed by three <see cref="TensorSpanBitmap{TElement, TElement}"/>
     /// </summary>
@@ -99,6 +99,13 @@ namespace InteropTypes.TensorBitmaps
 
         #region API
 
+        public void GetRowPixelSpans(int y, out Span<TElement> planex, out Span<TElement> planey, out Span<TElement> planez)
+        {
+            planex = _PlaneX.GetRowPixelsSpan(y);
+            planey = _PlaneY.GetRowPixelsSpan(y);
+            planez = _PlaneZ.GetRowPixelsSpan(y);
+        }
+
         public TensorSpanPlanes3<TElement> GetCropped(System.Drawing.Rectangle rectangle)
         {
             rectangle.Intersect(new System.Drawing.Rectangle(0, 0, Width, Height));
@@ -111,62 +118,139 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanPlanes3<TElement>(x, y, z, Format);
         }
 
-        public TensorSpanPlanes3OperatorContext<TensorSpanBitmap<TElement, TElement>, TElement, TSrcPixel> GetContext<TSrcPixel>()
-            where TSrcPixel : unmanaged
+        public TensorSpanPlanes3OperatorContext<TensorSpanBitmap<TElement, TElement>, TElement, TContextPixel> GetContext<TContextPixel>()
+            where TContextPixel : unmanaged
         {
-            return new TensorSpanPlanes3OperatorContext<TensorSpanBitmap<TElement, TElement>, TElement, TSrcPixel>(_PlaneX,_PlaneY,_PlaneZ);
+            return new TensorSpanPlanes3OperatorContext<TensorSpanBitmap<TElement, TElement>, TElement, TContextPixel>(_PlaneX,_PlaneY,_PlaneZ);
         }
 
         #endregion
     }
 
-    public readonly ref struct TensorSpanPlanes3OperatorContext<TBitmap, TPixel, TContextPixel>
-        where TBitmap : IBitmapOperand<TBitmap, TPixel>, allows ref struct
-        where TPixel : unmanaged
+    /// <summary>
+    /// Transform context for <see cref="TensorSpanPlanes3{TElement}"/>
+    /// </summary>
+    /// <typeparam name="TPlaneBitmap">The underlaying bitmap type for each plane.</typeparam>
+    /// <typeparam name="TPlanePixel">The bitmap plane pixel type.</typeparam>
+    /// <typeparam name="TContextPixel">The pixel type in which this context operates.</typeparam>
+    public readonly ref struct TensorSpanPlanes3OperatorContext<TPlaneBitmap, TPlanePixel, TContextPixel>
+        where TPlaneBitmap : IBitmapOperand<TPlaneBitmap, TPlanePixel>, allows ref struct
+        where TPlanePixel : unmanaged
         where TContextPixel : unmanaged
     {
-        public TensorSpanPlanes3OperatorContext(TBitmap planex, TBitmap planey, TBitmap planez)
+        #region lifecycle
+        public TensorSpanPlanes3OperatorContext(TPlaneBitmap planex, TPlaneBitmap planey, TPlaneBitmap planez)
         {
             _DstPlaneX = planex;
             _DstPlaneY = planey;
             _DstPlaneZ = planez;
         }
 
-        private readonly TBitmap _DstPlaneX;
-        private readonly TBitmap _DstPlaneY;
-        private readonly TBitmap _DstPlaneZ;
+        #endregion
 
-        public TResult Fill<TSrcBitmap, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, bool initPixels = true)
+        #region data
+
+        private readonly TPlaneBitmap _DstPlaneX;
+        private readonly TPlaneBitmap _DstPlaneY;
+        private readonly TPlaneBitmap _DstPlaneZ;
+
+        #endregion
+
+        #region API
+
+        public int Width => _DstPlaneX.Width;
+
+        public int Height => _DstPlaneX.Height;
+
+        public TResult Fill<TSrcBitmap, TResult>(BitmapBinaryOperation<TResult> transform, TSrcBitmap srcBmp)
             where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TContextPixel>, allows ref struct
         {
-            var xform = transform.GetInstance<TContextPixel, TPixel>();
+            var xform = transform.GetInstance<TContextPixel, TPlanePixel>();
 
-            var x = xform.Execute(srcBmp, _DstPlaneX, initPixels);
-            var y = xform.Execute(srcBmp, _DstPlaneY, initPixels);
-            var z = xform.Execute(srcBmp, _DstPlaneZ, initPixels);
-
-            return x;
-        }
-
-        public TResult Fill<TSrcBitmap, TResult>(PixelsTransform<TResult> transform, TSrcBitmap srcBmp, IPixelConverter<TContextPixel, TPixel> pixelConverter)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TContextPixel>, allows ref struct
-        {
-            var xform = transform.GetInstance<TContextPixel, TPixel>();
-
-            var x = xform.Execute(srcBmp, _DstPlaneX, pixelConverter);
-            var y = xform.Execute(srcBmp, _DstPlaneY, pixelConverter);
-            var z = xform.Execute(srcBmp, _DstPlaneZ, pixelConverter);
+            // we need to create a pixel converter for each plane
+            var x = xform.Execute(srcBmp, _DstPlaneX, true);
+            var y = xform.Execute(srcBmp, _DstPlaneY, true);
+            var z = xform.Execute(srcBmp, _DstPlaneZ, true);
 
             return x;
-        }
+        }        
 
-        public TResult CopyTo<TDstBitmap, TResult>(PixelsTransform<TResult> transform, TDstBitmap dst)
+        public TResult CopyTo<TDstBitmap, TResult>(BitmapBinaryOperation<TResult> transform, TDstBitmap dst)
             where TDstBitmap : IBitmapOperand<TDstBitmap, TContextPixel>, allows ref struct
         {
-            var x = dst.GetContext<TPixel>().Fill(transform, _DstPlaneX, false);
-            var y = dst.GetContext<TPixel>().Fill(transform, _DstPlaneY, false);
-            var z = dst.GetContext<TPixel>().Fill(transform, _DstPlaneZ, false);
+            var x = dst.GetContext<TPlanePixel>().Fill(transform, _DstPlaneX, false);
+            var y = dst.GetContext<TPlanePixel>().Fill(transform, _DstPlaneY, false);
+            var z = dst.GetContext<TPlanePixel>().Fill(transform, _DstPlaneZ, false);
             return x;
         }
-    }    
+
+        /// <summary>
+        /// Optimized path for <see cref="Fill{TSrcBitmap, TResult}(BitmapBinaryOperation{TResult}, TSrcBitmap)"/> with <see cref="BitmapOperations.StretchToFit"/>
+        /// </summary>        
+        public Matrix3x2 FillStretched<TSrcBmp>(TSrcBmp src)
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp, TContextPixel>, allows ref struct            
+        {
+            var pcx = IPixelConverter<TContextPixel, TPlanePixel>.Create(src.Format, _DstPlaneX.Format, true);
+            var pcy = IPixelConverter<TContextPixel, TPlanePixel>.Create(src.Format, _DstPlaneY.Format, true);
+            var pcz = IPixelConverter<TContextPixel, TPlanePixel>.Create(src.Format, _DstPlaneZ.Format, true);
+
+            if (src.TryCreateStretchedClientBitmap(this.Width, this.Height, out var stretchedBitmap))
+            {
+                System.Diagnostics.Debug.Assert(this.Width == stretchedBitmap.Width);
+                System.Diagnostics.Debug.Assert(this.Height == stretchedBitmap.Height);
+
+                var h = Math.Min(stretchedBitmap.Height, this.Height);                
+
+                for (int y = 0; y < h; ++y)
+                {
+                    var srcRow = stretchedBitmap.GetRowPixelsSpan(y);
+                    pcx.ConvertPixels(srcRow, _DstPlaneX.GetRowPixelsSpan(y));
+                    pcy.ConvertPixels(srcRow, _DstPlaneY.GetRowPixelsSpan(y));
+                    pcz.ConvertPixels(srcRow, _DstPlaneZ.GetRowPixelsSpan(y));
+                }
+
+                stretchedBitmap.Dispose();
+            }
+            else
+            {
+                Span<TContextPixel> tmpRow = stackalloc TContextPixel[Width];
+
+                for (int y = 0; y < Height; ++y)
+                {
+                    var srcRow = src.GetRowPixelsSpan(y * src.Height / Height);
+
+                    for (int x = 0; x < tmpRow.Length; ++x)
+                    {
+                        tmpRow[x] = srcRow[x * srcRow.Length / tmpRow.Length];
+                    }
+
+                    pcx.ConvertPixels(tmpRow, _DstPlaneX.GetRowPixelsSpan(y));
+                    pcy.ConvertPixels(tmpRow, _DstPlaneY.GetRowPixelsSpan(y));
+                    pcz.ConvertPixels(tmpRow, _DstPlaneZ.GetRowPixelsSpan(y));
+                }
+            }
+
+            return Matrix3x2.CreateScale(src.Width / (float)Width, src.Height / (float)Height);
+        }
+
+        /// <summary>
+        /// Optimized path for <see cref="Fill{TSrcBitmap, TResult}(BitmapBinaryOperation{TResult}, TSrcBitmap)"/> with <see cref="BitmapOperations.ScaleToFit(float)"/>
+        /// </summary>        
+        public Matrix3x2 FillScaled<TSrcBmp>(TSrcBmp src, float overflowAmount)
+            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp, TContextPixel>, allows ref struct
+        {
+            var crops = ScaledIntersectionCrop.CreateFrom(new System.Drawing.Size(src.Width, src.Height), new System.Drawing.Size(this.Width, this.Height), overflowAmount);
+            
+            src = src.GetCropped(crops.SourceCrop);
+            
+            var dstx = _DstPlaneX.GetCropped(crops.TargetCrop);
+            var dsty = _DstPlaneY.GetCropped(crops.TargetCrop);
+            var dstz = _DstPlaneZ.GetCropped(crops.TargetCrop);
+            var dst = new TensorSpanPlanes3OperatorContext<TPlaneBitmap, TPlanePixel, TContextPixel>(dstx, dsty, dstz);            
+
+            return crops.GetTransform(dst.FillStretched(src));
+        }
+
+        #endregion
+    }
 }

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace InteropTypes.TensorBitmaps
 {
-    public static class PixelsTransform
+    public static class BitmapOperations
     {
-        public static PixelsTransform<int> Copy { get; } = new _DirectCopy();
+        public static BitmapBinaryOperation<int> Copy { get; } = new _DirectCopy();
 
-        public static PixelsTransform<Matrix3x2> StretchToFit { get; } = new _StretchToFit();
+        public static BitmapBinaryOperation<Matrix3x2> StretchToFit { get; } = new _StretchToFit();
 
-        public static PixelsTransform<Matrix3x2> ScaleToFit(float overflowAmount) { return new _ScaleToFit(overflowAmount); }
+        public static BitmapBinaryOperation<Matrix3x2> ScaleToFit(float overflowAmount) { return new _ScaleToFit(overflowAmount); }
 
-        sealed class _DirectCopy : PixelsTransform<int>
+        sealed class _DirectCopy : BitmapBinaryOperation<int>
         {
             public override BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, int> GetInstance<TSrcPixel, TDstPixel>()
             {
@@ -23,7 +23,7 @@ namespace InteropTypes.TensorBitmaps
             }
         }
 
-        private sealed class _StretchToFit : PixelsTransform<Matrix3x2>
+        private sealed class _StretchToFit : BitmapBinaryOperation<Matrix3x2>
         {
             public override BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
             {
@@ -31,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
             }
         }
 
-        private sealed class _ScaleToFit : PixelsTransform<Matrix3x2>
+        private sealed class _ScaleToFit : BitmapBinaryOperation<Matrix3x2>
         {
             public _ScaleToFit(float overflowAmount)
             {
@@ -51,9 +51,9 @@ namespace InteropTypes.TensorBitmaps
     /// represents a pixel transformation to be applyed when copying pixels from one bitmap to another.
     /// </summary>
     /// <remarks>
-    /// Used by  using <see cref="ReadOnlyTensorSpanBitmap{TElement, TPixel}.CopyPixelsTo{TDstElement, TDstPixel}(PixelsTransform, TensorSpanBitmap{TDstElement, TDstPixel}, bool)"/>
+    /// Used by  using <see cref="ReadOnlyTensorSpanBitmap{TElement, TPixel}.CopyPixelsTo{TDstElement, TDstPixel}(BitmapOperations, TensorSpanBitmap{TDstElement, TDstPixel}, bool)"/>
     /// </remarks>
-    public abstract class PixelsTransform<TResult>
+    public abstract class BitmapBinaryOperation<TResult>
     {
         public abstract BITMAPOPERATORS.IBinaryOperation<TSrcPixel, TDstPixel, TResult> GetInstance<TSrcPixel, TDstPixel>()
             where TSrcPixel : unmanaged

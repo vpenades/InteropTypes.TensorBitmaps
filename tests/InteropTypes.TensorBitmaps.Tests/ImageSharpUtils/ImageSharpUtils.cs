@@ -11,7 +11,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace InteropTypes.TensorBitmaps
 {
-    static class _ImageSharpUtils
+    static class ImageSharpUtils
     {
         public static SixLabors.ImageSharp.Image<TPixel> ToImageSharp<TElement, TPixel>(this TensorBitmap<TElement, TPixel> srcBitmap)
             where TElement : unmanaged, INumber<TElement>

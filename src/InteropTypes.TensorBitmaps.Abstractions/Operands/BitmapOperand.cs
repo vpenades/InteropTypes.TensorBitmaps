@@ -34,7 +34,13 @@ namespace InteropTypes.TensorBitmaps.Operands
         /// </remarks>
         /// <param name="rect">The region to crop</param>
         /// <returns>A cropped bitmap</returns>
-        TSelf GetCropped(System.Drawing.Rectangle rectangle);        
+        TSelf GetCropped(System.Drawing.Rectangle rectangle);
+
+        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
+        {
+            stretchedBitmap = default;
+            return false;
+        }
     }
 
     /// <summary>
@@ -49,35 +55,11 @@ namespace InteropTypes.TensorBitmaps.Operands
         where TPixel : unmanaged        
     {
         /// <summary>
-        /// Returns a context that can be used to perform bulk operations on this bitmap.
+        /// Returns a context that can be used to perform bulk operations on this bitmap
         /// </summary>
-        /// <typeparam name="TSrcPixel"></typeparam>
+        /// <typeparam name="TContextPixel">The pixel format to be used in the operations of the context.</typeparam>
         /// <returns>It must return: <c>new Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel>(this);</c> </returns>
-        public Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel> GetContext<TSrcPixel>()
-            where TSrcPixel : unmanaged;
-    }
-
-    /// <summary>
-    /// Represents an interface to a disposable, read only bitmap
-    /// </summary>
-    /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
-    /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
-    public interface IDisposableReadOnlyBitmapOperand<TSelf,TPixel>
-        : IReadOnlyBitmapOperand<TSelf,TPixel>
-        , IDisposable
-        where TSelf : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
-        where TPixel : unmanaged
-    { }
-
-    /// <summary>
-    /// Represents an interface to a disposable bitmap.
-    /// </summary>
-    /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
-    /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
-    public interface IDisposableBitmapOperand<TSelf, TPixel>
-        : IDisposableReadOnlyBitmapOperand<TSelf, TPixel>
-        , IBitmapOperand<TSelf, TPixel>
-        where TSelf : IDisposableBitmapOperand<TSelf, TPixel>
-        where TPixel : unmanaged
-    { }    
+        public Operators.BinaryOperatorContext<TSelf, TPixel, TContextPixel> GetContext<TContextPixel>()
+            where TContextPixel : unmanaged;        
+    }    
 }

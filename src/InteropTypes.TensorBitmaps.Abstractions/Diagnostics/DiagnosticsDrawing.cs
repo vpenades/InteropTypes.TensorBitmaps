@@ -8,6 +8,10 @@ using System.Text;
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps.Operands;
 
+using COLOR = System.Drawing.Color;
+using POINT = System.Drawing.PointF;
+using RECTANGLE = System.Drawing.RectangleF;
+
 namespace InteropTypes.TensorBitmaps.Diagnostics
 {
     public readonly ref struct DiagnosticsDrawing<TBitmap, TPixel>
@@ -25,17 +29,17 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
         private readonly TBitmap _Bitmap;
         private readonly IPixelConverter<int, TPixel> _Colors;
 
-        public TPixel GetColorPixel(System.Drawing.Color color)
+        public TPixel GetColorPixel(COLOR color)
         {
             Span<int> src = stackalloc int[1];
             Span<TPixel> dst = stackalloc TPixel[1];
 
             src[0] = color.ToArgb();
             _Colors.ConvertPixels(src, dst);
-            return dst[0];        
+            return dst[0];
         }
 
-        public void DrawRectangle(System.Drawing.RectangleF rectf, System.Drawing.Color color)            
+        public void DrawRectangle(RECTANGLE rectf, COLOR color)
         {
             var a = new Vector2(rectf.X, rectf.Y);
             var b = new Vector2(rectf.X + rectf.Width, rectf.Y);
@@ -48,12 +52,12 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
             DrawLine(d, a, color);
         }
 
-        public void DrawLine(System.Drawing.PointF a, System.Drawing.PointF b, System.Drawing.Color color)
+        public void DrawLine(POINT a, POINT b, COLOR color)
         {
             DrawLine(new Vector2(a.X, b.X), new Vector2(b.X, b.Y), color);
         }
 
-        public void DrawLine(System.Numerics.Vector2 a, System.Numerics.Vector2 b, System.Drawing.Color color)            
+        public void DrawLine(System.Numerics.Vector2 a, System.Numerics.Vector2 b, COLOR color)
         {
             var bounds = new System.Drawing.Rectangle(0,0, _Bitmap.Width,_Bitmap.Height);
             var pixel = GetColorPixel(color);

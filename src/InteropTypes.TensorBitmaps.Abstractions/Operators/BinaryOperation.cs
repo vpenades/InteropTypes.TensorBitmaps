@@ -73,8 +73,6 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
-        
-
         public _ScaleToFitOperator(float overflowAmount, IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> stretchOperator)
         {
             _OverflowAmount = overflowAmount;
@@ -97,53 +95,14 @@ namespace InteropTypes.TensorBitmaps.Operators
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
         {
-            // calculate aspect ratios:
-            var srck = (float)src.Width / (float)src.Height;
-            var dstk = (float)dst.Width / (float)dst.Height;
+            var l = new System.Drawing.Size(src.Width, src.Height);
+            var r = new System.Drawing.Size(dst.Width, dst.Height);
+            var crops = ScaledIntersectionCrop.CreateFrom(l, r, _OverflowAmount);
 
-            // lerp aspect ratios using allowed overflow amount
-            var k = srck * (1 - _OverflowAmount) + dstk * _OverflowAmount;
+            src = src.GetCropped(crops.SourceCrop);
+            dst = dst.GetCropped(crops.TargetCrop);            
 
-            // shrink both src and dst to ensure they have k aspect ratio:            
-            var srcr = _GetCenterCrop(src.Width, src.Height, k);
-            src = src.GetCropped(srcr);
-            var dstr = _GetCenterCrop(dst.Width, dst.Height, k);
-            dst = dst.GetCropped(dstr);
-
-            #if DEBUG
-            srck = (float)src.Width / (float)src.Height;
-            dstk = (float)dst.Width / (float)dst.Height;
-            System.Diagnostics.Debug.Assert(Math.Abs(1f - srck / dstk) < 0.1f, "At this point the aspect ratio of both crops must be close enough");
-            #endif
-
-            var transform = _StretchOperator.Execute(src, dst, pixelConverter);
-
-            transform = Matrix3x2.CreateTranslation(-dstr.X, -dstr.Y) * transform;
-
-            transform *= Matrix3x2.CreateTranslation(srcr.X, srcr.Y);
-
-            return transform;
-        }
-        
-        private static System.Drawing.Rectangle _GetCenterCrop(int width, int height, float aspect)
-        {
-            var k = (float)width /(float)height;
-
-            if (k > aspect) // clip horizontally
-            {
-                var ww = height * aspect;
-                var r = new System.Drawing.RectangleF((width - ww) / 2, 0, ww, height);
-                return System.Drawing.Rectangle.Truncate(r);
-            }
-            
-            if (k < aspect) // clip vertically
-            {
-                var hh = width / aspect;
-                var r = new System.Drawing.RectangleF(0, (height - hh) / 2, width, hh);
-                return System.Drawing.Rectangle.Truncate(r);
-            }
-
-            return new System.Drawing.Rectangle(0, 0, width, height);
+            return crops.GetTransform(_StretchOperator.Execute(src, dst, pixelConverter));
         }        
     }
 
@@ -162,20 +121,38 @@ namespace InteropTypes.TensorBitmaps.Operators
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
-        {
-            Span<TSrcPixel> tmpRow = stackalloc TSrcPixel[dst.Width];
-
-            for (int y = 0; y < dst.Height; ++y)
+        {            
+            if (src.TryCreateStretchedClientBitmap(dst.Width, dst.Height, out var stretchedBitmap))
             {
-                var srcRow = src.GetRowPixelsSpan(y * src.Height / dst.Height);
+                System.Diagnostics.Debug.Assert(dst.Width == stretchedBitmap.Width);
+                System.Diagnostics.Debug.Assert(dst.Height == stretchedBitmap.Height);                
 
-                for (int x = 0; x < tmpRow.Length; ++x)
+                for (int y = 0; y < dst.Height; ++y)
                 {
-                    tmpRow[x] = srcRow[x * srcRow.Length / tmpRow.Length];
+                    var srcRow = stretchedBitmap.GetRowPixelsSpan(y);
+
+                    var dstRow = dst.GetRowPixelsSpan(y);
+                    pixelConverter.ConvertPixels(srcRow, dstRow);
                 }
 
-                var dstRow = dst.GetRowPixelsSpan(y);
-                pixelConverter.ConvertPixels(tmpRow, dstRow);
+                stretchedBitmap.Dispose();
+            }
+            else
+            {
+                Span<TSrcPixel> tmpRow = stackalloc TSrcPixel[dst.Width];
+
+                for (int y = 0; y < dst.Height; ++y)
+                {
+                    var srcRow = src.GetRowPixelsSpan(y * src.Height / dst.Height);
+
+                    for (int x = 0; x < tmpRow.Length; ++x)
+                    {
+                        tmpRow[x] = srcRow[x * srcRow.Length / tmpRow.Length];
+                    }
+
+                    var dstRow = dst.GetRowPixelsSpan(y);
+                    pixelConverter.ConvertPixels(tmpRow, dstRow);
+                }
             }
 
             return Matrix3x2.CreateScale(src.Width / (float)dst.Width, src.Height / (float)dst.Height);

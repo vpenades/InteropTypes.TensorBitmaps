@@ -20,13 +20,9 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task TestPlaneBitmaps()
         {
-            using var img = Image.Load<Bgr24>(ResourceInfo.From("shannon.jpg"));
+            using var img = ImageSharpBitmapOperand<Bgr24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);            
 
-            // convert ImageSharp to TensorBitmap
-
-            var srcBmp = img.ToTensorBitmap<byte, Bgr24>()
-                .AsReadOnlyTensorSpanBitmap()
-                .GetCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
+            using var imgCrop = img.GetCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
 
             // create a custom RGB format with a std-mean range
 
@@ -41,13 +37,13 @@ namespace InteropTypes.TensorBitmaps
 
             // fill planes with shannon.jpg:
 
-            planes.GetContext<Bgr24>().Fill(PixelsTransform.Copy,  srcBmp);
+            planes.GetContext<Bgr24>().Fill(BitmapOperations.Copy,  imgCrop);
 
             // merge planes back to a regular bitmap
 
             
             var dstBmp = TensorBitmap<byte, Rgb24>.Create(planes.Width, planes.Height, KnownPixelFormats.Rgb8);
-            planes.GetContext<Rgb24>().CopyTo(PixelsTransform.Copy, dstBmp);
+            planes.GetContext<Rgb24>().CopyTo(BitmapOperations.Copy, dstBmp);
 
             using var result = dstBmp.ToImageSharp();
 

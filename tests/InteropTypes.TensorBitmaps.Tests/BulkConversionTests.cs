@@ -12,15 +12,16 @@ using TUnit;
 
 namespace InteropTypes.TensorBitmaps
 {
-    internal class ImageSharpConversionTests
+    internal class BulkConversionTests
     {
         [Test]
         public async Task TestPixelConversions()
         {
-            using var img = Image.Load<Rgb24>(ResourceInfo.From("shannon.jpg"));
+            using var img = ImageSharpBitmapOperand<Rgb24>.Load(ResourceInfo.From("shannon.jpg"));
 
-            var tbmp = img
-                .ToTensorBitmap<byte, Rgb24>()
+            img.ToTensorBitmap(out TensorBitmap<byte,Rgb24> tensorbmp);
+
+            var tbmp = tensorbmp
                 .AsReadOnlyTensorSpanBitmap()
                 .GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
@@ -43,11 +44,11 @@ namespace InteropTypes.TensorBitmaps
             where TElement: unmanaged, INumber<TElement>
             where TPixel: unmanaged, IPixel<TPixel>
         {
-            var fmt = _ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel));
+            var fmt = ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel));
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, fmt);
 
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
-            dst.GetContext<Rgb24>().Fill(PixelsTransform.Copy, src);
+            dst.GetContext<Rgb24>().Fill(BitmapOperations.Copy, src);
 
             using var result = dst.ToImageSharp();
 

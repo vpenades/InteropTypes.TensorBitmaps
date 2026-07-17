@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
 
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+
 using TUnit;
 
 namespace InteropTypes.TensorBitmaps
@@ -18,8 +21,8 @@ namespace InteropTypes.TensorBitmaps
         {
             if (OperatingSystem.IsLinux()) return; // skiasharp is failing me on linux            
 
-            var tbmp = SkiaSharpBitmapOperand<uint>.Read(ResourceInfo.From("shannon.jpg").File.OpenRead)                
-                .GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
+            using var img = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
+            using var tbmp = img.GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
             ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8);
             ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Bgra8);
@@ -36,9 +39,9 @@ namespace InteropTypes.TensorBitmaps
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, fmt);
 
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
-            dst.GetContext<uint>().Fill(PixelsTransform.Copy, src);
+            dst.GetContext<uint>().Fill(BitmapOperations.Copy, src);
 
-            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel, uint>(dst);
+            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel>(dst);
 
             AttachmentInfo
                 .From($"shannon.{typeof(TPixel).Name}.jpg")
@@ -48,13 +51,32 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task TestAsBitmapOperand()
         {
-            var resource = ResourceInfo.From("shannon.jpg");
+            if (OperatingSystem.IsLinux()) return; // skiasharp is failing me on linux
 
-            using var bmp = SkiaSharpBitmapOperand<uint>.Read(resource.File.OpenRead);
+            using var bmp = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
 
             using var stretched = bmp.CreateStretched(64, 48);
 
             AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(s=> stretched.Write(s) );
+        }
+
+        [Test]
+        [Arguments(48, 256)]
+        [Arguments(256, 48)]
+        public async Task BitmapPreserveAspectFitTests(int w, int h)
+        {
+            using var img = SkiaSharpBitmapOperand<uint>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
+
+            for (int oa = 0; oa <= 10; oa++)
+            {
+                var bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
+
+                bmp.GetContext<uint>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img);
+
+                using var img2 = bmp.Cast<Rgb24>().ToImageSharp();
+
+                AttachmentInfo.From($"shannon.{oa}.jpg").WriteObjectEx( f=> img2.SaveAsJpeg(f.FullName));
+            }
         }
     }
 }

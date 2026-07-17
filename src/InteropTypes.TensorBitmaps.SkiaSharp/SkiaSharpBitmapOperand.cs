@@ -17,11 +17,21 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     /// <typeparam name="TPixel">The pixel type, most of the time this will be <see cref="uint"/></typeparam>
     public class SkiaSharpBitmapOperand<TPixel>
-        : IDisposableBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
-        , IDisposable
+        : IBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
+        , IDisposableBitmap<TPixel>
         where TPixel : unmanaged
     {
         #region IO
+
+        public static SkiaSharpBitmapOperand<TPixel> Load(System.IO.FileInfo finfo)
+        {
+            return Read(finfo.OpenRead);
+        }
+
+        public void Save(System.IO.FileInfo finfo)
+        {
+            Write(finfo.Create);
+        }
 
         public static SkiaSharpBitmapOperand<TPixel> Read(Func<System.IO.Stream> stream)
         {
@@ -35,7 +45,7 @@ namespace InteropTypes.TensorBitmaps
         {
             var skbmp = SKBitmap.Decode(stream);
 
-            return new SkiaSharpBitmapOperand<TPixel>(skbmp, false);
+            return new SkiaSharpBitmapOperand<TPixel>(skbmp);
         }
 
         public void Write(Func<System.IO.Stream> stream)
@@ -59,29 +69,21 @@ namespace InteropTypes.TensorBitmaps
 
         #region lifecycle
 
-        public static SkiaSharpBitmapOperand<TDstPixel> Create<TSrcBitmap, TSrcPixel, TDstPixel>(TSrcBitmap src)
+        public static SkiaSharpBitmapOperand<TPixel> Create<TSrcBitmap, TSrcPixel>(TSrcBitmap src)
             where TSrcBitmap: IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
-            where TSrcPixel: unmanaged
-            where TDstPixel : unmanaged
+            where TSrcPixel: unmanaged            
         {
             var skbmp = new SKBitmap(src.Width, src.Height);
-            var dst = new SkiaSharpBitmapOperand<TDstPixel>(skbmp, false);
+            var dst = new SkiaSharpBitmapOperand<TPixel>(skbmp);
 
-            dst.GetContext<TSrcPixel>().Fill(PixelsTransform.Copy, src);
+            dst.GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
 
             return dst;
         }
-
-
-        public SkiaSharpBitmapOperand(SKBitmap bitmap, bool doNotDispose)
-            : this(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height), doNotDispose) { }
-
-        private SkiaSharpBitmapOperand(SKBitmap bitmap, Rectangle region, bool doNotDispose)
+        
+        public SkiaSharpBitmapOperand(SKBitmap bitmap)
         {
             _Bitmap = bitmap;
-            _DoNotDispose = doNotDispose;
-            _Region = region;
-
             Format = (bitmap.ColorType, bitmap.AlphaType).ToPixelFormat();
         }
 
@@ -100,8 +102,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         protected virtual void Dispose(bool disposing)
-        {
-            if (_DoNotDispose) return;
+        {            
             if (!disposing) return;
 
             var bmp = System.Threading.Interlocked.Exchange(ref _Bitmap, null);
@@ -111,52 +112,65 @@ namespace InteropTypes.TensorBitmaps
         #endregion
 
         #region data
-
-        private readonly bool _DoNotDispose;
+        
         private SkiaSharp.SKBitmap _Bitmap;
-        private readonly Rectangle _Region;
-
         public PixelFormat Format { get; }
+
+        #endregion
+
+        #region properties
+
+        public int Width => _Bitmap.Width;
+
+        public int Height => _Bitmap.Height;
 
         #endregion
 
         #region API
 
-        public int Width => _Region.Width;
-
-        public int Height => _Region.Height;        
-
         public Span<byte> GetRowBytesSpan(int y)
         {
-            if (y < 0 || y >= _Region.Height) throw new ArgumentOutOfRangeException(nameof(y));
-
-            y += _Region.Y;
+            if (y < 0 || y >= _Bitmap.Height) throw new ArgumentOutOfRangeException(nameof(y));            
 
             var buffer = _Bitmap.GetPixelSpan();
-            return buffer.Slice(y * _Bitmap.RowBytes, _Bitmap.BytesPerPixel * _Region.Width);
+            var len = Math.Min(_Bitmap.RowBytes, _Bitmap.BytesPerPixel * _Bitmap.Width);
+            return buffer.Slice(y * _Bitmap.RowBytes, len);
         }
 
         public SkiaSharpBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
-        {
-            rectangle.Intersect(_Region);
-            return new SkiaSharpBitmapOperand<TPixel>(_Bitmap, rectangle, true); // this is a view, so do not dispose
-        }
+        {            
+            rectangle.Intersect(new Rectangle(0,0,Width,Height));
+
+            var cropArea = SKRectI.Create(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+
+            // Extract the subset (Shares memory!)
+            var croppedBitmap = new SKBitmap();
+            bool success = _Bitmap.ExtractSubset(croppedBitmap, cropArea);
+            if (!success) throw new InvalidOperationException();
+
+            return new SkiaSharpBitmapOperand<TPixel>(croppedBitmap); // this is a view, so do not dispose
+        }        
 
         public SkiaSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
         {
             var newSize = new SKImageInfo(width, height);
-            var options = SKSamplingOptions.Default;
-            var newBitmap = _Bitmap.Resize(newSize, options);
+            var options = new SKSamplingOptions(SKFilterMode.Linear);
 
-            return new SkiaSharpBitmapOperand<TPixel>(newBitmap, false); // this is a new object, so DO dispose
-        }
+            var newBitmap = _Bitmap.Resize(newSize, options);            
 
-        
+            return new SkiaSharpBitmapOperand<TPixel>(newBitmap);
+        }        
 
         public BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>() where TSrcPixel : unmanaged
         {
             return new BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel>(this);
-        }        
+        }
+
+        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
+        {
+            stretchedBitmap = CreateStretched(width, height);
+            return true;
+        }
 
         #endregion
     }

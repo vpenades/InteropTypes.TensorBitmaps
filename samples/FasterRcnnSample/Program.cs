@@ -19,7 +19,7 @@ namespace FasterRcnnSample
         public static void Main(string[] args)
         {
             // Read image
-            var image = SkiaSharpBitmapOperand<uint>.Read(new System.IO.FileInfo("frcnn_demo.jpg").OpenRead);
+            var image = SkiaSharpBitmapOperand<uint>.Load(new System.IO.FileInfo("frcnn_demo.jpg"));
 
             // create session
             using var sesion = new DetectionSession(null);
@@ -35,7 +35,7 @@ namespace FasterRcnnSample
                 dc.DrawRectangle(prediction.Box, System.Drawing.Color.Red);
             }
 
-            image.Write(new System.IO.FileInfo("frcnn_demo.diag.jpg").Create);
+            image.Save(new System.IO.FileInfo("frcnn_demo.result.jpg"));
         }
     }
 

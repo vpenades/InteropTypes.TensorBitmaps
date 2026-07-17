@@ -144,9 +144,9 @@ namespace InteropTypes.TensorBitmaps
             return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
         }        
 
-        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>() where TSrcPixel : unmanaged
+        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TSrcPixel>(this);
+            return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }
 
         #endregion

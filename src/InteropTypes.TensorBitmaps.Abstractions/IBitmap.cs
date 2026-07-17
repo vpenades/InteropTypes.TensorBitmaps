@@ -91,4 +91,12 @@ namespace InteropTypes.TensorBitmaps
         }
     }
 
+    public interface IReadOnlyDisposableBitmap<TPixel> : IReadOnlyBitmap<TPixel>, IDisposable
+        where TPixel : unmanaged
+    { }
+
+    public interface IDisposableBitmap<TPixel>
+        : IReadOnlyDisposableBitmap<TPixel>
+        , IBitmap<TPixel>
+        where TPixel: unmanaged { }
 }
