@@ -44,8 +44,7 @@ namespace InteropTypes.TensorBitmaps
 
             var crop = ScaledIntersectionCrop.CreateFrom(l, r, 0.5f);
         }
-
-
+        
         [Test]
         [Arguments(48,256)]
         [Arguments(256, 48)]

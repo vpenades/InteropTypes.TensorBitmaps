@@ -22,13 +22,13 @@ namespace FasterRcnnSample
             var image = SkiaSharpBitmapOperand<uint>.Load(new System.IO.FileInfo("frcnn_demo.jpg"));
 
             // create session
-            using var sesion = new DetectionSession(null);
+            using var session = new DetectionSession(null);
 
             // run session
-            var predictions = sesion.Predict<SkiaSharpBitmapOperand<uint>, uint>(image);            
+            var predictions = session.Predict(image);            
 
             // draw predictions
-            var dc = new DiagnosticsDrawing<SkiaSharpBitmapOperand<uint>, uint>(image);
+            var dc = new DiagnosticsDrawing<ManagedBitmapOperand<uint>, uint>(new ManagedBitmapOperand<uint>(image));
 
             foreach(var prediction in predictions)
             {

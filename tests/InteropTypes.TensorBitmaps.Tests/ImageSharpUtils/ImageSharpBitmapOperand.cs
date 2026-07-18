@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps.Operands;
 
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
-using BITMAPOPERATORS = InteropTypes.TensorBitmaps.Operators;
+using SkiaSharp;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -17,9 +18,7 @@ namespace InteropTypes.TensorBitmaps
     /// Represents a wrapper over a ImageSharp bitmap
     /// </summary>
     /// <typeparam name="TPixel">The ImageSharp pixel type</typeparam>
-    public class ImageSharpBitmapOperand<TPixel>
-        : IBitmapOperand<ImageSharpBitmapOperand<TPixel>, TPixel>
-        , IDisposableBitmap<TPixel>
+    public class ImageSharpBitmapOperand<TPixel> : IClientBitmap<TPixel>        
         where TPixel : unmanaged, IPixel<TPixel>
     {
         #region IO
@@ -46,7 +45,7 @@ namespace InteropTypes.TensorBitmaps
         {
             var img = Image.Load<TPixel>(stream);
 
-            return new ImageSharpBitmapOperand<TPixel>(img, false);
+            return new ImageSharpBitmapOperand<TPixel>(img);
         }
 
         public void Write(Func<System.IO.Stream> stream)
@@ -86,23 +85,16 @@ namespace InteropTypes.TensorBitmaps
             where TSrcPixel : unmanaged            
         {
             var bmp = new Image<TPixel>(src.Width, src.Height);
-            var dst = new ImageSharpBitmapOperand<TPixel>(bmp, false);
+            var dst = new ImageSharpBitmapOperand<TPixel>(bmp);
 
-            dst.GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
+            dst.AsOperand().GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
 
             return dst;
         }
 
-
-        public ImageSharpBitmapOperand(Image<TPixel> bitmap, bool doNotDispose)
-            : this(bitmap, new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height), doNotDispose) { }
-
-        private ImageSharpBitmapOperand(Image<TPixel> bitmap, System.Drawing.Rectangle region, bool doNotDispose)
+        private ImageSharpBitmapOperand(Image<TPixel> bitmap)
         {
             _Bitmap = bitmap;
-            _DoNotDispose = doNotDispose;
-            _Region = region;
-
             Format = ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel));
         }
 
@@ -121,8 +113,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         protected virtual void Dispose(bool disposing)
-        {
-            if (_DoNotDispose) return;
+        {            
             if (!disposing) return;
 
             var bmp = System.Threading.Interlocked.Exchange(ref _Bitmap, null);
@@ -132,75 +123,85 @@ namespace InteropTypes.TensorBitmaps
         #endregion
 
         #region data
-
-        private readonly bool _DoNotDispose;
+        
         private Image<TPixel>? _Bitmap;
-        private readonly System.Drawing.Rectangle _Region;
-
         public PixelFormat Format { get; }
 
         #endregion
 
         #region properties
 
-        public int Width => _Region.Width;
-
-        public int Height => _Region.Height;
+        public int Width => _Bitmap?.Width ?? 0;
+        public int Height => _Bitmap?.Height ?? 0;
 
         #endregion
 
-        #region API
+        #region API        
 
-        public Span<byte> GetRowBytesSpan(int y)
-        {            
-            return System.Runtime.InteropServices.MemoryMarshal.AsBytes(GetRowPixelsSpan(y));
+        public ManagedBitmapOperand<TPixel> AsOperand()
+        {
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
+
+            return new ManagedBitmapOperand<TPixel>(this);
         }
 
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
-            if (y < 0 || y >= _Region.Height) throw new ArgumentOutOfRangeException(nameof(y));
-
-            y += _Region.Y;
-
-            var pixels = _Bitmap.Frames[0].PixelBuffer.DangerousGetRowSpan(y);
-            return pixels.Slice(0, _Region.Width);            
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
+            return _Bitmap.Frames[0].PixelBuffer.DangerousGetRowSpan(y);
         }
 
-        public ImageSharpBitmapOperand<TPixel> GetCropped(System.Drawing.Rectangle rectangle)
+        bool IClientBitmap<TPixel>.TryCreateCropped(System.Drawing.Rectangle rect, bool shareMemory, [NotNullWhen(true)] out IClientBitmap<TPixel>? croppedBitmap)
         {
-            rectangle.X += _Region.X;
-            rectangle.Y += _Region.Y;
-            rectangle.Intersect(_Region);
+            if (shareMemory)
+            {
+                croppedBitmap = null;
+                return false;
+            }
+            else
+            {
+                croppedBitmap = CreateCropped(rect);
+                return true;
+            }
+        }
 
-            return new ImageSharpBitmapOperand<TPixel>(_Bitmap, rectangle, true); // this is a view, so do not dispose
+        bool IClientBitmap<TPixel>.TryCreateStretched(int width, int height, System.Drawing.Rectangle? srcCrop, [NotNullWhen(true)] out IClientBitmap<TPixel>? stretchedBitmap)
+        {
+            if (srcCrop.HasValue)
+            {
+                using var cropped = CreateCropped(srcCrop.Value);
+                stretchedBitmap = cropped.CreateStretched(width, height);
+                return true;
+            }
+
+            stretchedBitmap = CreateStretched(width, height);
+            return true;
+        }
+
+        public ImageSharpBitmapOperand<TPixel> CreateCropped(System.Drawing.Rectangle rectangle)
+        {
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
+
+            var r = new Rectangle(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+
+            var crop = _Bitmap.Clone(dc => dc.Crop(r));
+
+            return new ImageSharpBitmapOperand<TPixel>(crop);
         }
 
         public ImageSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
         {
-            var r = new Rectangle(_Region.X, _Region.Y, _Region.Width, _Region.Height);
-            using var crop = _Bitmap.Clone(item => item.Crop(r));
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
 
             var ropts = new ResizeOptions();
             ropts.Size = new Size(width, height);
             ropts.Compand = true;
             ropts.PremultiplyAlpha = true;
-            ropts.Mode = ResizeMode.Stretch;
-            
+            ropts.Mode = ResizeMode.Stretch;            
 
-            var newBitmap = crop.Clone(dc => dc.Resize(ropts));
+            var newBitmap = _Bitmap.Clone(dc => dc.Resize(ropts));
 
-            return new ImageSharpBitmapOperand<TPixel>(newBitmap, false);
-        }
-
-        public BITMAPOPERATORS.BinaryOperatorContext<ImageSharpBitmapOperand<TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
-        {
-            return new BITMAPOPERATORS.BinaryOperatorContext<ImageSharpBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
-        }
-
-        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = CreateStretched(width, height);
-            return true;
+            return new ImageSharpBitmapOperand<TPixel>(newBitmap);
         }        
 
         #endregion

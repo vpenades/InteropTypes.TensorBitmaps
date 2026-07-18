@@ -121,11 +121,12 @@ namespace InteropTypes.TensorBitmaps.Operators
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
-        {            
-            if (src.TryCreateStretchedClientBitmap(dst.Width, dst.Height, out var stretchedBitmap))
+        {
+            if (src.TryCastTo<IReadOnlyBitmap<TSrcPixel>>(out var srcManaged) &&
+                IClientReadOnlyBitmap<TSrcPixel>.TryCreateStretched(srcManaged, dst.Width,dst.Height, out var stretchedBitmap))
             {
                 System.Diagnostics.Debug.Assert(dst.Width == stretchedBitmap.Width);
-                System.Diagnostics.Debug.Assert(dst.Height == stretchedBitmap.Height);                
+                System.Diagnostics.Debug.Assert(dst.Height == stretchedBitmap.Height);
 
                 for (int y = 0; y < dst.Height; ++y)
                 {
@@ -134,9 +135,9 @@ namespace InteropTypes.TensorBitmaps.Operators
                     var dstRow = dst.GetRowPixelsSpan(y);
                     pixelConverter.ConvertPixels(srcRow, dstRow);
                 }
-
                 stretchedBitmap.Dispose();
             }
+            
             else
             {
                 Span<TSrcPixel> tmpRow = stackalloc TSrcPixel[dst.Width];

@@ -40,7 +40,7 @@ namespace InteropTypes.TensorBitmaps
         public async Task LoadSaveRoundtripTest()
         {
             using var img = ImageSharpBitmapOperand<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
-            using var imgCrop = img.GetCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
+            using var imgCrop = img.CreateCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
 
             var fillColor = new Rgb24(0, 255, 0);
             for (int i = 0; i < imgCrop.Height; i++)

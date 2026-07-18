@@ -16,9 +16,7 @@ namespace InteropTypes.TensorBitmaps
     /// Represents a wrapper over a Skiasharp bitmap
     /// </summary>
     /// <typeparam name="TPixel">The pixel type, most of the time this will be <see cref="uint"/></typeparam>
-    public class SkiaSharpBitmapOperand<TPixel>
-        : IBitmapOperand<SkiaSharpBitmapOperand<TPixel>, TPixel>        
-        , IDisposableBitmap<TPixel>
+    public class SkiaSharpBitmapOperand<TPixel> : IClientBitmap<TPixel>
         where TPixel : unmanaged
     {
         #region IO
@@ -76,7 +74,7 @@ namespace InteropTypes.TensorBitmaps
             var skbmp = new SKBitmap(src.Width, src.Height);
             var dst = new SkiaSharpBitmapOperand<TPixel>(skbmp);
 
-            dst.GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
+            dst.AsOperand().GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
 
             return dst;
         }
@@ -121,15 +119,28 @@ namespace InteropTypes.TensorBitmaps
         #region properties
 
         public int Width => _Bitmap.Width;
-
         public int Height => _Bitmap.Height;
 
         #endregion
 
         #region API
 
+        public ManagedBitmapOperand<TPixel> AsOperand()
+        {
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(SKBitmap));
+            return new ManagedBitmapOperand<TPixel>(this);
+        }
+
+        public Span<TPixel> GetRowPixelsSpan(int y)
+        {
+            var bytes = GetRowBytesSpan(y);
+            return System.Runtime.InteropServices.MemoryMarshal.Cast<byte, TPixel>(bytes);
+        }
+
         public Span<byte> GetRowBytesSpan(int y)
         {
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(SKBitmap));
+
             if (y < 0 || y >= _Bitmap.Height) throw new ArgumentOutOfRangeException(nameof(y));            
 
             var buffer = _Bitmap.GetPixelSpan();
@@ -137,9 +148,42 @@ namespace InteropTypes.TensorBitmaps
             return buffer.Slice(y * _Bitmap.RowBytes, len);
         }
 
-        public SkiaSharpBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
-        {            
-            rectangle.Intersect(new Rectangle(0,0,Width,Height));
+        bool IClientBitmap<TPixel>.TryCreateCropped(System.Drawing.Rectangle rect, bool shareMemory, out IClientBitmap<TPixel> croppedBitmap)
+        {
+            croppedBitmap = CreateCropped(rect);
+            return true;
+        }
+
+        bool IClientBitmap<TPixel>.TryCreateStretched(int width, int height, System.Drawing.Rectangle? srcCrop, out IClientBitmap<TPixel> stretchedBitmap)
+        {
+            if (srcCrop.HasValue)
+            {
+                using var cropped = CreateCropped(srcCrop.Value);
+                stretchedBitmap = cropped.CreateStretched(width, height);
+                return true;
+            }
+
+            stretchedBitmap = CreateStretched(width,height);
+            return true;
+        }
+
+        public SkiaSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
+        {
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(SKBitmap));
+
+            var newSize = new SKImageInfo(width, height);
+            var options = new SKSamplingOptions(SKCubicResampler.Mitchell);
+
+            var newBitmap = _Bitmap.Resize(newSize, options);
+
+            return new SkiaSharpBitmapOperand<TPixel>(newBitmap);
+        }
+
+        public SkiaSharpBitmapOperand<TPixel> CreateCropped(Rectangle rectangle)
+        {
+            ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(SKBitmap));
+
+            rectangle.Intersect(new Rectangle(0, 0, Width, Height));
 
             var cropArea = SKRectI.Create(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
 
@@ -150,27 +194,6 @@ namespace InteropTypes.TensorBitmaps
 
             return new SkiaSharpBitmapOperand<TPixel>(croppedBitmap); // this is a view, so do not dispose
         }        
-
-        public SkiaSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
-        {
-            var newSize = new SKImageInfo(width, height);            
-            var options = new SKSamplingOptions (SKCubicResampler.Mitchell);
-
-            var newBitmap = _Bitmap.Resize(newSize, options);            
-
-            return new SkiaSharpBitmapOperand<TPixel>(newBitmap);
-        }        
-
-        public BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>() where TSrcPixel : unmanaged
-        {
-            return new BITMAPOPERATORS.BinaryOperatorContext<SkiaSharpBitmapOperand<TPixel>, TPixel, TSrcPixel>(this);
-        }
-
-        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = CreateStretched(width, height);
-            return true;
-        }
 
         #endregion
     }

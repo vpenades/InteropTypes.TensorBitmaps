@@ -44,6 +44,13 @@ namespace FasterRcnnSample
 
         public float MinConfidence { get; set; } = 0.7f;        
 
+        public IReadOnlyList<Prediction> Predict<TPixel>(IReadOnlyBitmap<TPixel> image)
+            where TPixel: unmanaged
+        {
+            var operand = new ManagedReadOnlyBitmapOperand<TPixel>(image);
+            return Predict<ManagedReadOnlyBitmapOperand<TPixel>, TPixel>(operand);
+        }
+
         public IReadOnlyList<Prediction> Predict<TBitmap, TPixel>(TBitmap image)
             where TBitmap: IReadOnlyBitmapOperand<TBitmap, TPixel>, allows ref struct
             where TPixel : unmanaged

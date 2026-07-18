@@ -105,6 +105,13 @@ namespace InteropTypes.TensorBitmaps
 
         #region API
 
+        public bool TryCastTo<T>(out T managedBitmap)
+            where T : IReadOnlyBitmap<TPixel>
+        {
+            managedBitmap = default;
+            return false;
+        }
+
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
         /// </summary>
@@ -167,18 +174,6 @@ namespace InteropTypes.TensorBitmaps
         public BITMAPOPERATORS.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
         {
             return new Operators.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
-        }
-
-        public bool TryCreateStretchedClientBitmap(int width, int height, out IDisposableBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = default;
-            return false;
-        }
-
-        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = default;
-            return false;
         }
 
         #endregion

@@ -103,6 +103,19 @@ namespace InteropTypes.TensorBitmaps
 
         #region API
 
+        public bool TryCastTo<T>(out T managedBitmap)
+            where T : IReadOnlyBitmap<TPixel>
+        {
+            if (this is T managed)
+            {
+                managedBitmap = managed;
+                return true;
+            }
+
+            managedBitmap = default;            
+            return false;
+        }
+
         ITensorBitmap ITensorBitmap.GetCropped(Rectangle rectangle)
         {
             return GetCropped(rectangle);
@@ -122,7 +135,6 @@ namespace InteropTypes.TensorBitmaps
         {
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
         }
-
 
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.

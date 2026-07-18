@@ -4,9 +4,6 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-
-using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps.Operands
 {
@@ -19,6 +16,13 @@ namespace InteropTypes.TensorBitmaps.Operands
         where TSelf : IReadOnlyBitmapOperand<TSelf, TPixel>, allows ref struct
         where TPixel : unmanaged        
     {
+        public bool TryCastTo<T>(out T managedBitmap)
+            where T: IReadOnlyBitmap<TPixel>
+        {
+            managedBitmap = default;
+            return false;
+        }
+
         /// <summary>
         /// Gets a cropped view of the bitmap.
         /// </summary>
@@ -34,13 +38,7 @@ namespace InteropTypes.TensorBitmaps.Operands
         /// </remarks>
         /// <param name="rect">The region to crop</param>
         /// <returns>A cropped bitmap</returns>
-        TSelf GetCropped(System.Drawing.Rectangle rectangle);
-
-        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = default;
-            return false;
-        }
+        TSelf GetCropped(System.Drawing.Rectangle rectangle);        
     }
 
     /// <summary>

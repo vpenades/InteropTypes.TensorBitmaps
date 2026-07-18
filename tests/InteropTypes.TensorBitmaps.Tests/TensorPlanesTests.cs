@@ -22,7 +22,7 @@ namespace InteropTypes.TensorBitmaps
         {
             using var img = ImageSharpBitmapOperand<Bgr24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);            
 
-            using var imgCrop = img.GetCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
+            using var imgCrop = img.CreateCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
 
             // create a custom RGB format with a std-mean range
 

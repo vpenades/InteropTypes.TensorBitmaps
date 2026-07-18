@@ -162,6 +162,12 @@ namespace InteropTypes.TensorBitmaps
 
         public int Height => _DstPlaneX.Height;
 
+        public TResult Fill<TResult>(BitmapBinaryOperation<TResult> transform, IReadOnlyBitmap<TContextPixel> srcBmp)
+        {
+            var srcRef = new ManagedReadOnlyBitmapOperand<TContextPixel>(srcBmp);
+            return Fill(transform, srcRef);            
+        }
+
         public TResult Fill<TSrcBitmap, TResult>(BitmapBinaryOperation<TResult> transform, TSrcBitmap srcBmp)
             where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TContextPixel>, allows ref struct
         {
@@ -173,14 +179,20 @@ namespace InteropTypes.TensorBitmaps
             var z = xform.Execute(srcBmp, _DstPlaneZ, true);
 
             return x;
-        }        
+        }
 
-        public TResult CopyTo<TDstBitmap, TResult>(BitmapBinaryOperation<TResult> transform, TDstBitmap dst)
+        public TResult CopyTo<TResult>(BitmapBinaryOperation<TResult> transform, IBitmap<TContextPixel> dstBmp)            
+        {
+            var dstRef = new ManagedBitmapOperand<TContextPixel>(dstBmp);
+            return CopyTo(transform, dstRef);
+        }
+
+        public TResult CopyTo<TDstBitmap, TResult>(BitmapBinaryOperation<TResult> transform, TDstBitmap dstBmp)
             where TDstBitmap : IBitmapOperand<TDstBitmap, TContextPixel>, allows ref struct
         {
-            var x = dst.GetContext<TPlanePixel>().Fill(transform, _DstPlaneX, false);
-            var y = dst.GetContext<TPlanePixel>().Fill(transform, _DstPlaneY, false);
-            var z = dst.GetContext<TPlanePixel>().Fill(transform, _DstPlaneZ, false);
+            var x = dstBmp.GetContext<TPlanePixel>().Fill(transform, _DstPlaneX, false);
+            var y = dstBmp.GetContext<TPlanePixel>().Fill(transform, _DstPlaneY, false);
+            var z = dstBmp.GetContext<TPlanePixel>().Fill(transform, _DstPlaneZ, false);
             return x;
         }
 
@@ -194,7 +206,8 @@ namespace InteropTypes.TensorBitmaps
             var pcy = IPixelConverter<TContextPixel, TPlanePixel>.Create(src.Format, _DstPlaneY.Format, true);
             var pcz = IPixelConverter<TContextPixel, TPlanePixel>.Create(src.Format, _DstPlaneZ.Format, true);
 
-            if (src.TryCreateStretchedClientBitmap(this.Width, this.Height, out var stretchedBitmap))
+            if (src.TryCastTo<IReadOnlyBitmap<TContextPixel>>(out var srcManaged) && 
+                IClientReadOnlyBitmap<TContextPixel>.TryCreateStretched(srcManaged, this.Width, this.Height, out var stretchedBitmap))
             {
                 System.Diagnostics.Debug.Assert(this.Width == stretchedBitmap.Width);
                 System.Diagnostics.Debug.Assert(this.Height == stretchedBitmap.Height);

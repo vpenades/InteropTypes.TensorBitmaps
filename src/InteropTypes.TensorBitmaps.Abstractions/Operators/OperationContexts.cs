@@ -17,7 +17,20 @@ namespace InteropTypes.TensorBitmaps.Operators
             _DstBitmap = dstBitmap;            
         }
 
-        private readonly TBitmap _DstBitmap;        
+        private readonly TBitmap _DstBitmap;
+
+        public TResult Fill<TResult>(BitmapBinaryOperation<TResult> transform, IReadOnlyBitmap<TContextPixel> srcBmp, bool initPixels = true)            
+        {
+            var srcRef = new ManagedReadOnlyBitmapOperand<TContextPixel>(srcBmp);
+            return Fill(transform,srcRef, initPixels);
+        }
+
+        public TResult Fill<TSrcBitmap, TResult>(BitmapBinaryOperation<TResult> transform, IReadOnlyBitmap<TContextPixel> srcBmp, IPixelConverter<TContextPixel, TPixel> pixelConverter)            
+        {
+            var srcRef = new ManagedReadOnlyBitmapOperand<TContextPixel>(srcBmp);
+            return Fill(transform, srcRef, pixelConverter);
+        }
+
 
         public TResult Fill<TSrcBitmap,TResult>(BitmapBinaryOperation<TResult> transform, TSrcBitmap srcBmp, bool initPixels = true)
             where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TContextPixel>, allows ref struct

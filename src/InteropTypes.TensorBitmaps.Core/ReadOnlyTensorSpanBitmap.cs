@@ -102,6 +102,13 @@ namespace InteropTypes.TensorBitmaps
 
         #region API
 
+        public bool TryCastTo<T>(out T managedBitmap)
+            where T : IReadOnlyBitmap<TPixel>
+        {
+            managedBitmap = default;
+            return false;
+        }
+
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
         /// </summary>
@@ -120,13 +127,7 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
-        }
-
-        public bool TryCreateStretchedClientBitmap(int width, int height, out IReadOnlyDisposableBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = default;
-            return false;
-        }
+        }        
 
         #endregion
     }

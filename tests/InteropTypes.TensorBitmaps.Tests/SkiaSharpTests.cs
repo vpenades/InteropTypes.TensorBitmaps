@@ -22,7 +22,7 @@ namespace InteropTypes.TensorBitmaps
             if (OperatingSystem.IsLinux()) return; // skiasharp is failing me on linux            
 
             using var img = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
-            using var tbmp = img.GetCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
+            using var tbmp = img.CreateCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
             ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8);
             ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Bgra8);
