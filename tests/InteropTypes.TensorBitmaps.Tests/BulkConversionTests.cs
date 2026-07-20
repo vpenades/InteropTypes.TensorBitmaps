@@ -17,7 +17,7 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task TestPixelConversions()
         {
-            using var img = ImageSharpBitmapOperand<Rgb24>.Load(ResourceInfo.From("shannon.jpg"));
+            using var img = ImageSharpBitmap<Rgb24>.Load(ResourceInfo.From("shannon.jpg"));
 
             img.ToTensorBitmap(out TensorBitmap<byte,Rgb24> tensorbmp);
 

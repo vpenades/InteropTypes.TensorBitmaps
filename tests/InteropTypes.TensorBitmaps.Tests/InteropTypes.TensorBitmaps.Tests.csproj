@@ -18,6 +18,7 @@
 		<PackageReference Include="TestAttachments.TUnit" />
 		<PackageReference Include="SixLabors.ImageSharp" />
 		<PackageReference Include="SkiaSharp" />
+		<PackageReference Include="PhotoSauce.MagicScaler" />
 	</ItemGroup>	
 
 	<ItemGroup>	  

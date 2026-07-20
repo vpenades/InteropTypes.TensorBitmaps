@@ -20,7 +20,7 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task TestPlaneBitmaps()
         {
-            using var img = ImageSharpBitmapOperand<Bgr24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);            
+            using var img = ImageSharpBitmap<Bgr24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);            
 
             using var imgCrop = img.CreateCropped(new System.Drawing.Rectangle(200, 100, 280, 280));
 

@@ -22,7 +22,7 @@ namespace InteropTypes.TensorBitmaps
         {
             // load image and convert it to a tensor bitmap
 
-            using var img = ImageSharpBitmapOperand<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);            
+            using var img = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);            
 
             // create another tensor bitmap and fill it with the image we've loaded
 
@@ -50,7 +50,7 @@ namespace InteropTypes.TensorBitmaps
         [Arguments(256, 48)]
         public async Task BitmapPreserveAspectFitTests(int w, int h)
         {
-            using var img_isharp = ImageSharpBitmapOperand<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
+            using var img_isharp = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
 
             using var img_skya = OperatingSystem.IsLinux()
                 ? null 

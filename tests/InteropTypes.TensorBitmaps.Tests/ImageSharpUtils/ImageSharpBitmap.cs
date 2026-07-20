@@ -10,20 +10,18 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-using SkiaSharp;
-
 namespace InteropTypes.TensorBitmaps
 {
     /// <summary>
     /// Represents a wrapper over a ImageSharp bitmap
     /// </summary>
     /// <typeparam name="TPixel">The ImageSharp pixel type</typeparam>
-    public class ImageSharpBitmapOperand<TPixel> : IClientBitmap<TPixel>        
+    public class ImageSharpBitmap<TPixel> : IClientBitmap<TPixel>        
         where TPixel : unmanaged, IPixel<TPixel>
     {
         #region IO
 
-        public static ImageSharpBitmapOperand<TPixel> Load(System.IO.FileInfo finfo)
+        public static ImageSharpBitmap<TPixel> Load(System.IO.FileInfo finfo)
         {
             return Read(finfo.OpenRead);
         }
@@ -33,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
             Write(finfo.Create);
         }
 
-        public static ImageSharpBitmapOperand<TPixel> Read(Func<System.IO.Stream> stream)
+        public static ImageSharpBitmap<TPixel> Read(Func<System.IO.Stream> stream)
         {
             using (var s = stream.Invoke())
             {
@@ -41,11 +39,11 @@ namespace InteropTypes.TensorBitmaps
             }
         }
 
-        public static ImageSharpBitmapOperand<TPixel> Read(System.IO.Stream stream)
+        public static ImageSharpBitmap<TPixel> Read(System.IO.Stream stream)
         {
             var img = Image.Load<TPixel>(stream);
 
-            return new ImageSharpBitmapOperand<TPixel>(img);
+            return new ImageSharpBitmap<TPixel>(img);
         }
 
         public void Write(Func<System.IO.Stream> stream)
@@ -80,19 +78,19 @@ namespace InteropTypes.TensorBitmaps
 
         #region lifecycle
 
-        public static ImageSharpBitmapOperand<TPixel> Create<TSrcBitmap, TSrcPixel>(TSrcBitmap src)
+        public static ImageSharpBitmap<TPixel> Create<TSrcBitmap, TSrcPixel>(TSrcBitmap src)
             where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
             where TSrcPixel : unmanaged            
         {
             var bmp = new Image<TPixel>(src.Width, src.Height);
-            var dst = new ImageSharpBitmapOperand<TPixel>(bmp);
+            var dst = new ImageSharpBitmap<TPixel>(bmp);
 
             dst.AsOperand().GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
 
             return dst;
         }
 
-        private ImageSharpBitmapOperand(Image<TPixel> bitmap)
+        private ImageSharpBitmap(Image<TPixel> bitmap)
         {
             _Bitmap = bitmap;
             Format = ImageSharpUtils.ToTensorPixelFormat(typeof(TPixel));
@@ -178,7 +176,7 @@ namespace InteropTypes.TensorBitmaps
             return true;
         }
 
-        public ImageSharpBitmapOperand<TPixel> CreateCropped(System.Drawing.Rectangle rectangle)
+        public ImageSharpBitmap<TPixel> CreateCropped(System.Drawing.Rectangle rectangle)
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
 
@@ -186,10 +184,10 @@ namespace InteropTypes.TensorBitmaps
 
             var crop = _Bitmap.Clone(dc => dc.Crop(r));
 
-            return new ImageSharpBitmapOperand<TPixel>(crop);
+            return new ImageSharpBitmap<TPixel>(crop);
         }
 
-        public ImageSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
+        public ImageSharpBitmap<TPixel> CreateStretched(int width, int height)
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
 
@@ -201,7 +199,7 @@ namespace InteropTypes.TensorBitmaps
 
             var newBitmap = _Bitmap.Clone(dc => dc.Resize(ropts));
 
-            return new ImageSharpBitmapOperand<TPixel>(newBitmap);
+            return new ImageSharpBitmap<TPixel>(newBitmap);
         }        
 
         #endregion
