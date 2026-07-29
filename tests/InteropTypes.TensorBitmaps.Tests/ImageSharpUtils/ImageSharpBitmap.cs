@@ -149,30 +149,22 @@ namespace InteropTypes.TensorBitmaps
             return _Bitmap.Frames[0].PixelBuffer.DangerousGetRowSpan(y);
         }
 
-        bool IClientBitmap<TPixel>.TryCreateCropped(System.Drawing.Rectangle rect, bool shareMemory, [NotNullWhen(true)] out IClientBitmap<TPixel>? croppedBitmap)
-        {
-            if (shareMemory)
-            {
-                croppedBitmap = null;
-                return false;
-            }
-            else
-            {
-                croppedBitmap = CreateCropped(rect);
-                return true;
-            }
-        }
+        bool IClientBitmap<TPixel>.TryGetCropped(System.Drawing.Rectangle rect, [NotNullWhen(true)] out IClientBitmap<TPixel>? croppedBitmap)
+        {            
+            croppedBitmap = null;
+            return false;
+        }        
 
-        bool IClientBitmap<TPixel>.TryCreateStretched(int width, int height, System.Drawing.Rectangle? srcCrop, [NotNullWhen(true)] out IClientBitmap<TPixel>? stretchedBitmap)
+        bool IClientBitmap<TPixel>.TryCreateStretched(System.Drawing.Rectangle? srcCrop, System.Drawing.Size dstSize, [NotNullWhen(true)] out IClientBitmap<TPixel>? stretchedBitmap)
         {
             if (srcCrop.HasValue)
             {
                 using var cropped = CreateCropped(srcCrop.Value);
-                stretchedBitmap = cropped.CreateStretched(width, height);
+                stretchedBitmap = cropped.CreateStretched(dstSize);
                 return true;
             }
 
-            stretchedBitmap = CreateStretched(width, height);
+            stretchedBitmap = CreateStretched(dstSize);
             return true;
         }
 
@@ -187,12 +179,12 @@ namespace InteropTypes.TensorBitmaps
             return new ImageSharpBitmap<TPixel>(crop);
         }
 
-        public ImageSharpBitmap<TPixel> CreateStretched(int width, int height)
+        public ImageSharpBitmap<TPixel> CreateStretched(System.Drawing.Size size)
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
 
             var ropts = new ResizeOptions();
-            ropts.Size = new Size(width, height);
+            ropts.Size = new SixLabors.ImageSharp.Size(size.Width, size.Height);
             ropts.Compand = true;
             ropts.PremultiplyAlpha = true;
             ropts.Mode = ResizeMode.Stretch;            

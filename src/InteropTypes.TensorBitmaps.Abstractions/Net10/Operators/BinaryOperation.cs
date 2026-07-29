@@ -123,7 +123,7 @@ namespace InteropTypes.TensorBitmaps.Operators
             where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
         {
             if (src.TryCastTo<IReadOnlyBitmap<TSrcPixel>>(out var srcManaged) &&
-                IClientReadOnlyBitmap<TSrcPixel>.TryCreateStretched(srcManaged, dst.Width,dst.Height, out var stretchedBitmap))
+                IClientReadOnlyBitmap<TSrcPixel>.TryCreateStretched(srcManaged, new System.Drawing.Size(dst.Width,dst.Height), out var stretchedBitmap))
             {
                 System.Diagnostics.Debug.Assert(dst.Width == stretchedBitmap.Width);
                 System.Diagnostics.Debug.Assert(dst.Height == stretchedBitmap.Height);

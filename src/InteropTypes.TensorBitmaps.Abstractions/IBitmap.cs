@@ -5,8 +5,6 @@ using System.Text;
 
 using InteropTypes.Numerics;
 
-using RECT = System.Drawing.Rectangle;
-
 namespace InteropTypes.TensorBitmaps
 {
     /// <summary>
@@ -102,77 +100,5 @@ namespace InteropTypes.TensorBitmaps
             var pixels = GetRowPixelsSpan(y);
             return System.Runtime.InteropServices.MemoryMarshal.AsBytes(pixels);
         }        
-    }
-
-    public interface IClientReadOnlyBitmap<TPixel> : IReadOnlyBitmap<TPixel>, IDisposable
-        where TPixel : unmanaged
-    {
-        public bool TryCreateCropped(RECT rect, bool shareMemory, out IClientReadOnlyBitmap<TPixel> croppedBitmap)
-        {
-            croppedBitmap = default;
-            return false;
-        }
-
-        public bool TryCreateStretched(int width, int height, RECT? srcCrop, out IClientReadOnlyBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = default;
-            return false;
-        }
-
-        public static bool TryCreateStretched(IReadOnlyBitmap<TPixel> src, int width, int height, out IClientReadOnlyBitmap<TPixel> stretchedBitmap)
-        {
-            switch(src)
-            {
-                case IClientReadOnlyBitmap<TPixel> client:
-                    return client.TryCreateStretched(width, height, null, out stretchedBitmap);                
-
-                case _ReadOnlyBitmapCropped<TPixel> rocropped:
-                    return rocropped.TryCreateStretchedClient(width, height, out stretchedBitmap);
-
-                case _BitmapCropped<TPixel> rocropped:
-                    if (rocropped.TryCreateStretchedClient(width, height, out var stretched))
-                    {
-                        stretchedBitmap = stretched;
-                        return true;
-                    }
-                    break;
-            }
-
-            stretchedBitmap = default;
-            return false;
-        }
-    }
-
-    public interface IClientBitmap<TPixel>
-        : IClientReadOnlyBitmap<TPixel>
-        , IBitmap<TPixel>
-        where TPixel: unmanaged
-    {
-        bool IClientReadOnlyBitmap<TPixel>.TryCreateCropped(RECT rect, bool shareMemory, out IClientReadOnlyBitmap<TPixel> croppedBitmap)
-        {
-            if (TryCreateCropped(rect, shareMemory, out var cropped)) { croppedBitmap = cropped; return true; }
-            croppedBitmap = default;
-            return false;
-        }
-
-        bool IClientReadOnlyBitmap<TPixel>.TryCreateStretched(int width, int height, RECT? srcCrop, out IClientReadOnlyBitmap<TPixel> stretchedBitmap)
-        {
-            if (TryCreateStretched(width, height, srcCrop, out var stretched)) { stretchedBitmap = stretched; return true; }
-            stretchedBitmap = default;
-            return false;
-        }
-
-
-        public bool TryCreateCropped(RECT rect, bool shareMemory, out IClientBitmap<TPixel> croppedBitmap)
-        {
-            croppedBitmap = default;
-            return false;
-        }
-
-        public bool TryCreateStretched(int width, int height, RECT? srcCrop, out IClientBitmap<TPixel> stretchedBitmap)
-        {
-            stretchedBitmap = default;
-            return false;
-        }
-    }
+    }    
 }

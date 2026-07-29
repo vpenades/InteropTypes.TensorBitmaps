@@ -14,10 +14,13 @@ using RECTANGLE = System.Drawing.RectangleF;
 
 namespace InteropTypes.TensorBitmaps.Diagnostics
 {
+    [System.Diagnostics.DebuggerDisplay("DiagnosticsDrawing {_Bitmap.Width}x{_Bitmap.Height}x{{_Bitmap.Format}")]
     public readonly ref struct DiagnosticsDrawing<TBitmap, TPixel>
             where TBitmap : IBitmapOperand<TBitmap, TPixel>, allows ref struct
             where TPixel : unmanaged
     {
+        #region lifecycle
+
         public DiagnosticsDrawing(TBitmap bitmap)
         {
             _Bitmap = bitmap;
@@ -26,8 +29,16 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
             _Colors = IPixelConverter<int, TPixel>.Create(KnownPixelFormats.Bgra8, _Bitmap.Format, true);
         }
 
+        #endregion
+
+        #region data
+
         private readonly TBitmap _Bitmap;
         private readonly IPixelConverter<int, TPixel> _Colors;
+
+        #endregion
+
+        #region API
 
         public TPixel GetColorPixel(COLOR color)
         {
@@ -116,5 +127,7 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
                 }
             }
         }
+
+        #endregion
     }
 }

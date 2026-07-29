@@ -5,9 +5,11 @@ using System.Text;
 using InteropTypes.Numerics;
 
 using RECT = System.Drawing.Rectangle;
+using SIZE = System.Drawing.Size;
 
 namespace InteropTypes.TensorBitmaps
 {
+    [System.Diagnostics.DebuggerDisplay("_ReadOnlyBitmapCropped {Width}x{Height}x{Format}")]
     readonly struct _ReadOnlyBitmapCropped : IReadOnlyBitmap
     {
         public _ReadOnlyBitmapCropped(IReadOnlyBitmap source, RECT cropRect)
@@ -40,6 +42,7 @@ namespace InteropTypes.TensorBitmaps
         }
     }
 
+    [System.Diagnostics.DebuggerDisplay("_BitmapCropped {Width}x{Height}x{Format}")]
     readonly struct _BitmapCropped : IBitmap
     {
         public _BitmapCropped(IBitmap source, RECT cropRect)
@@ -75,6 +78,7 @@ namespace InteropTypes.TensorBitmaps
         }
     }
 
+    [System.Diagnostics.DebuggerDisplay("_ReadOnlyBitmapCropped {Width}x{Height}x{Format}")]
     readonly struct _ReadOnlyBitmapCropped<TPixel> : IReadOnlyBitmap<TPixel>
         where TPixel: unmanaged
     {
@@ -107,19 +111,20 @@ namespace InteropTypes.TensorBitmaps
                 .Slice(_Rect.X, _Rect.Width);
         }        
 
-        public bool TryCreateCroppedClient(bool shareMemory, out IClientReadOnlyBitmap<TPixel> croppedClient)
+        public bool TryCreateCroppedClient(out IClientReadOnlyBitmap<TPixel> croppedClient)
         {
             if (_Source is not IClientReadOnlyBitmap<TPixel> client) { croppedClient = null; return false; }
-            return client.TryCreateCropped(_Rect, shareMemory, out croppedClient);
+            return client.TryGetCropped(_Rect, out croppedClient);
         }
 
-        public bool TryCreateStretchedClient(int width, int height, out IClientReadOnlyBitmap<TPixel> stretchedClient)
+        public bool TryCreateStretchedClient(SIZE dstSize, out IClientReadOnlyBitmap<TPixel> stretchedClient)
         {
             if (_Source is not IClientReadOnlyBitmap<TPixel> client) { stretchedClient = null; return false; }
-            return client.TryCreateStretched(width,height, _Rect, out stretchedClient);
+            return client.TryCreateStretched(_Rect, dstSize, out stretchedClient);
         }
     }
 
+    [System.Diagnostics.DebuggerDisplay("_BitmapCropped {Width}x{Height}x{Format}")]
     readonly struct _BitmapCropped<TPixel> : IBitmap<TPixel>
         where TPixel : unmanaged
     {
@@ -152,16 +157,16 @@ namespace InteropTypes.TensorBitmaps
                 .Slice(_Rect.X, _Rect.Width);
         }
 
-        public bool TryCreateCroppedClient(bool shareMemory, out IClientBitmap<TPixel> croppedClient)
+        public bool TryCreateCroppedClient(out IClientBitmap<TPixel> croppedClient)
         {
             if (_Source is not IClientBitmap<TPixel> client) { croppedClient = null; return false; }
-            return client.TryCreateCropped(_Rect, shareMemory, out croppedClient);
+            return client.TryGetCropped(_Rect, out croppedClient);
         }
 
-        public bool TryCreateStretchedClient(int width, int height, out IClientBitmap<TPixel> stretchedClient)
+        public bool TryCreateStretchedClient(SIZE dstSize, out IClientBitmap<TPixel> stretchedClient)
         {
             if (_Source is not IClientBitmap<TPixel> client) { stretchedClient = null; return false; }
-            return client.TryCreateStretched(width, height, _Rect, out stretchedClient);
+            return client.TryCreateStretched(_Rect, dstSize, out stretchedClient);
         }
     }
 }

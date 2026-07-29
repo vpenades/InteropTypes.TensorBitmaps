@@ -207,7 +207,7 @@ namespace InteropTypes.TensorBitmaps
             var pcz = IPixelConverter<TContextPixel, TPlanePixel>.Create(src.Format, _DstPlaneZ.Format, true);
 
             if (src.TryCastTo<IReadOnlyBitmap<TContextPixel>>(out var srcManaged) && 
-                IClientReadOnlyBitmap<TContextPixel>.TryCreateStretched(srcManaged, this.Width, this.Height, out var stretchedBitmap))
+                IClientReadOnlyBitmap<TContextPixel>.TryCreateStretched(srcManaged, new System.Drawing.Size(this.Width, this.Height), out var stretchedBitmap))
             {
                 System.Diagnostics.Debug.Assert(this.Width == stretchedBitmap.Width);
                 System.Diagnostics.Debug.Assert(this.Height == stretchedBitmap.Height);

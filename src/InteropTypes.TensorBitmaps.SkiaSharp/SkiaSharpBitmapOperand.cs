@@ -148,30 +148,30 @@ namespace InteropTypes.TensorBitmaps
             return buffer.Slice(y * _Bitmap.RowBytes, len);
         }
 
-        bool IClientBitmap<TPixel>.TryCreateCropped(System.Drawing.Rectangle rect, bool shareMemory, out IClientBitmap<TPixel> croppedBitmap)
+        bool IClientBitmap<TPixel>.TryGetCropped(System.Drawing.Rectangle rect, out IClientBitmap<TPixel> croppedBitmap)
         {
             croppedBitmap = CreateCropped(rect);
             return true;
         }
 
-        bool IClientBitmap<TPixel>.TryCreateStretched(int width, int height, System.Drawing.Rectangle? srcCrop, out IClientBitmap<TPixel> stretchedBitmap)
+        bool IClientBitmap<TPixel>.TryCreateStretched(System.Drawing.Rectangle? srcCrop, System.Drawing.Size dstSize, out IClientBitmap<TPixel> stretchedBitmap)
         {
             if (srcCrop.HasValue)
             {
                 using var cropped = CreateCropped(srcCrop.Value);
-                stretchedBitmap = cropped.CreateStretched(width, height);
+                stretchedBitmap = cropped.CreateStretched(dstSize);
                 return true;
             }
 
-            stretchedBitmap = CreateStretched(width,height);
+            stretchedBitmap = CreateStretched(dstSize);
             return true;
         }
 
-        public SkiaSharpBitmapOperand<TPixel> CreateStretched(int width, int height)
+        public SkiaSharpBitmapOperand<TPixel> CreateStretched(System.Drawing.Size size)
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(SKBitmap));
 
-            var newSize = new SKImageInfo(width, height);
+            var newSize = new SKImageInfo(size.Width, size.Height);
             var options = new SKSamplingOptions(SKCubicResampler.Mitchell);
 
             var newBitmap = _Bitmap.Resize(newSize, options);

@@ -55,7 +55,7 @@ namespace InteropTypes.TensorBitmaps
 
             using var bmp = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
 
-            using var stretched = bmp.CreateStretched(64, 48);
+            using var stretched = bmp.CreateStretched(new System.Drawing.Size(64, 48));
 
             AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(s=> stretched.Write(s) );
         }
