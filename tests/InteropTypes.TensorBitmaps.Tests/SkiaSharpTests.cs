@@ -24,15 +24,15 @@ namespace InteropTypes.TensorBitmaps
             using var img = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
             using var tbmp = img.CreateCropped(new System.Drawing.Rectangle(200,100,280,280)); // crop Shannon's face.
 
-            ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8);
-            ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Bgra8);
-            ConvertAndSave<byte, Pixel888>(tbmp, KnownPixelFormats.Bgr8);
-            ConvertAndSave<float, Vector4>(tbmp, KnownPixelFormats.RgbaF32);
-            ConvertAndSave<float, Vector3>(tbmp, KnownPixelFormats.RgbF32);
-            ConvertAndSave<ushort, int>(tbmp, KnownPixelFormats.Rg16); // blue channel will be missing in converted image
+            await ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Rgba8, 3005288302);
+            await ConvertAndSave<byte, int>(tbmp, KnownPixelFormats.Bgra8, 1827876581);
+            await ConvertAndSave<byte, Pixel888>(tbmp, KnownPixelFormats.Bgr8, 1915969248);
+            await ConvertAndSave<float, Vector4>(tbmp, KnownPixelFormats.RgbaF32, 2862329585);
+            await ConvertAndSave<float, Vector3>(tbmp, KnownPixelFormats.RgbF32, 3535056545);
+            await ConvertAndSave<ushort, int>(tbmp, KnownPixelFormats.Rg16, 1100000087); // blue channel will be missing in converted image
         }
 
-        private static void ConvertAndSave<TElement, TPixel>(SkiaSharpBitmapOperand<uint> src, PixelFormat fmt)
+        private static async Task ConvertAndSave<TElement, TPixel>(SkiaSharpBitmapOperand<uint> src, PixelFormat fmt, uint crc32)
             where TElement: unmanaged, INumber<TElement>
             where TPixel: unmanaged
         {            
@@ -41,7 +41,9 @@ namespace InteropTypes.TensorBitmaps
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
             dst.GetContext<uint>().Fill(BitmapOperations.Copy, src);
 
-            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel>(dst);
+            await Assert.That(dst.CalculateCrc32()).IsEqualTo(crc32);
+
+            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel>(dst);            
 
             AttachmentInfo
                 .From($"shannon.{typeof(TPixel).Name}.jpg")
@@ -56,6 +58,8 @@ namespace InteropTypes.TensorBitmaps
             using var bmp = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
 
             using var stretched = bmp.CreateStretched(new System.Drawing.Size(64, 48));
+
+            await Assert.That(stretched.CalculateCrc32()).IsEqualTo(2859208297u);
 
             AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(s=> stretched.Write(s) );
         }

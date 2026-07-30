@@ -10,7 +10,7 @@ namespace InteropTypes.TensorBitmaps
     public static class TensorBitmapExtensions
     {
         public static void ToTensorBitmap<TSrcBitmap, TSrcPixel, TDstElement>(this TSrcBitmap src, out TensorBitmap<TDstElement, TSrcPixel> dst)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>
+            where TSrcBitmap : IReadOnlyBitmap<TSrcBitmap, TSrcPixel>
             where TSrcPixel : unmanaged
             where TDstElement : unmanaged, INumber<TDstElement>
         {

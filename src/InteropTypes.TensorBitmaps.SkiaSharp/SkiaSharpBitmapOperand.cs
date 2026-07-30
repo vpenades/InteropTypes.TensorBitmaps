@@ -68,7 +68,7 @@ namespace InteropTypes.TensorBitmaps
         #region lifecycle
 
         public static SkiaSharpBitmapOperand<TPixel> Create<TSrcBitmap, TSrcPixel>(TSrcBitmap src)
-            where TSrcBitmap: IReadOnlyBitmapOperand<TSrcBitmap,TSrcPixel>, allows ref struct
+            where TSrcBitmap: IReadOnlyBitmap<TSrcBitmap,TSrcPixel>, allows ref struct
             where TSrcPixel: unmanaged            
         {
             var skbmp = new SKBitmap(src.Width, src.Height);

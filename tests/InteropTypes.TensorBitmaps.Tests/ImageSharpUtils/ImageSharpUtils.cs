@@ -13,6 +13,30 @@ namespace InteropTypes.TensorBitmaps
 {
     static class ImageSharpUtils
     {
+        public static SixLabors.ImageSharp.Image<TDstPixel> ToImageSharp<TSrcPixel,TDstPixel>(this IReadOnlyBitmap<TSrcPixel> srcBitmap)
+            where TSrcPixel: unmanaged
+            where TDstPixel : unmanaged, IPixel<TDstPixel>
+        {
+            var cvt = IPixelConverter<TSrcPixel, TDstPixel>.Create(srcBitmap.Format, ToTensorPixelFormat(typeof(TDstPixel)), true);
+
+            var dstImage = new SixLabors.ImageSharp.Image<TDstPixel>(srcBitmap.Width, srcBitmap.Height);
+
+            var srcRow = new TDstPixel[dstImage.Width];
+
+            void _processPixels(SixLabors.ImageSharp.PixelAccessor<TDstPixel> pixelAccessor)
+            {
+                for (int y = 0; y < dstImage.Height; ++y)
+                {
+                    cvt.ConvertPixels(srcBitmap.GetRowPixelsSpan(y), srcRow);                    
+                    srcRow.CopyTo(pixelAccessor.GetRowSpan(y));
+                }
+            }
+
+            dstImage.ProcessPixelRows(_processPixels);
+
+            return dstImage;
+        }
+
         public static SixLabors.ImageSharp.Image<TPixel> ToImageSharp<TElement, TPixel>(this TensorBitmap<TElement, TPixel> srcBitmap)
             where TElement : unmanaged, INumber<TElement>
             where TPixel : unmanaged, IPixel<TPixel>

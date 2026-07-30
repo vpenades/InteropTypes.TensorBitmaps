@@ -1,54 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
-using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
 
 using COLOR = System.Drawing.Color;
 using POINT = System.Drawing.PointF;
 using RECTANGLE = System.Drawing.RectangleF;
 
 namespace InteropTypes.TensorBitmaps.Diagnostics
-{
-    [System.Diagnostics.DebuggerDisplay("DiagnosticsDrawing {_Bitmap.Width}x{_Bitmap.Height}x{{_Bitmap.Format}")]
-    public readonly ref struct DiagnosticsDrawing<TBitmap, TPixel>
-            where TBitmap : IBitmap<TBitmap, TPixel>, allows ref struct
+{    
+    public interface IDiagnosticsDrawing<TPixel> : IBitmap<TPixel>
             where TPixel : unmanaged
     {
-        #region lifecycle
+        #region API        
 
-        public DiagnosticsDrawing(TBitmap bitmap)
-        {
-            _Bitmap = bitmap;
-
-            // System.Drawing.Color is Bgra8 format
-            _Colors = IPixelConverter<int, TPixel>.Create(KnownPixelFormats.Bgra8, _Bitmap.Format, true);
-        }
-
-        #endregion
-
-        #region data
-
-        private readonly TBitmap _Bitmap;
-        private readonly IPixelConverter<int, TPixel> _Colors;
-
-        #endregion
-
-        #region API
-
-        public TPixel GetColorPixel(COLOR color)
-        {
-            Span<int> src = stackalloc int[1];
-            Span<TPixel> dst = stackalloc TPixel[1];
-
-            src[0] = color.ToArgb();
-            _Colors.ConvertPixels(src, dst);
-            return dst[0];
-        }
+        public TPixel GetColorPixel(COLOR color);
 
         public void DrawRectangle(RECTANGLE rectf, COLOR color)
         {
@@ -70,10 +41,10 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
 
         public void DrawLine(System.Numerics.Vector2 a, System.Numerics.Vector2 b, COLOR color)
         {
-            var bounds = new System.Drawing.Rectangle(0,0, _Bitmap.Width,_Bitmap.Height);
+            var bounds = new System.Drawing.Rectangle(0, 0, Width, Height);
             var pixel = GetColorPixel(color);
 
-            var ab = b-a;
+            var ab = b - a;
 
             if (Math.Abs(ab.X) <= 1 && Math.Abs(ab.Y) <= 1)
             // can't loop; draw a single pixel
@@ -81,7 +52,7 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
                 int x = (int)a.X;
                 int y = (int)a.Y;
 
-                if (bounds.Contains(y, x)) _Bitmap.GetRowPixelsSpan(y)[x] = pixel;
+                if (bounds.Contains(y, x)) GetRowPixelsSpan(y)[x] = pixel;
 
                 return;
             }
@@ -101,7 +72,7 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
                     int x = (int)ptr.X;
                     int y = (int)ptr.Y;
 
-                    if (bounds.Contains(y, x)) _Bitmap.GetRowPixelsSpan(y)[x] = pixel;
+                    if (bounds.Contains(y, x)) GetRowPixelsSpan(y)[x] = pixel;
 
                     ptr += d;
                 }
@@ -121,7 +92,7 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
                     int x = (int)ptr.X;
                     int y = (int)ptr.Y;
 
-                    if (bounds.Contains(y, x)) _Bitmap.GetRowPixelsSpan(y)[x] = pixel;
+                    if (bounds.Contains(y, x)) GetRowPixelsSpan(y)[x] = pixel;
 
                     ptr += d;
                 }

@@ -12,7 +12,7 @@ namespace InteropTypes.TensorBitmaps.Operands
     /// </summary>    
     [System.Diagnostics.DebuggerDisplay("ManagedReadOnlyBitmapOperand {Width}x{Height} {Format}")]
     public readonly ref struct ManagedReadOnlyBitmapOperand<TPixel>
-        : IReadOnlyBitmapOperand<ManagedReadOnlyBitmapOperand<TPixel>,TPixel>
+        : IReadOnlyBitmap<ManagedReadOnlyBitmapOperand<TPixel>,TPixel>
         where TPixel: unmanaged
     {
         public ManagedReadOnlyBitmapOperand(IReadOnlyBitmap<TPixel> managed)
@@ -57,7 +57,7 @@ namespace InteropTypes.TensorBitmaps.Operands
     /// </summary>    
     [System.Diagnostics.DebuggerDisplay("ManagedBitmapOperand {Width}x{Height} {Format}")]
     public readonly ref struct ManagedBitmapOperand<TPixel>
-        : IBitmapOperand<ManagedBitmapOperand<TPixel>, TPixel>
+        : IBitmap<ManagedBitmapOperand<TPixel>, TPixel>
         where TPixel : unmanaged
     {
         public ManagedBitmapOperand(IBitmap<TPixel> managed)

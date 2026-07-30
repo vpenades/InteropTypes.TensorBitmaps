@@ -19,6 +19,7 @@
 		<PackageReference Include="SixLabors.ImageSharp" />
 		<PackageReference Include="SkiaSharp" />
 		<PackageReference Include="PhotoSauce.MagicScaler" />
+    <PackageReference Include="System.IO.Hashing" />
 	</ItemGroup>	
 
 	<ItemGroup>	  

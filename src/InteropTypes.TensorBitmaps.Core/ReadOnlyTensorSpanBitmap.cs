@@ -19,7 +19,7 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     public readonly ref struct ReadOnlyTensorSpanBitmap<TElement, TPixel>
-        : IReadOnlyBitmapOperand<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>        
+        : IReadOnlyBitmap<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>        
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {

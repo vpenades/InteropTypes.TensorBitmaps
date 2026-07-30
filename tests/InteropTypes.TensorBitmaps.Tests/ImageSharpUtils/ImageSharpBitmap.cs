@@ -79,7 +79,7 @@ namespace InteropTypes.TensorBitmaps
         #region lifecycle
 
         public static ImageSharpBitmap<TPixel> Create<TSrcBitmap, TSrcPixel>(TSrcBitmap src)
-            where TSrcBitmap : IReadOnlyBitmapOperand<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcBitmap : IReadOnlyBitmap<TSrcBitmap, TSrcPixel>, allows ref struct
             where TSrcPixel : unmanaged            
         {
             var bmp = new Image<TPixel>(src.Width, src.Height);

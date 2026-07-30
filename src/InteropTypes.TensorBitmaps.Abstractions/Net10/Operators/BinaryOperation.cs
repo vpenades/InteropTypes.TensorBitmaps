@@ -20,16 +20,16 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TDstPixel : unmanaged        
     {
         TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
             return Execute(src, dst, pixelConverter);
         }
 
         TResult Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct;        
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct;        
 
         public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetScaleToFit(float overflowAmount)
         {
@@ -49,8 +49,8 @@ namespace InteropTypes.TensorBitmaps.Operators
         public static _DirectCopyOperator<TSrcPixel, TDstPixel> Instance { get; } = new _DirectCopyOperator<TSrcPixel, TDstPixel>();
 
         public int Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             var h = Math.Min(src.Height, dst.Height);
 
@@ -92,17 +92,19 @@ namespace InteropTypes.TensorBitmaps.Operators
         private readonly IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> _StretchOperator;
 
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             var l = new System.Drawing.Size(src.Width, src.Height);
             var r = new System.Drawing.Size(dst.Width, dst.Height);
             var crops = ScaledIntersectionCrop.CreateFrom(l, r, _OverflowAmount);
 
             src = src.GetCropped(crops.SourceCrop);
-            dst = dst.GetCropped(crops.TargetCrop);            
+            dst = dst.GetCropped(crops.TargetCrop);
 
-            return crops.GetTransform(_StretchOperator.Execute(src, dst, pixelConverter));
+            var xform = _StretchOperator.Execute(src, dst, pixelConverter);
+
+            return crops.GetTransform(xform);
         }        
     }
 
@@ -119,8 +121,8 @@ namespace InteropTypes.TensorBitmaps.Operators
         public static _StretchToFitOperator<TSrcPixel, TDstPixel> Instance { get; } = new _StretchToFitOperator<TSrcPixel, TDstPixel>();
 
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp,TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp,TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             if (src.TryCastTo<IReadOnlyBitmap<TSrcPixel>>(out var srcManaged) &&
                 IClientReadOnlyBitmap<TSrcPixel>.TryCreateStretched(srcManaged, new System.Drawing.Size(dst.Width,dst.Height), out var stretchedBitmap))

@@ -37,6 +37,23 @@ namespace InteropTypes.TensorBitmaps
         }
 
         [Test]
+        public async Task LanczosResizeTest()
+        {
+            // load image and convert it to a tensor bitmap
+
+            using var img = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
+
+            var tmp = new ManagedBitmap<Vector4>(img.Width, img.Height, KnownPixelFormats.RgbaF32);
+            tmp.GetContext<Rgb24>().Fill(img);
+
+            tmp = LanczosResizer.Resize(tmp, 120, 80);            
+
+            AttachmentInfo.From("shannon.resized.jpg").WriteObjectEx(x=> tmp.Save(x));
+        }
+
+
+
+        [Test]
         public async Task TestScaledIntersectionCrop()
         {
             var l = new System.Drawing.Size(100, 50);
@@ -50,38 +67,40 @@ namespace InteropTypes.TensorBitmaps
         [Arguments(256, 48)]
         public async Task BitmapPreserveAspectFitTests(int w, int h)
         {
-            using var img_isharp = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
-
-            using var img_skya = OperatingSystem.IsLinux()
-                ? null 
-                : SkiaSharpBitmapOperand<uint>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
-
-            img_isharp.ToTensorBitmap(out TensorBitmap<byte, Rgb24> img_ref);
-
             for (int oa = 0; oa <= 10; oa ++)
             {
                 // imagesharp
+
+                using var img_isharp = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
+
                 var bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_isharp);
-                
-                using var img2 = bmp.Cast<Rgb24>().ToImageSharp();
-                AttachmentInfo.From($"shannon.{oa}.imagesharp.jpg").WriteObject(img2.Save);
+                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_isharp);                
+                AttachmentInfo.From($"shannon.{oa}.imagesharp.jpg").WriteObjectEx(bmp.Save);
 
                 // ref
+
+                img_isharp.ToTensorBitmap(out TensorBitmap<byte, Rgb24> img_ref);
+
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_ref);
+                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_ref);                
+                AttachmentInfo.From($"shannon.{oa}.ref.jpg").WriteObjectEx(bmp.Save);
 
-                using var img3 = bmp.Cast<Rgb24>().ToImageSharp();
-                AttachmentInfo.From($"shannon.{oa}.ref.jpg").WriteObject(img3.Save);
-
-                if (img_skya == null) continue;
-
-                // ref
+                // magicScaler
+                /*
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetContext<uint>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_skya);
+                bmp.GetContext<Rgb24>().Fill(MagicScalerUtils.ScaleToFit(oa / 10f), img_ref);
+                AttachmentInfo.From($"shannon.{oa}.magicScaler.jpg").WriteObjectEx(bmp.Save);
+                */
 
-                using var img4 = bmp.Cast<Rgb24>().ToImageSharp();
-                AttachmentInfo.From($"shannon.{oa}.skia.jpg").WriteObject(img4.Save);
+                if (OperatingSystem.IsLinux()) continue;
+
+                // skia
+
+                using var img_skia = SkiaSharpBitmapOperand<uint>.Read(ResourceInfo.From("shannon.jpg").OpenRead); ;
+
+                bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
+                bmp.GetContext<uint>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_skia);                
+                AttachmentInfo.From($"shannon.{oa}.skia.jpg").WriteObjectEx(bmp.Save);
             }
         }
 

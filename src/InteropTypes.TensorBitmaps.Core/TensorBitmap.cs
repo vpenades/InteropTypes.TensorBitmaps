@@ -19,7 +19,7 @@ namespace InteropTypes.TensorBitmaps
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public class TensorBitmap<TElement,TPixel>
         : ITensorBitmap
-        , IBitmapOperand<TensorBitmap<TElement, TPixel>, TPixel>        
+        , IBitmap<TensorBitmap<TElement, TPixel>, TPixel>        
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {

@@ -22,6 +22,7 @@ namespace InteropTypes.Numerics
     [type: System.Diagnostics.DebuggerDisplay("{ToString(),nq}")]
     public readonly struct PixelFormat : IEquatable<PixelFormat>
     {
+        #region lifecycle
         public PixelFormat(ImmutableArray<PixelComponent> components)
             : this(components, components.Sum(item => item.ByteSize)) { }
 
@@ -43,18 +44,35 @@ namespace InteropTypes.Numerics
             this.BytesPerPixel = bytesPerPixel;
         }
 
+        #endregion
+
+        #region data
+
         public ImmutableArray<PixelComponent> Components { get; }
 
         public override int GetHashCode() => PixelComponent.GetHashCodeFrom(Components);
-
-        public bool Equals(PixelFormat other) => PixelComponent.AreStructurallyEqual(this.Components, other.Components);        
-
+        public override bool Equals(Object obj) => obj is PixelFormat fmt && Equals(fmt);
+        public bool Equals(PixelFormat other) => PixelComponent.AreStructurallyEqual(this.Components, other.Components);
         public static bool operator ==(PixelFormat left, PixelFormat right) => left.Equals(right);
         public static bool operator !=(PixelFormat left, PixelFormat right) => !left.Equals(right);
 
+        #endregion
+
+        #region properties
+
+        /// <summary>
+        /// The total number of bytes used by the pixel
+        /// </summary>
+        /// <remarks>
+        /// It must match <see cref="Components"/>.Sum( x=&gt; x.ByteSize );
+        /// </remarks>
         public int BytesPerPixel { get; }
 
         public bool HasAlphaComponent => Components.All(item => item.HasAlphaComponent);
+
+        #endregion
+
+        #region API
 
         public int IndexOf(string semantic)
         {
@@ -122,6 +140,8 @@ namespace InteropTypes.Numerics
 
             pixel = dst[0];
             return true;
-        }        
+        }
+
+        #endregion
     }
 }

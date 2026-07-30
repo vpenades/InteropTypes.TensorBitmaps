@@ -20,7 +20,7 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public readonly ref struct TensorSpanBitmap<TElement, TPixel>        
-        : IBitmapOperand<TensorSpanBitmap<TElement, TPixel>, TPixel>        
+        : IBitmap<TensorSpanBitmap<TElement, TPixel>, TPixel>        
         where TElement : unmanaged, INumber<TElement>
         where TPixel : unmanaged
     {

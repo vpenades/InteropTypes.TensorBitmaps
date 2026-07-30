@@ -12,12 +12,12 @@ namespace InteropTypes.TensorBitmaps.Operators
     public interface IReadOnlyUnaryOperation<TPixel, TResult>
         where TPixel : unmanaged
     {
-        TResult Execute<TBmp>(TBmp dst) where TBmp : IReadOnlyBitmapOperand<TBmp, TPixel>;
+        TResult Execute<TBmp>(TBmp dst) where TBmp : IReadOnlyBitmap<TBmp, TPixel>;
     }
 
     public interface IUnaryOperation<TPixel, TResult>
         where TPixel : unmanaged        
     {
-        TResult Execute<TBmp>(TBmp dst) where TBmp : IBitmapOperand<TBmp, TPixel>;
+        TResult Execute<TBmp>(TBmp dst) where TBmp : IBitmap<TBmp, TPixel>;
     }
 }

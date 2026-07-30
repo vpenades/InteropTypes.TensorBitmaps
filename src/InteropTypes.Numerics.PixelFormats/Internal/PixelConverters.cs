@@ -74,7 +74,7 @@ namespace InteropTypes.Numerics.Internal
 
             if (DirectPixelConverter<TSrcPixel, TDstPixel>.TryCreate(sourceFmt, targetFmt, out var directCvt)) return directCvt;
 
-            // converters using floating point:
+            // converters using floating point:            
 
             if (typeof(TSrc) == typeof(double) || typeof(TDst) == typeof(double))
             {
@@ -95,7 +95,5 @@ namespace InteropTypes.Numerics.Internal
 
             return new ComponentWisePixelConverter<TSrc, TSrcPixel, TDst, TDstPixel, ComponentConverterInteger<TSrc, TDst>>(sourceFmt.Components, targetFmt.Components, initPixels);
         }
-
-
     }
 }

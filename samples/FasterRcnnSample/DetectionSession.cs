@@ -52,7 +52,7 @@ namespace FasterRcnnSample
         }
 
         public IReadOnlyList<Prediction> Predict<TBitmap, TPixel>(TBitmap image)
-            where TBitmap: IReadOnlyBitmapOperand<TBitmap, TPixel>, allows ref struct
+            where TBitmap: IReadOnlyBitmap<TBitmap, TPixel>, allows ref struct
             where TPixel : unmanaged
         {
             // Preprocess image
@@ -116,7 +116,7 @@ namespace FasterRcnnSample
         }        
 
         private Matrix3x2 CopyImageGeneric<TBitmap, TPixel>(TBitmap image, DenseTensor<float> input)
-            where TBitmap : IReadOnlyBitmapOperand<TBitmap, TPixel>, allows ref struct
+            where TBitmap : IReadOnlyBitmap<TBitmap, TPixel>, allows ref struct
             where TPixel : unmanaged
         {
             // convert Onnx.Tensor to Numerics.TensorSpan

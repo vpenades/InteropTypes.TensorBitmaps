@@ -10,6 +10,7 @@ using InteropTypes.TensorBitmaps.Operands;
 using InteropTypes.TensorBitmaps.Operators;
 
 using PhotoSauce.MagicScaler;
+using PhotoSauce.MagicScaler.Transforms;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -25,55 +26,63 @@ namespace InteropTypes.TensorBitmaps
             if (format == PixelFormats.Bgra32bpp) return KnownPixelFormats.Bgra8;
 
             throw new NotImplementedException();
-        }        
+        }
+
+        public static BitmapBinaryOperation<Matrix3x2> StretchToFit { get; } = new _MagicScalerStretchToFit();
+
+        public static BitmapBinaryOperation<Matrix3x2> ScaleToFit(float overflowAmount) { return new _MagicScalerScaleToFit(overflowAmount); }
+
     }
 
 
-    sealed class MagicScalerBitmap
-        : IBitmap<Pixel888>
-        , PhotoSauce.MagicScaler.IPixelSource
+    sealed class MagicScalerBitmap : ManagedBitmap<Pixel888>
+        , IPixelSource
     {
+        #region lifecycle
+
+        public static MagicScalerBitmap CreateFrom<TBitmap,TPixel>(TBitmap bitmap)
+            where TBitmap: IReadOnlyBitmap<TBitmap, TPixel>, allows ref struct
+            where TPixel: unmanaged
+        {
+            var dst = new MagicScalerBitmap(bitmap.Width, bitmap.Height);
+
+            dst.Fill<TBitmap,TPixel>(bitmap);
+
+            return dst;
+        }
+
         public static MagicScalerBitmap CreateFrom(PhotoSauce.MagicScaler.IPixelSource source)
         {
             if (source.Format != PixelFormats.Bgr24bpp) throw new ArgumentException("invalid format");
 
             var dst = new MagicScalerBitmap(source.Width, source.Height);
-
-            var a = new System.Drawing.Rectangle(0, 0, dst.Width, dst.Height);
-
             var dstb = System.Runtime.InteropServices.MemoryMarshal.AsBytes(dst._Pixels.AsSpan());
 
-            source.CopyPixels(a, Unsafe.SizeOf<Pixel888>() * dst.Width, dstb);
+            var srcArea = new System.Drawing.Rectangle(0, 0, dst.Width, dst.Height);
+            source.CopyPixels(srcArea, Unsafe.SizeOf<Pixel888>() * dst.Width, dstb);
 
             return dst;
         }
 
+        public MagicScalerBitmap(int width, int height) : base(width,height, KnownPixelFormats.Bgr8) { }
 
+        #endregion
 
-        public MagicScalerBitmap(int width, int height)
-        {
-            _Pixels = new Pixel888[width * height];
-            Width = width;
-            Height = height;
-        }
-
-        private readonly Pixel888[] _Pixels;
-
-        public PixelFormat Format => KnownPixelFormats.Bgr8;
+        #region data        
 
         Guid IPixelSource.Format => PixelFormats.Bgr24bpp;
 
-        public int Width { get; }
+        #endregion
 
-        public int Height { get; }
+        #region API        
 
-        public Span<Pixel888> GetRowPixelsSpan(int y)
+        void IPixelSource.CopyPixels(Rectangle sourceArea, int cbStride, Span<byte> buffer)
         {
-            return _Pixels.AsSpan(y * Width, Width);
-        }
+            if (sourceArea.X + sourceArea.Width > this.Width) throw new ArgumentException(nameof(sourceArea));
+            if (sourceArea.Y + sourceArea.Height > this.Height) throw new ArgumentException(nameof(sourceArea));
 
-        public void CopyPixels(Rectangle sourceArea, int cbStride, Span<byte> buffer)
-        {
+            System.Diagnostics.Debug.Assert(cbStride < buffer.Length);
+
             for(int i=0; i < sourceArea.Height; ++i)
             {
                 var y = i + sourceArea.Y;
@@ -82,6 +91,7 @@ namespace InteropTypes.TensorBitmaps
 
                 b.CopyTo(buffer);
 
+                System.Diagnostics.Debug.Assert(cbStride <= buffer.Length);
                 buffer = buffer.Slice(cbStride);
             }
         }
@@ -95,43 +105,84 @@ namespace InteropTypes.TensorBitmaps
 
             using var pipeline = MagicImageProcessor.BuildPipeline(this, settings);
 
+            
+            
+
             return CreateFrom(pipeline.PixelSource);
         }
 
-        
+        #endregion
     }
 
-    readonly struct MagicScalerOperator<TSrcPixel, TDstPixel>
+
+    sealed class _MagicScalerScaleToFit : BitmapBinaryOperation<Matrix3x2>
+    {
+        public _MagicScalerScaleToFit(float overflowAmount)
+        {
+            _overflowAmount = overflowAmount;
+        }
+
+        private readonly float _overflowAmount;
+        public override IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        {
+            return new _MagicScalerScaleOperator<TSrcPixel, TDstPixel>(_overflowAmount);
+        }
+    }
+
+    readonly struct _MagicScalerScaleOperator<TSrcPixel, TDstPixel>
         : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
-        public static MagicScalerOperator<TSrcPixel, TDstPixel> Instance { get; } = new MagicScalerOperator<TSrcPixel, TDstPixel>();
+        public _MagicScalerScaleOperator(float overflowAmount)
+        {
+            _OverflowAmount = overflowAmount;
+        }
+
+        private readonly float _OverflowAmount;        
 
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmapOperand<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapOperand<TDstBmp, TDstPixel>, allows ref struct
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
+            var l = new System.Drawing.Size(src.Width, src.Height);
+            var r = new System.Drawing.Size(dst.Width, dst.Height);
+            var crops = ScaledIntersectionCrop.CreateFrom(l, r, _OverflowAmount);
+
+            src = src.GetCropped(crops.SourceCrop);
+            dst = dst.GetCropped(crops.TargetCrop);
+
+            var xform = _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance.Execute(src, dst, pixelConverter);
+
+            return crops.GetTransform(xform);
+        }
+    }
 
 
 
+    sealed class _MagicScalerStretchToFit : BitmapBinaryOperation<Matrix3x2>
+    {        
+        public override IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        {
+            return _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance;
+        }
+    }
 
+    readonly struct _MagicScalerStretchOperator<TSrcPixel, TDstPixel>
+        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        where TSrcPixel : unmanaged
+        where TDstPixel : unmanaged
+    {
+        public static _MagicScalerStretchOperator<TSrcPixel, TDstPixel> Instance { get; } = new _MagicScalerStretchOperator<TSrcPixel, TDstPixel>();
 
-
-            Span<TSrcPixel> tmpRow = stackalloc TSrcPixel[dst.Width];
-
-            for (int y = 0; y < dst.Height; ++y)
-            {
-                var srcRow = src.GetRowPixelsSpan(y * src.Height / dst.Height);
-
-                for (int x = 0; x < tmpRow.Length; ++x)
-                {
-                    tmpRow[x] = srcRow[x * srcRow.Length / tmpRow.Length];
-                }
-
-                var dstRow = dst.GetRowPixelsSpan(y);
-                pixelConverter.ConvertPixels(tmpRow, dstRow);
-            }
+        public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
+        {
+            // convert src to magicScaler, stretch to dst size, and copy to dst
+            var tmp = MagicScalerBitmap.CreateFrom<TSrcBmp, TSrcPixel>(src);
+            tmp = tmp.Resize(dst.Width, dst.Height);
+            dst.GetContext<Pixel888>().Fill(tmp);
 
             return Matrix3x2.CreateScale(src.Width / (float)dst.Width, src.Height / (float)dst.Height);
         }

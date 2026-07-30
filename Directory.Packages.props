@@ -24,6 +24,7 @@
 		<PackageVersion Include="TestAttachments.TUnit" Version="4.0.0-Preview-20260129-1218" />		
 		<PackageVersion Include="SixLabors.ImageSharp" Version="[3.1.12]" />
 		<PackageVersion Include="PhotoSauce.MagicScaler" Version="0.15.0" />
+    <PackageVersion Include="System.IO.Hashing" Version="10.0.10" />
 	</ItemGroup>  
   
 </Project>

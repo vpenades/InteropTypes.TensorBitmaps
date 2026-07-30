@@ -9,14 +9,52 @@ using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps.Diagnostics
 {
-    internal class ComparisonStatistics
+    public class ComparisonStatistics
     {
         #region lifecycle
 
+        public static ComparisonStatistics Compare<TLeftPixel, TRightPixel>(IReadOnlyBitmap<TLeftPixel> left, IReadOnlyBitmap<TRightPixel> right)
+            where TLeftPixel: unmanaged
+            where TRightPixel: unmanaged
+        {
+            var stats = new ComparisonStatistics();
+
+            if (left.Width != right.Width || left.Height != right.Height)
+            {
+                stats.SizeMismatch = true;
+                return stats;
+            }
+
+            var leftConverter = IPixelConverter<TLeftPixel, Vector4>.Create(left.Format, KnownPixelFormats.RgbaF32, true);
+            var rightConverter = IPixelConverter<TRightPixel, Vector4>.Create(right.Format, KnownPixelFormats.RgbaF32, true);
+
+            Span<Vector4> leftRow = stackalloc Vector4[right.Width];
+            Span<Vector4> rightRow = stackalloc Vector4[right.Width];
+
+            for (int y = 0; y < left.Height; y++)
+            {
+                leftConverter.ConvertPixels(left.GetRowPixelsSpan(y), leftRow);
+                rightConverter.ConvertPixels(right.GetRowPixelsSpan(y), rightRow);
+
+                for (int x = 0; x < left.Width; x++)
+                {
+                    var l = leftRow[x];
+                    var r = rightRow[x];
+                    stats.Aggregate(l, r);
+                }
+            }
+
+            stats.Finish();
+
+            return stats;
+        }        
+
+        #if NET10_0_OR_GREATER
+
         public static ComparisonStatistics Compare<TLeftBitmap, TLeftPixel, TRightBitmap, TRightPixel>(TLeftBitmap left, TRightBitmap right)
-            where TLeftBitmap : Operands.IReadOnlyBitmapOperand<TLeftBitmap, TLeftPixel>
+            where TLeftBitmap : IReadOnlyBitmap<TLeftBitmap, TLeftPixel>
             where TLeftPixel : unmanaged
-            where TRightBitmap : Operands.IReadOnlyBitmapOperand<TRightBitmap, TRightPixel>
+            where TRightBitmap : IReadOnlyBitmap<TRightBitmap, TRightPixel>
             where TRightPixel : unmanaged
         {
             var stats = new ComparisonStatistics();
@@ -51,7 +89,9 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
             return stats;
         }
 
-        public ComparisonStatistics()
+        #endif
+
+        protected ComparisonStatistics()
         {
             compMin.AsSpan().Fill(double.PositiveInfinity);
             compMax.AsSpan().Fill(double.NegativeInfinity);
@@ -72,35 +112,40 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
 
         #region API
 
-        protected void Aggregate(Vector4 L, Vector4 R)
+        public void Aggregate(Vector4 L, Vector4 R)
         {
             PixelCount++;
 
-            float dR = L.X - R.X;
-            float dG = L.Y - R.Y;
-            float dB = L.Z - R.Z;
-            float dA = L.W - R.W;
+            L = Premultiply(L);
+            R = Premultiply(R);
+
+            double dR = L.X - R.X;
+            double dG = L.Y - R.Y;
+            double dB = L.Z - R.Z;
+            double dA = L.W - R.W;
+
+            double sqR = dR * dR;
+            double sqG = dG * dG;
+            double sqB = dB * dB;
+            double sqA = dA * dA;
+            totalSq += sqR + sqG + sqB + sqA;
 
             double absR = Math.Abs(dR);
             double absG = Math.Abs(dG);
             double absB = Math.Abs(dB);
             double absA = Math.Abs(dA);
-
-            double sqR = dR * (double)dR;
-            double sqG = dG * (double)dG;
-            double sqB = dB * (double)dB;
-            double sqA = dA * (double)dA;
+            totalAbs += absR + absG + absB + absA;
 
             // accumulate per-component
+            compSumAbsSq[0] += sqR;
+            compSumAbsSq[1] += sqG;
+            compSumAbsSq[2] += sqB;
+            compSumAbsSq[3] += sqA;
+
             compSumAbs[0] += absR;
             compSumAbs[1] += absG;
             compSumAbs[2] += absB;
-            compSumAbs[3] += absA;
-
-            compSumAbsSq[0] += absR * absR;
-            compSumAbsSq[1] += absG * absG;
-            compSumAbsSq[2] += absB * absB;
-            compSumAbsSq[3] += absA * absA;
+            compSumAbs[3] += absA;            
 
             compMin[0] = Math.Min(compMin[0], absR);
             compMin[1] = Math.Min(compMin[1], absG);
@@ -110,11 +155,15 @@ namespace InteropTypes.TensorBitmaps.Diagnostics
             compMax[0] = Math.Max(compMax[0], absR);
             compMax[1] = Math.Max(compMax[1], absG);
             compMax[2] = Math.Max(compMax[2], absB);
-            compMax[3] = Math.Max(compMax[3], absA);
+            compMax[3] = Math.Max(compMax[3], absA);            
+        }
 
-            // global accumulators (squared diffs and absolute diffs)
-            totalAbs += absR + absG + absB + absA;
-            totalSq += sqR + sqG + sqB + sqA;
+        private static System.Numerics.Vector4 Premultiply(System.Numerics.Vector4 v)
+        {
+            v.X *= v.W;
+            v.Y *= v.W;
+            v.Z *= v.W;
+            return v;
         }
 
         private void Finish()

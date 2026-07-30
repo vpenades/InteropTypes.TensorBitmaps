@@ -168,7 +168,44 @@ namespace InteropTypes.Numerics
         public override Type ComponentType => typeof(T);
 
         public override int ByteSize => Unsafe.SizeOf<T>();
-    }    
+    }
+
+
+
+    public sealed class PixelPackedComponent<T> : PixelComponent
+        where T : unmanaged, IBinaryInteger<T>
+    {
+        public PixelPackedComponent(string semantic, int shiftBytes, T maxValue) :base(semantic)       
+        {
+            this.Shift = shiftBytes;
+            this.MaxValue = maxValue;
+            this.Mask = (maxValue << shiftBytes)!;
+        }
+
+        public T MaxValue { get; }
+
+        public  int Shift { get; }        
+
+        public T Mask { get; }
+
+        public override Type ComponentType => typeof(T);
+
+        public override int ByteSize => Unsafe.SizeOf<T>();
+
+        public T Unpack(T packed)
+        {
+            packed >>= Shift;
+            packed &= MaxValue;
+            return packed;
+        }
+
+        public T UpdatePacked(T packed, T componentValue)
+        {
+            packed &= Mask;
+            packed |= (componentValue& MaxValue) << Shift;
+            return packed;
+        }
+    }
 }
 
 

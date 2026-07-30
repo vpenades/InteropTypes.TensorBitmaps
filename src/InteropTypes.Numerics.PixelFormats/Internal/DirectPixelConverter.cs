@@ -18,7 +18,7 @@ namespace InteropTypes.Numerics.Internal
     {
         public static bool TryCreate(PixelFormat srcFmt, PixelFormat dstFmt, out DirectPixelConverter<TSrcPixel, TDstPixel> converter)
         {
-            if (Unsafe.SizeOf<TSrcPixel>() == Unsafe.SizeOf<TDstPixel>())
+            if (Unsafe.SizeOf<TSrcPixel>() != Unsafe.SizeOf<TDstPixel>())
             {
                 converter = default;
                 return false;
