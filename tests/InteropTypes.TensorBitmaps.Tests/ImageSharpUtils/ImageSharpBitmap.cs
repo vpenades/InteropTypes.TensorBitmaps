@@ -17,7 +17,7 @@ namespace InteropTypes.TensorBitmaps
     /// </summary>
     /// <typeparam name="TPixel">The ImageSharp pixel type</typeparam>
     public class ImageSharpBitmap<TPixel> : IClientBitmap<TPixel>        
-        where TPixel : unmanaged, IPixel<TPixel>
+        where TPixel : unmanaged, SixLabors.ImageSharp.PixelFormats.IPixel<TPixel>
     {
         #region IO
 
@@ -187,7 +187,8 @@ namespace InteropTypes.TensorBitmaps
             ropts.Size = new SixLabors.ImageSharp.Size(size.Width, size.Height);
             ropts.Compand = true;
             ropts.PremultiplyAlpha = true;
-            ropts.Mode = ResizeMode.Stretch;            
+            ropts.Mode = ResizeMode.Stretch;
+            ropts.Sampler = KnownResamplers.Lanczos3;
 
             var newBitmap = _Bitmap.Clone(dc => dc.Resize(ropts));
 

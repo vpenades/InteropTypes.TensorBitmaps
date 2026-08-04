@@ -10,7 +10,6 @@ using InteropTypes.TensorBitmaps.Operands;
 using InteropTypes.TensorBitmaps.Operators;
 
 using PhotoSauce.MagicScaler;
-using PhotoSauce.MagicScaler.Transforms;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -53,15 +52,31 @@ namespace InteropTypes.TensorBitmaps
 
         public static MagicScalerBitmap CreateFrom(PhotoSauce.MagicScaler.IPixelSource source)
         {
-            if (source.Format != PixelFormats.Bgr24bpp) throw new ArgumentException("invalid format");
+            if (source.Format == PixelFormats.Bgr24bpp)
+            {
+                var dst = new MagicScalerBitmap(source.Width, source.Height);
+                var dstb = System.Runtime.InteropServices.MemoryMarshal.AsBytes(dst._Pixels.AsSpan());
 
-            var dst = new MagicScalerBitmap(source.Width, source.Height);
-            var dstb = System.Runtime.InteropServices.MemoryMarshal.AsBytes(dst._Pixels.AsSpan());
+                var srcArea = new System.Drawing.Rectangle(0, 0, dst.Width, dst.Height);
+                var cbStride = 3 * dst.Width;
+                source.CopyPixels(srcArea, cbStride, dstb);
 
-            var srcArea = new System.Drawing.Rectangle(0, 0, dst.Width, dst.Height);
-            source.CopyPixels(srcArea, Unsafe.SizeOf<Pixel888>() * dst.Width, dstb);
+                return dst;
+            }
 
-            return dst;
+            if (source.Format == PixelFormats.Bgra32bpp)
+            {
+                var dst = new MagicScalerBitmap(source.Width, source.Height);
+                var dstb = System.Runtime.InteropServices.MemoryMarshal.AsBytes(dst._Pixels.AsSpan());
+
+                var srcArea = new System.Drawing.Rectangle(0, 0, dst.Width, dst.Height);
+                var cbStride = 4 * dst.Width;
+                source.CopyPixels(srcArea, cbStride, dstb);
+
+                return dst;
+            }
+
+            throw new ArgumentException("invalid format");
         }
 
         public MagicScalerBitmap(int width, int height) : base(width,height, KnownPixelFormats.Bgr8) { }
@@ -79,9 +94,7 @@ namespace InteropTypes.TensorBitmaps
         void IPixelSource.CopyPixels(Rectangle sourceArea, int cbStride, Span<byte> buffer)
         {
             if (sourceArea.X + sourceArea.Width > this.Width) throw new ArgumentException(nameof(sourceArea));
-            if (sourceArea.Y + sourceArea.Height > this.Height) throw new ArgumentException(nameof(sourceArea));
-
-            System.Diagnostics.Debug.Assert(cbStride < buffer.Length);
+            if (sourceArea.Y + sourceArea.Height > this.Height) throw new ArgumentException(nameof(sourceArea));            
 
             for(int i=0; i < sourceArea.Height; ++i)
             {
@@ -91,7 +104,8 @@ namespace InteropTypes.TensorBitmaps
 
                 b.CopyTo(buffer);
 
-                System.Diagnostics.Debug.Assert(cbStride <= buffer.Length);
+                if (cbStride >= buffer.Length) break;
+                
                 buffer = buffer.Slice(cbStride);
             }
         }
@@ -123,14 +137,14 @@ namespace InteropTypes.TensorBitmaps
         }
 
         private readonly float _overflowAmount;
-        public override IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        public override IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
         {
             return new _MagicScalerScaleOperator<TSrcPixel, TDstPixel>(_overflowAmount);
         }
     }
 
     readonly struct _MagicScalerScaleOperator<TSrcPixel, TDstPixel>
-        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        : IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
@@ -162,14 +176,14 @@ namespace InteropTypes.TensorBitmaps
 
     sealed class _MagicScalerStretchToFit : BitmapBinaryOperation<Matrix3x2>
     {        
-        public override IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        public override IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
         {
             return _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance;
         }
     }
 
     readonly struct _MagicScalerStretchOperator<TSrcPixel, TDstPixel>
-        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        : IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {

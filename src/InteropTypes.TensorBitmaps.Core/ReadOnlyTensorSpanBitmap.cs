@@ -78,6 +78,11 @@ namespace InteropTypes.TensorBitmaps
 
         #region API - Rows
 
+        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst)
+        {
+            GetRowPixelsSpan(y).CopyTo(dst);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y)
         {

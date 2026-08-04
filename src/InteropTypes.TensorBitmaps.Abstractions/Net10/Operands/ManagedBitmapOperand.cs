@@ -12,7 +12,7 @@ namespace InteropTypes.TensorBitmaps.Operands
     /// </summary>    
     [System.Diagnostics.DebuggerDisplay("ManagedReadOnlyBitmapOperand {Width}x{Height} {Format}")]
     public readonly ref struct ManagedReadOnlyBitmapOperand<TPixel>
-        : IReadOnlyBitmap<ManagedReadOnlyBitmapOperand<TPixel>,TPixel>
+        : IReadOnlyBitmap<ManagedReadOnlyBitmapOperand<TPixel>,TPixel>        
         where TPixel: unmanaged
     {
         public ManagedReadOnlyBitmapOperand(IReadOnlyBitmap<TPixel> managed)
@@ -49,7 +49,12 @@ namespace InteropTypes.TensorBitmaps.Operands
             var cropped = new _ReadOnlyBitmapCropped<TPixel>(_Managed, rectangle);
 
             return new ManagedReadOnlyBitmapOperand<TPixel>(cropped);
-        }               
+        }
+
+        public void ReadRowPixelsSpan(int y, Span<TPixel> dst)
+        {
+            GetRowPixelsSpan(y).CopyTo(dst);
+        }
     }
 
     /// <summary>
@@ -91,6 +96,16 @@ namespace InteropTypes.TensorBitmaps.Operands
         public Span<byte> GetRowBytesSpan(int y) => _Managed.GetRowBytesSpan(y);
         public Span<TPixel> GetRowPixelsSpan(int y) => _Managed.GetRowPixelsSpan(y);
 
+        public void ReadRowPixelsSpan(int y, Span<TPixel> dst)
+        {
+            GetRowPixelsSpan(y).CopyTo(dst);
+        }
+
+        public void WriteRowPixelsSpan(int y, ReadOnlySpan<TPixel> src)
+        {
+            src.CopyTo(GetRowPixelsSpan(y));
+        }
+
         public ManagedBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
         {
             var cropped = new _BitmapCropped<TPixel>(_Managed, rectangle);
@@ -102,6 +117,11 @@ namespace InteropTypes.TensorBitmaps.Operands
             where TContextPixel : unmanaged
         {
             return new BITMAPOPERATORS.BinaryOperatorContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
+        }        
+
+        public BITMAPOPERATORS.BinaryFillContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetFiller<TContextPixel>() where TContextPixel : unmanaged
+        {
+            return new BITMAPOPERATORS.BinaryFillContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
         }
     }
 }

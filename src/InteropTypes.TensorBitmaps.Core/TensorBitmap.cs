@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -50,7 +49,7 @@ namespace InteropTypes.TensorBitmaps
 
         #endregion
 
-        #region dara
+        #region data
 
         internal readonly _TensorBitmapInfo _Info;
         public PixelFormat Format { get; }
@@ -66,7 +65,7 @@ namespace InteropTypes.TensorBitmaps
 
         #endregion
 
-        #region API - Rows
+        #region API - Rows        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)
@@ -154,12 +153,17 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
-        }        
+        }
+
+        public BITMAPOPERATORS.BinaryFillContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFiller<TContextPixel>() where TContextPixel : unmanaged
+        {
+            return new Operators.BinaryFillContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+        }
 
         public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
         {
             return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
-        }
+        }        
 
         #endregion
     }

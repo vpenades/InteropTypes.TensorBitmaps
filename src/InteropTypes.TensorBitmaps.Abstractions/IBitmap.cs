@@ -7,10 +7,7 @@ using InteropTypes.Numerics;
 
 namespace InteropTypes.TensorBitmaps
 {
-    /// <summary>
-    /// Minimal readonly bitmap interface
-    /// </summary>
-    public interface IReadOnlyBitmap
+    public interface IBitmapDimensions
     {
         /// <summary>
         /// The pixel layout
@@ -28,8 +25,14 @@ namespace InteropTypes.TensorBitmaps
         /// <summary>
         /// The height of the bitmap, in pixels
         /// </summary>
-        int Height { get; }        
+        int Height { get; }
+    }
 
+    /// <summary>
+    /// Minimal readonly bitmap interface
+    /// </summary>
+    public interface IReadOnlyBitmap : IBitmapDimensions
+    {
         ReadOnlySpan<byte> GetRowBytesSpan(int y);        
     }
 
@@ -103,24 +106,14 @@ namespace InteropTypes.TensorBitmaps
     }
 
 
-    /// <summary>
-    /// Represents an ByRef read only bitmap
-    /// </summary>
-    /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
-    /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
-    public interface IReadOnlyBitmap<TSelf, TPixel> : IReadOnlyBitmap<TPixel>
-        where TSelf : IReadOnlyBitmap<TSelf, TPixel>
+    public interface IBitmapReader<TSelf, TPixel> : IBitmapDimensions
+        where TSelf : IBitmapReader<TSelf, TPixel>
         #if NET9_0_OR_GREATER
         , allows ref struct
         #endif
         where TPixel : unmanaged
     {
-        public bool TryCastTo<TBitmap>(out TBitmap managedBitmap)
-            where TBitmap : IReadOnlyBitmap<TPixel>
-        {
-            managedBitmap = default;
-            return false;
-        }
+        void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst);
 
         /// <summary>
         /// Gets a cropped bitmap.
@@ -140,6 +133,56 @@ namespace InteropTypes.TensorBitmaps
         TSelf GetCropped(System.Drawing.Rectangle rectangle);
     }
 
+    public interface IBitmapWriter<TSelf, TPixel>
+        : IBitmapDimensions
+        , IBitmapReader<TSelf, TPixel>
+        where TSelf : IBitmapWriter<TSelf, TPixel>
+        #if NET9_0_OR_GREATER
+        , allows ref struct
+        #endif
+        where TPixel : unmanaged
+    {
+        void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst);
+
+        #if NET10_0_OR_GREATER
+        /// <summary>
+        /// Returns a context that can be used to perform bulk operations on this bitmap
+        /// </summary>
+        /// <typeparam name="TContextPixel">The pixel format to be used in the operations of the context.</typeparam>
+        /// <returns>It must return: <c>new Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel>(this);</c> </returns>
+        public Operators.BinaryFillContext<TSelf, TPixel, TContextPixel> GetFiller<TContextPixel>()
+            where TContextPixel : unmanaged;
+        #endif
+    }
+
+
+    /// <summary>
+    /// Represents an ByRef read only bitmap
+    /// </summary>
+    /// <typeparam name="TSelf">The type of the class or structure implementing this interface</typeparam>
+    /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
+    public interface IReadOnlyBitmap<TSelf, TPixel>
+        : IReadOnlyBitmap<TPixel>
+        , IBitmapReader<TSelf, TPixel>
+        where TSelf : IReadOnlyBitmap<TSelf, TPixel>
+        #if NET9_0_OR_GREATER
+        , allows ref struct
+        #endif
+        where TPixel : unmanaged
+    {
+        public bool TryCastTo<TBitmap>(out TBitmap managedBitmap)
+            where TBitmap : IReadOnlyBitmap<TPixel>
+        {
+            managedBitmap = default;
+            return false;
+        }
+
+        void IBitmapReader<TSelf, TPixel>.ReadRowPixelsSpan(int y, scoped Span<TPixel> dst)
+        {
+            GetRowPixelsSpan(y).CopyTo(dst);
+        }        
+    }
+
     /// <summary>
     /// Represents ByRef bitmap
     /// </summary>
@@ -147,6 +190,8 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TPixel">The pixel type. It can be anything as long as it has the same ByteSize declared by <see cref="Format"/> </typeparam>
     public interface IBitmap<TSelf, TPixel>
         : IReadOnlyBitmap<TSelf, TPixel>
+        , IBitmapReader<TSelf, TPixel>
+        , IBitmapWriter<TSelf, TPixel>
         , IBitmap<TPixel>
         where TSelf : IBitmap<TSelf, TPixel>
         #if NET9_0_OR_GREATER
@@ -154,6 +199,12 @@ namespace InteropTypes.TensorBitmaps
         #endif
         where TPixel : unmanaged
     {
+
+        void IBitmapWriter<TSelf, TPixel>.WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst)
+        {
+            dst.CopyTo(GetRowPixelsSpan(y));
+        }
+
         #if NET10_0_OR_GREATER
         /// <summary>
         /// Returns a context that can be used to perform bulk operations on this bitmap

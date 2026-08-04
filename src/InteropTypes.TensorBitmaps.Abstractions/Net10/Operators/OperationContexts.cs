@@ -59,5 +59,31 @@ namespace InteropTypes.TensorBitmaps.Operators
             return transform.GetInstance<TContextPixel, TPixel>().Execute(srcBmp, _DstBitmap, pixelConverter);
         }
     }
-    
+
+
+    public readonly ref struct BinaryFillContext<TBitmap, TPixel, TContextPixel>
+        where TBitmap : IBitmapWriter<TBitmap, TPixel>, allows ref struct
+        where TPixel : unmanaged
+        where TContextPixel : unmanaged
+    {
+        public BinaryFillContext(TBitmap dstBitmap)
+        {
+            _DstBitmap = dstBitmap;
+        }
+
+        private readonly TBitmap _DstBitmap;        
+
+        public TResult Fill<TSrcBitmap, TResult>(BitmapFillOperation<TResult> transform, TSrcBitmap srcBmp, IPixelConverter<TContextPixel, TPixel> pixelConverter)
+            where TSrcBitmap : IBitmapReader<TSrcBitmap, TContextPixel>, allows ref struct
+        {
+            return transform.GetInstance<TContextPixel, TPixel>().Execute(srcBmp, _DstBitmap, pixelConverter);
+        }
+
+        public TResult Fill2<TSrcBitmap, TResult>(BitmapFillOperation<TResult> transform, TSrcBitmap srcBmp, IPixelConverter<TContextPixel, TPixel> pixelConverter)
+            where TSrcBitmap : IReadOnlyBitmap<TSrcBitmap, TContextPixel>, allows ref struct
+        {
+            return transform.GetInstance<TContextPixel, TPixel>().Execute2(srcBmp, _DstBitmap, pixelConverter);
+        }
+    }
+
 }

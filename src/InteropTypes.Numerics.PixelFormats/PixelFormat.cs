@@ -23,8 +23,8 @@ namespace InteropTypes.Numerics
     public readonly struct PixelFormat : IEquatable<PixelFormat>
     {
         #region lifecycle
-        public PixelFormat(ImmutableArray<PixelComponent> components)
-            : this(components, components.Sum(item => item.ByteSize)) { }
+        public PixelFormat(IEnumerable<PixelComponent> components)
+            : this(components.ToImmutableArray()) { }
 
         public PixelFormat(PixelComponent x)
             : this([x], x.ByteSize) { }
@@ -42,6 +42,12 @@ namespace InteropTypes.Numerics
         {
             this.Components = components;
             this.BytesPerPixel = bytesPerPixel;
+        }
+
+        private PixelFormat(ImmutableArray<PixelComponent> components)
+        {
+            this.Components = components;
+            this.BytesPerPixel = components.Sum(item => item.ByteSize);
         }
 
         #endregion

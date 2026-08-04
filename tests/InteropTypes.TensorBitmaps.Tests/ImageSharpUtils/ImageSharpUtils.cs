@@ -15,7 +15,7 @@ namespace InteropTypes.TensorBitmaps
     {
         public static SixLabors.ImageSharp.Image<TDstPixel> ToImageSharp<TSrcPixel,TDstPixel>(this IReadOnlyBitmap<TSrcPixel> srcBitmap)
             where TSrcPixel: unmanaged
-            where TDstPixel : unmanaged, IPixel<TDstPixel>
+            where TDstPixel : unmanaged, SixLabors.ImageSharp.PixelFormats.IPixel<TDstPixel>
         {
             var cvt = IPixelConverter<TSrcPixel, TDstPixel>.Create(srcBitmap.Format, ToTensorPixelFormat(typeof(TDstPixel)), true);
 
@@ -39,7 +39,7 @@ namespace InteropTypes.TensorBitmaps
 
         public static SixLabors.ImageSharp.Image<TPixel> ToImageSharp<TElement, TPixel>(this TensorBitmap<TElement, TPixel> srcBitmap)
             where TElement : unmanaged, INumber<TElement>
-            where TPixel : unmanaged, IPixel<TPixel>
+            where TPixel : unmanaged, SixLabors.ImageSharp.PixelFormats.IPixel<TPixel>
         {
             var dstImage = new SixLabors.ImageSharp.Image<TPixel>(srcBitmap.Width, srcBitmap.Height);
 
@@ -60,7 +60,7 @@ namespace InteropTypes.TensorBitmaps
 
         public static SixLabors.ImageSharp.Image<TPixel> ToImageSharp<TElement, TPixel>(this ReadOnlyTensorSpanBitmap<TElement, TPixel> srcBitmap)
             where TElement : unmanaged, INumber<TElement>
-            where TPixel : unmanaged, IPixel<TPixel>
+            where TPixel : unmanaged, SixLabors.ImageSharp.PixelFormats.IPixel<TPixel>
         {
             var dstImage = new SixLabors.ImageSharp.Image<TPixel>(srcBitmap.Width, srcBitmap.Height);
 
@@ -76,7 +76,7 @@ namespace InteropTypes.TensorBitmaps
 
         public static TensorBitmap<TElement, TPixel> ToTensorBitmap<TElement, TPixel>(this SixLabors.ImageSharp.Image<TPixel> srcImage)
             where TElement : unmanaged, INumber<TElement>
-            where TPixel : unmanaged, IPixel<TPixel>
+            where TPixel : unmanaged, SixLabors.ImageSharp.PixelFormats.IPixel<TPixel>
         {
             var dstFmt = ToTensorPixelFormat(typeof(TPixel));
             var dstBitmap = TensorBitmap<TElement, TPixel>.Create(srcImage.Width, srcImage.Height, dstFmt);

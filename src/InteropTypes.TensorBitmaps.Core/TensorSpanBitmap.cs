@@ -72,6 +72,16 @@ namespace InteropTypes.TensorBitmaps
 
         #region API - Rows
 
+        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst)
+        {
+            GetRowPixelsSpan(y).CopyTo(dst);
+        }
+
+        public void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst)
+        {
+            dst.CopyTo(GetRowPixelsSpan(y));
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
@@ -174,6 +184,11 @@ namespace InteropTypes.TensorBitmaps
         public BITMAPOPERATORS.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
         {
             return new Operators.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+        }        
+
+        public BITMAPOPERATORS.BinaryFillContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFiller<TContextPixel>() where TContextPixel : unmanaged
+        {
+            return new Operators.BinaryFillContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }
 
         #endregion

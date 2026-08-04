@@ -201,7 +201,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         /// <summary>
-        /// Optimized path for <see cref="Fill{TSrcBitmap, TResult}(BitmapBinaryOperation{TResult}, TSrcBitmap)"/> with <see cref="BitmapOperations.StretchToFit"/>
+        /// Optimized path for <see cref="Fill{TSrcBitmap, TResult}(BitmapBinaryOperation{TResult}, TSrcBitmap)"/> with <see cref="BitmapOperations.StretchToFitStep"/>
         /// </summary>        
         public Matrix3x2 FillStretched<TSrcBmp>(TSrcBmp src)
             where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TContextPixel>, allows ref struct            

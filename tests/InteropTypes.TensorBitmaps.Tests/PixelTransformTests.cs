@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Operands;
 using InteropTypes.TensorBitmaps.Operators;
+
+using PhotoSauce.MagicScaler;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -27,7 +31,7 @@ namespace InteropTypes.TensorBitmaps
             // create another tensor bitmap and fill it with the image we've loaded
 
             var bmp = TensorBitmap<byte, Bgr24>.Create(48, 32, KnownPixelFormats.Rgb8);
-            bmp.GetContext<Rgb24>().Fill(BitmapOperations.StretchToFit, img);
+            bmp.GetContext<Rgb24>().Fill(BitmapOperations.StretchToFitStep, img);
 
             // save back
 
@@ -37,18 +41,39 @@ namespace InteropTypes.TensorBitmaps
         }
 
         [Test]
-        public async Task LanczosResizeTest()
+        public async Task StretchOperationTest()
         {
             // load image and convert it to a tensor bitmap
 
-            using var img = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
+            var s = new System.Drawing.Size(128, 96);
 
-            var tmp = new ManagedBitmap<Vector4>(img.Width, img.Height, KnownPixelFormats.RgbaF32);
-            tmp.GetContext<Rgb24>().Fill(img);
+            var f = ResourceInfo.From("shannon.jpg");
 
-            tmp = LanczosResizer.Resize(tmp, 120, 80);            
+            // magic scaler reference
 
-            AttachmentInfo.From("shannon.resized.jpg").WriteObjectEx(x=> tmp.Save(x));
+            var mso = new ProcessImageSettings { Width = s.Width, Height = s.Height, ResizeMode = CropScaleMode.Stretch };
+            using var ms = MagicImageProcessor.BuildPipeline(f.File.FullName, mso);
+            AttachmentInfo.From($"shannon.MagicScaler.jpg").WriteToStream(x => ms.WriteOutput(x));
+
+            // imagesharp reference
+
+            using var img = ImageSharpBitmap<Rgb24>.Read(f.OpenRead);
+
+            using var iref = img.CreateStretched(s);
+            AttachmentInfo.From($"shannon.ImageSharp.jpg").WriteObjectEx(x => iref.Save(x));
+
+            // algorythms
+
+            foreach (var op in new[] { BitmapOperations.StretchToFitStep, BitmapOperations.StretchToFitBicubic, BitmapOperations.StretchToFitLanczos, MagicScalerUtils.StretchToFit })
+            {
+                var src = new ManagedBitmap<uint>(img.Width, img.Height, KnownPixelFormats.Rgba8);
+                src.GetContext<Rgb24>().Fill(img);
+
+                var dst = new ManagedBitmap<uint>(s.Width, s.Height, KnownPixelFormats.Rgba8);
+                dst.GetContext<uint>().Fill(op, src);
+
+                AttachmentInfo.From($"shannon.{op.GetType().Name}.jpg").WriteObjectEx(x => dst.Save(x));
+            }
         }
 
 
@@ -82,15 +107,15 @@ namespace InteropTypes.TensorBitmaps
                 img_isharp.ToTensorBitmap(out TensorBitmap<byte, Rgb24> img_ref);
 
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_ref);                
+                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_ref);
                 AttachmentInfo.From($"shannon.{oa}.ref.jpg").WriteObjectEx(bmp.Save);
 
-                // magicScaler
-                /*
+                // ref lanczos
+                img_isharp.ToTensorBitmap(out img_ref);
+
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetContext<Rgb24>().Fill(MagicScalerUtils.ScaleToFit(oa / 10f), img_ref);
-                AttachmentInfo.From($"shannon.{oa}.magicScaler.jpg").WriteObjectEx(bmp.Save);
-                */
+                bmp.GetContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f, BitmapOperations.StretchToFitLanczos), img_ref);
+                AttachmentInfo.From($"shannon.{oa}.ref_lanczos.jpg").WriteObjectEx(bmp.Save);
 
                 if (OperatingSystem.IsLinux()) continue;
 

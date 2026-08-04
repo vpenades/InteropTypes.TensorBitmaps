@@ -19,6 +19,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\InteropTypes.Numerics.PixelFormats\InteropTypes.Numerics.PixelFormats.csproj" />
+	</ItemGroup>	
+
+	<ItemGroup>
+	  <Folder Include="Net10\Operands\" />
 	</ItemGroup>
 
 	<PropertyGroup>

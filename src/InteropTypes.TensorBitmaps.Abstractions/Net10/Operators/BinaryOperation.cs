@@ -6,43 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
 
 namespace InteropTypes.TensorBitmaps.Operators
 {
-    /// <summary>
-    /// interface for operator that perform a pixel transfer between a source and destination bitmap
-    /// </summary>
-    /// <typeparam name="TSrcPixel">The pixel type of source</typeparam>
-    /// <typeparam name="TDstPixel">The pixel type od destination</typeparam>
-    public interface IBinaryOperation<TSrcPixel, TDstPixel, TResult>
-        where TSrcPixel : unmanaged        
-        where TDstPixel : unmanaged        
-    {
-        TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
-            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
-        {
-            var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
-            return Execute(src, dst, pixelConverter);
-        }
-
-        TResult Execute<TSrcBmp,TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmap<TSrcBmp,TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct;        
-
-        public static IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> GetScaleToFit(float overflowAmount)
-        {
-            return new _ScaleToFitOperator<TSrcPixel,TDstPixel>(overflowAmount, _StretchToFitOperator<TSrcPixel,TDstPixel>.Instance);
-        }
-    }    
+    
     
 
     /// <summary>
     /// Operator that simply copies source over destination
     /// </summary>    
     readonly struct _DirectCopyOperator<TSrcPixel, TDstPixel>
-            : IBinaryOperation<TSrcPixel, TDstPixel, int>
+            : IDrawOperation<TSrcPixel, TDstPixel, int>
             where TSrcPixel : unmanaged            
             where TDstPixel : unmanaged
     {
@@ -69,11 +43,11 @@ namespace InteropTypes.TensorBitmaps.Operators
     /// Operator that resizes and crops the source so it fits into destination while preserving aspect ration.
     /// </summary>    
     readonly struct _ScaleToFitOperator<TSrcPixel, TDstPixel>
-        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>        
+        : IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2>        
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
-        public _ScaleToFitOperator(float overflowAmount, IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> stretchOperator)
+        public _ScaleToFitOperator(float overflowAmount, IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> stretchOperator)
         {
             _OverflowAmount = overflowAmount;
             _StretchOperator = stretchOperator;
@@ -89,7 +63,7 @@ namespace InteropTypes.TensorBitmaps.Operators
         /// </remarks>
         private readonly float _OverflowAmount;
 
-        private readonly IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2> _StretchOperator;
+        private readonly IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> _StretchOperator;
 
         public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmap<TSrcBmp,TSrcPixel>, allows ref struct
@@ -114,7 +88,7 @@ namespace InteropTypes.TensorBitmaps.Operators
     /// <typeparam name="TSrcPixel"></typeparam>
     /// <typeparam name="TDstPixel"></typeparam>
     readonly struct _StretchToFitOperator<TSrcPixel, TDstPixel>
-        : IBinaryOperation<TSrcPixel, TDstPixel, Matrix3x2>        
+        : IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2>        
         where TSrcPixel : unmanaged        
         where TDstPixel : unmanaged
     {
@@ -146,11 +120,15 @@ namespace InteropTypes.TensorBitmaps.Operators
 
                 for (int y = 0; y < dst.Height; ++y)
                 {
-                    var srcRow = src.GetRowPixelsSpan(y * src.Height / dst.Height);
+                    var yy = (2 * y + 1) * src.Height / (2 * dst.Height);
+
+                    var srcRow = src.GetRowPixelsSpan(yy);
 
                     for (int x = 0; x < tmpRow.Length; ++x)
                     {
-                        tmpRow[x] = srcRow[x * srcRow.Length / tmpRow.Length];
+                        var xx = (2 * x + 1) * srcRow.Length / (2 * tmpRow.Length);
+
+                        tmpRow[x] = srcRow[xx];
                     }
 
                     var dstRow = dst.GetRowPixelsSpan(y);
