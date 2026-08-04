@@ -130,7 +130,7 @@ namespace InteropTypes.TensorBitmaps
         /// </remarks>
         /// <param name="rect">The region to crop</param>
         /// <returns>A cropped bitmap</returns>
-        TSelf GetCropped(System.Drawing.Rectangle rectangle);
+        TSelf GetCropped(System.Drawing.Rectangle rectangle);        
     }
 
     public interface IBitmapWriter<TSelf, TPixel>
@@ -142,7 +142,7 @@ namespace InteropTypes.TensorBitmaps
         #endif
         where TPixel : unmanaged
     {
-        void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst);
+        void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> src);
 
         #if NET10_0_OR_GREATER
         /// <summary>
@@ -150,7 +150,7 @@ namespace InteropTypes.TensorBitmaps
         /// </summary>
         /// <typeparam name="TContextPixel">The pixel format to be used in the operations of the context.</typeparam>
         /// <returns>It must return: <c>new Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel>(this);</c> </returns>
-        public Operators.BinaryFillContext<TSelf, TPixel, TContextPixel> GetFiller<TContextPixel>()
+        public Operators.FillerContext<TSelf, TPixel, TContextPixel> GetFillerContext<TContextPixel>()
             where TContextPixel : unmanaged;
         #endif
     }
@@ -211,7 +211,7 @@ namespace InteropTypes.TensorBitmaps
         /// </summary>
         /// <typeparam name="TContextPixel">The pixel format to be used in the operations of the context.</typeparam>
         /// <returns>It must return: <c>new Operators.BinaryOperatorContext<TSelf, TPixel, TSrcPixel>(this);</c> </returns>
-        public Operators.BinaryOperatorContext<TSelf, TPixel, TContextPixel> GetContext<TContextPixel>()
+        public Operators.DrawingContext<TSelf, TPixel, TContextPixel> GetDrawingContext<TContextPixel>()
             where TContextPixel : unmanaged;
         #endif
     }

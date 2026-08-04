@@ -74,7 +74,7 @@ namespace InteropTypes.TensorBitmaps
             var skbmp = new SKBitmap(src.Width, src.Height);
             var dst = new SkiaSharpBitmapOperand<TPixel>(skbmp);
 
-            dst.AsOperand().GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
+            dst.AsOperand().GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, src);
 
             return dst;
         }

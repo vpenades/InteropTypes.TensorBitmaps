@@ -39,7 +39,7 @@ namespace InteropTypes.TensorBitmaps
             var dst = TensorBitmap<TElement, TPixel>.Create(256, 256, fmt);
 
             // copies the pixels from src to dst, taking into account the pixel layout and each component range.
-            dst.GetContext<uint>().Fill(BitmapOperations.Copy, src);
+            dst.GetFillerContext<uint>().Fill(BitmapOperations.FillCopy, src);
 
             await Assert.That(dst.CalculateCrc32()).IsEqualTo(crc32);
 
@@ -77,7 +77,7 @@ namespace InteropTypes.TensorBitmaps
             {
                 var bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
 
-                bmp.GetContext<uint>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img);
+                bmp.GetFillerContext<uint>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img);
 
                 using var img2 = bmp.Cast<Rgb24>().ToImageSharp();
 

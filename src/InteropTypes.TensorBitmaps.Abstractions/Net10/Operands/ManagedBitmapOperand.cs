@@ -53,7 +53,8 @@ namespace InteropTypes.TensorBitmaps.Operands
 
         public void ReadRowPixelsSpan(int y, Span<TPixel> dst)
         {
-            GetRowPixelsSpan(y).CopyTo(dst);
+            var src = GetRowPixelsSpan(y);
+            src.CopyTo(dst);
         }
     }
 
@@ -113,15 +114,15 @@ namespace InteropTypes.TensorBitmaps.Operands
             return new ManagedBitmapOperand<TPixel>(cropped);
         }
 
-        public BITMAPOPERATORS.BinaryOperatorContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>()
+        public BITMAPOPERATORS.DrawingContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetDrawingContext<TContextPixel>()
             where TContextPixel : unmanaged
         {
-            return new BITMAPOPERATORS.BinaryOperatorContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
+            return new BITMAPOPERATORS.DrawingContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
         }        
 
-        public BITMAPOPERATORS.BinaryFillContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetFiller<TContextPixel>() where TContextPixel : unmanaged
+        public BITMAPOPERATORS.FillerContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new BITMAPOPERATORS.BinaryFillContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
+            return new BITMAPOPERATORS.FillerContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
         }
     }
 }

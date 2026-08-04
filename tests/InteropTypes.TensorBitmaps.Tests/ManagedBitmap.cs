@@ -6,8 +6,6 @@ using System.Text;
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps.Operands;
 
-using PhotoSauce.MagicScaler;
-
 namespace InteropTypes.TensorBitmaps
 {
     class ManagedBitmap<TPixel> : IBitmap<TPixel>
@@ -46,7 +44,7 @@ namespace InteropTypes.TensorBitmaps
         }
 
         public void Fill<TSrcBitmap,TSrcPixel>(TSrcBitmap bmp)
-            where TSrcBitmap : IReadOnlyBitmap<TSrcBitmap, TSrcPixel>, allows ref struct
+            where TSrcBitmap : IBitmapReader<TSrcBitmap, TSrcPixel>, allows ref struct
             where TSrcPixel : unmanaged
         {
             var cvt = IPixelConverter<TSrcPixel, TPixel>.Create(bmp.Format, this.Format, true);
@@ -54,19 +52,21 @@ namespace InteropTypes.TensorBitmaps
             var w = Math.Min(bmp.Width, this.Width);
             var h = Math.Min(bmp.Height, this.Height);
 
+            Span<TSrcPixel> sr = stackalloc TSrcPixel[bmp.Width];
+
             for (int y = 0; y < h; ++y)
             {
-                var sr = bmp.GetRowPixelsSpan(y).Slice(0, w);
-                var sd = this.GetRowPixelsSpan(y).Slice(0, w);
-                cvt.ConvertPixels(sr, sd);
+                bmp.ReadRowPixelsSpan(y, sr);                
+                var sd = this.GetRowPixelsSpan(y);
+                cvt.ConvertPixels(sr.Slice(0,w), sd.Slice(0, w));
             }
         }
 
-        public Operators.BinaryOperatorContext<ManagedBitmapOperand<TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>()
+        public Operators.DrawingContext<ManagedBitmapOperand<TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>()
             where TSrcPixel:unmanaged
         {
             var m = new ManagedBitmapOperand<TPixel>(this);
-            return m.GetContext<TSrcPixel>();
+            return m.GetDrawingContext<TSrcPixel>();
         }
 
         #endregion

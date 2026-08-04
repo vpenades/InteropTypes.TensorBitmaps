@@ -128,8 +128,8 @@ namespace FasterRcnnSample
 
             // resize, convert, fit, and copy pixels
             return planes
-                .GetContext<TPixel>()
-                .FillScaled(image, 0);
+                .GetFillerContext<TPixel>()
+                .Fill(BitmapOperations.ScaleToFit(0), image);
         }
 
     }

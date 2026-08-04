@@ -132,7 +132,7 @@ namespace InteropTypes.TensorBitmaps
         {
             if (Unsafe.SizeOf<TPixel>() != Unsafe.SizeOf<TPixelOut>()) throw new InvalidOperationException("Pixel size mismatch");
             return new ReadOnlyTensorSpanBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
-        }        
+        }
 
         #endregion
     }

@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operators;
 
 namespace InteropTypes.TensorBitmaps.Operators
 {
@@ -19,24 +18,17 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
-        TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
+        TResult Draw<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
             where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
             where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
-            return Execute(src, dst, pixelConverter);
+            return Draw(src, dst, pixelConverter);
         }
 
-        TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        TResult Draw<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct;
-
-        public static IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> GetScaleToFit(float overflowAmount, IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> stretchOp)
-        {
-            stretchOp ??= _StretchToFitOperator<TSrcPixel, TDstPixel>.Instance;
-
-            return new _ScaleToFitOperator<TSrcPixel, TDstPixel>(overflowAmount, stretchOp);
-        }
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct;        
     }
 
     /// <summary>
@@ -48,28 +40,33 @@ namespace InteropTypes.TensorBitmaps.Operators
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
-        TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
-            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
-        {
-            var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
-            return Execute(src, dst, pixelConverter);
-        }
+        
 
-        TResult Execute2<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
+        TResult FillEx<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
             where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
         {
             var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
-            return Execute2(src, dst, pixelConverter);
+            return FillEx(src, dst, pixelConverter);
         }
 
-        TResult Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct;
-
-        TResult Execute2<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+        TResult FillEx<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
             where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
+        {
+            return Fill(src, dst, pixelConverter);
+        }
+
+        TResult Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, bool initPixels = true)
+            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
+        {
+            var pixelConverter = IPixelConverter<TSrcPixel, TDstPixel>.Create(src.Format, dst.Format, initPixels);
+            return Fill(src, dst, pixelConverter);
+        }
+
+        TResult Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
             where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct;
     }
 }

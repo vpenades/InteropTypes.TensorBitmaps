@@ -155,14 +155,14 @@ namespace InteropTypes.TensorBitmaps
             return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
         }
 
-        public BITMAPOPERATORS.BinaryFillContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFiller<TContextPixel>() where TContextPixel : unmanaged
+        public BITMAPOPERATORS.FillerContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new Operators.BinaryFillContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+            return new Operators.FillerContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }
 
-        public BITMAPOPERATORS.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
+        public BITMAPOPERATORS.DrawingContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetDrawingContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new Operators.BinaryOperatorContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+            return new Operators.DrawingContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }        
 
         #endregion

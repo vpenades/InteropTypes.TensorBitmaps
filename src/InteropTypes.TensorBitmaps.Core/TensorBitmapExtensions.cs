@@ -16,7 +16,7 @@ namespace InteropTypes.TensorBitmaps
         {
             dst = TensorBitmap<TDstElement, TSrcPixel>.Create(src.Width, src.Height, src.Format);
 
-            dst.GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
+            dst.GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, src);
         }
 
         public static void ToTensorBitmap<TSrcPixel, TDstElement>(this IReadOnlyBitmap<TSrcPixel> src, out TensorBitmap<TDstElement, TSrcPixel> dst)            
@@ -26,7 +26,7 @@ namespace InteropTypes.TensorBitmaps
             dst = TensorBitmap<TDstElement, TSrcPixel>.Create(src.Width, src.Height, src.Format);
             var srcx = new ManagedReadOnlyBitmapOperand<TSrcPixel>(src);
 
-            dst.GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, srcx);
+            dst.GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, srcx);
         }
     }
 }

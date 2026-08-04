@@ -181,14 +181,14 @@ namespace InteropTypes.TensorBitmaps
             }
         }        
 
-        public BITMAPOPERATORS.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
+        public BITMAPOPERATORS.DrawingContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetDrawingContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new Operators.BinaryOperatorContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+            return new Operators.DrawingContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }        
 
-        public BITMAPOPERATORS.BinaryFillContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFiller<TContextPixel>() where TContextPixel : unmanaged
+        public BITMAPOPERATORS.FillerContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new Operators.BinaryFillContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+            return new Operators.FillerContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }
 
         #endregion

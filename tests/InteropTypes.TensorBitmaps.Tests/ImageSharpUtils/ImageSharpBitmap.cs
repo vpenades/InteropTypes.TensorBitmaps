@@ -85,7 +85,7 @@ namespace InteropTypes.TensorBitmaps
             var bmp = new Image<TPixel>(src.Width, src.Height);
             var dst = new ImageSharpBitmap<TPixel>(bmp);
 
-            dst.AsOperand().GetContext<TSrcPixel>().Fill(BitmapOperations.Copy, src);
+            dst.AsOperand().GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, src);
 
             return dst;
         }

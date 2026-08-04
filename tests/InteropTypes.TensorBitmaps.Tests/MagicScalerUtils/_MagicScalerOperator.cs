@@ -27,9 +27,9 @@ namespace InteropTypes.TensorBitmaps
             throw new NotImplementedException();
         }
 
-        public static BitmapBinaryOperation<Matrix3x2> StretchToFit { get; } = new _MagicScalerStretchToFit();
+        public static BitmapFillOperation<Matrix3x2> StretchToFit { get; } = new _MagicScalerStretchToFit();
 
-        public static BitmapBinaryOperation<Matrix3x2> ScaleToFit(float overflowAmount) { return new _MagicScalerScaleToFit(overflowAmount); }
+        public static BitmapFillOperation<Matrix3x2> ScaleToFit(float overflowAmount) { return new _MagicScalerScaleToFit(overflowAmount); }
 
     }
 
@@ -40,7 +40,7 @@ namespace InteropTypes.TensorBitmaps
         #region lifecycle
 
         public static MagicScalerBitmap CreateFrom<TBitmap,TPixel>(TBitmap bitmap)
-            where TBitmap: IReadOnlyBitmap<TBitmap, TPixel>, allows ref struct
+            where TBitmap: IBitmapReader<TBitmap, TPixel>, allows ref struct
             where TPixel: unmanaged
         {
             var dst = new MagicScalerBitmap(bitmap.Width, bitmap.Height);
@@ -129,7 +129,7 @@ namespace InteropTypes.TensorBitmaps
     }
 
 
-    sealed class _MagicScalerScaleToFit : BitmapBinaryOperation<Matrix3x2>
+    sealed class _MagicScalerScaleToFit : BitmapFillOperation<Matrix3x2>
     {
         public _MagicScalerScaleToFit(float overflowAmount)
         {
@@ -137,14 +137,14 @@ namespace InteropTypes.TensorBitmaps
         }
 
         private readonly float _overflowAmount;
-        public override IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        public override IFillOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
         {
             return new _MagicScalerScaleOperator<TSrcPixel, TDstPixel>(_overflowAmount);
         }
     }
 
     readonly struct _MagicScalerScaleOperator<TSrcPixel, TDstPixel>
-        : IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        : IFillOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
@@ -155,9 +155,9 @@ namespace InteropTypes.TensorBitmaps
 
         private readonly float _OverflowAmount;        
 
-        public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
+        public Matrix3x2 Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
         {
             var l = new System.Drawing.Size(src.Width, src.Height);
             var r = new System.Drawing.Size(dst.Width, dst.Height);
@@ -166,7 +166,7 @@ namespace InteropTypes.TensorBitmaps
             src = src.GetCropped(crops.SourceCrop);
             dst = dst.GetCropped(crops.TargetCrop);
 
-            var xform = _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance.Execute(src, dst, pixelConverter);
+            var xform = _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance.Fill(src, dst, pixelConverter);
 
             return crops.GetTransform(xform);
         }
@@ -174,29 +174,29 @@ namespace InteropTypes.TensorBitmaps
 
 
 
-    sealed class _MagicScalerStretchToFit : BitmapBinaryOperation<Matrix3x2>
+    sealed class _MagicScalerStretchToFit : BitmapFillOperation<Matrix3x2>
     {        
-        public override IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        public override IFillOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
         {
             return _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance;
         }
     }
 
     readonly struct _MagicScalerStretchOperator<TSrcPixel, TDstPixel>
-        : IDrawOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        : IFillOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
         public static _MagicScalerStretchOperator<TSrcPixel, TDstPixel> Instance { get; } = new _MagicScalerStretchOperator<TSrcPixel, TDstPixel>();
 
-        public Matrix3x2 Execute<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
+        public Matrix3x2 Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
         {
             // convert src to magicScaler, stretch to dst size, and copy to dst
             var tmp = MagicScalerBitmap.CreateFrom<TSrcBmp, TSrcPixel>(src);
             tmp = tmp.Resize(dst.Width, dst.Height);
-            dst.GetContext<Pixel888>().Fill(tmp);
+            dst.GetFillerContext<Pixel888>().Fill(tmp);
 
             return Matrix3x2.CreateScale(src.Width / (float)dst.Width, src.Height / (float)dst.Height);
         }
