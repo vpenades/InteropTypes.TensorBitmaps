@@ -70,17 +70,7 @@ namespace InteropTypes.TensorBitmaps
 
         #endregion
 
-        #region API - Rows
-
-        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst)
-        {
-            GetRowPixelsSpan(y).CopyTo(dst);
-        }
-
-        public void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst)
-        {
-            dst.CopyTo(GetRowPixelsSpan(y));
-        }
+        #region API - Rows        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public Span<TPixel> GetRowPixelsSpan(int y)
@@ -95,21 +85,19 @@ namespace InteropTypes.TensorBitmaps
 
             return pixels;
         }
+        public Span<byte> GetRowBytesSpan(int y) => System.Runtime.InteropServices.MemoryMarshal.AsBytes(GetRowPixelsSpan(y));
 
-        ReadOnlySpan<TPixel> IReadOnlyBitmap<TPixel>.GetRowPixelsSpan(int y) { return GetRowPixelsSpan(y); }
 
-        Span<TPixel> IBitmap<TPixel>.GetRowPixelsSpan(int y) { return GetRowPixelsSpan(y); }
+        ReadOnlySpan<TPixel> IReadOnlyBitmap<TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y) => GetRowBytesSpan(y);        
 
-        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y)
-        {
-            var pixels = GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(pixels);
-        }
-        Span<byte> IBitmap.GetRowBytesSpan(int y)
-        {
-            var pixels = GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(pixels);
-        }
+
+        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst) => GetRowPixelsSpan(y).CopyTo(dst);
+        public void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst) => dst.CopyTo(GetRowPixelsSpan(y));
+
+
+        public void ReadRowBytesSpan(int y, scoped Span<byte> dst) => GetRowBytesSpan(y).CopyTo(dst);
+        public void WriteRowBytesSpan(int y, scoped ReadOnlySpan<byte> dst) => dst.CopyTo(GetRowBytesSpan(y));
 
         #endregion
 
@@ -185,6 +173,7 @@ namespace InteropTypes.TensorBitmaps
         {
             return new Operators.DrawingContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }        
+
 
         public BITMAPOPERATORS.FillerContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
         {

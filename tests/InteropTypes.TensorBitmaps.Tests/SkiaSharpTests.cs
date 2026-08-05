@@ -43,7 +43,7 @@ namespace InteropTypes.TensorBitmaps
 
             await Assert.That(dst.CalculateCrc32()).IsEqualTo(crc32);
 
-            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<TensorBitmap<TElement, TPixel>, TPixel>(dst);            
+            using var skiabmp = SkiaSharpBitmapOperand<uint>.Create<ReadOnlyTensorSpanBitmap<TElement, TPixel>, TPixel>(dst.AsReadOnlyTensorSpanBitmap());            
 
             AttachmentInfo
                 .From($"shannon.{typeof(TPixel).Name}.jpg")

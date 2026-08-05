@@ -7,6 +7,8 @@ Contains interfaces to be implemented by derived libraries
 |read only|read and write|
 |-|-|
 |`IBitmapDimensions`||
+|`IIBitmapReader`|`IBitmapWriter`|
+|`IIBitmapReader<TPixel>`|`IBitmapWriter<TPixel>`|
 |`IReadOnlyBitmap`|`IBitmap`|
 |`IReadOnlyBitmap<TPixel>`|`IBitmap<TPixel>`|
 |`IBitmapReader<TSelf,TPixel>`|`IBitmapWriter<TSelf,TPixel>`|

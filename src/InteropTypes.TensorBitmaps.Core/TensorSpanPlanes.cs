@@ -113,7 +113,7 @@ namespace InteropTypes.TensorBitmaps
 
         #endregion
 
-        #region API
+        #region API - Rows
 
         public void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<PlanesPixel3<TElement>> src)
         {
@@ -130,7 +130,6 @@ namespace InteropTypes.TensorBitmaps
                 r2[x] = src[x].Z;
             }
         }
-
         public void ReadRowPixelsSpan(int y, scoped Span<PlanesPixel3<TElement>> dst)
         {
             var r0 = _PlaneX.GetRowPixelsSpan(y);
@@ -145,12 +144,20 @@ namespace InteropTypes.TensorBitmaps
             }
         }
 
+        public void WriteRowBytesSpan(int y, ReadOnlySpan<byte> src) => WriteRowPixelsSpan(y, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, PlanesPixel3<TElement>>(src));
+        public void ReadRowBytesSpan(int y, Span<byte> dst) => ReadRowPixelsSpan(y, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, PlanesPixel3<TElement>>(dst));
+
+
         public void GetRowPixelSpans(int y, out Span<TElement> planex, out Span<TElement> planey, out Span<TElement> planez)
         {
             planex = _PlaneX.GetRowPixelsSpan(y);
             planey = _PlaneY.GetRowPixelsSpan(y);
             planez = _PlaneZ.GetRowPixelsSpan(y);
         }
+
+        #endregion
+
+        #region API
 
         public TensorSpanPlanes3<TElement> GetCropped(System.Drawing.Rectangle rectangle)
         {

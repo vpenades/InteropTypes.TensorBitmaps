@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using InteropTypes.Numerics;
+
 namespace InteropTypes.TensorBitmaps
 {
     public static class BitmapExtensions
@@ -22,6 +24,6 @@ namespace InteropTypes.TensorBitmaps
             where TDstPixel : unmanaged
         {
             return new _ReadOnlyBitmapCasted<TSrcPixel, TDstPixel>(bitmap);
-        }
+        }        
     }
 }

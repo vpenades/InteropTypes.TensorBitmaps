@@ -42,7 +42,9 @@ namespace FasterRcnnSample
 
         private readonly PixelFormat _InputFormat;
 
-        public float MinConfidence { get; set; } = 0.7f;        
+        public BitmapFillOperation<Matrix3x2>? StretchFilter { get; set; }
+
+        public float MinConfidence { get; set; } = 0.7f;
 
         public IReadOnlyList<Prediction> Predict<TPixel>(IReadOnlyBitmap<TPixel> image)
             where TPixel: unmanaged
@@ -129,7 +131,7 @@ namespace FasterRcnnSample
             // resize, convert, fit, and copy pixels
             return planes
                 .GetFillerContext<TPixel>()
-                .Fill(BitmapOperations.ScaleToFit(0), image);
+                .Fill(BitmapOperations.ScaleToFit(0, StretchFilter), image);
         }
 
     }

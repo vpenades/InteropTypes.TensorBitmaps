@@ -129,6 +129,35 @@ namespace InteropTypes.TensorBitmaps
     }
 
 
+
+    readonly struct MagicScalerWrapper : IPixelSource
+    {
+        private readonly IBitmapReader _SrcBitmap;
+
+        public Guid Format => throw new NotImplementedException();
+
+        public int Width => _SrcBitmap.Width;
+        public int Height => _SrcBitmap.Height;
+
+        public void CopyPixels(Rectangle sourceArea, int cbStride, Span<byte> buffer)
+        {
+            var bpp = _SrcBitmap.Format.BytesPerPixel;
+
+            Span<byte> row = stackalloc Byte[_SrcBitmap.Width * bpp];
+
+            for(int i=0; i < sourceArea.Height; ++i)
+            {
+                _SrcBitmap.ReadRowBytesSpan(i + sourceArea.Y, row);
+
+                row.Slice(sourceArea.X * bpp, sourceArea.Width * bpp).CopyTo(buffer);
+
+                if (cbStride >= buffer.Length) break;
+                buffer = buffer.Slice(cbStride);
+            }
+        }        
+    }
+
+
     sealed class _MagicScalerScaleToFit : BitmapFillOperation<Matrix3x2>
     {
         public _MagicScalerScaleToFit(float overflowAmount)

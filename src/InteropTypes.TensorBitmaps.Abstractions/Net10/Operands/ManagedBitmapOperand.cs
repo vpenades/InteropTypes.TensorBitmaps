@@ -15,15 +15,33 @@ namespace InteropTypes.TensorBitmaps.Operands
         : IReadOnlyBitmap<ManagedReadOnlyBitmapOperand<TPixel>,TPixel>        
         where TPixel: unmanaged
     {
+        #region lifecycle
         public ManagedReadOnlyBitmapOperand(IReadOnlyBitmap<TPixel> managed)
         {
             _Managed = managed;
         }
 
+        #endregion
+
+        #region data
+
         private readonly IReadOnlyBitmap<TPixel> _Managed;
         public PixelFormat Format => _Managed.Format;
         public int Width => _Managed.Width;
         public int Height => _Managed.Height;
+
+        #endregion
+
+        #region API - Rows
+        public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y) => _Managed.GetRowPixelsSpan(y);        
+        public ReadOnlySpan<byte> GetRowBytesSpan(int y) => System.Runtime.InteropServices.MemoryMarshal.AsBytes(GetRowPixelsSpan(y));
+
+        public void ReadRowPixelsSpan(int y, Span<TPixel> dst) => GetRowPixelsSpan(y).CopyTo(dst);
+        public void ReadRowBytesSpan(int y, Span<byte> dst) => GetRowBytesSpan(y).CopyTo(dst);        
+
+        #endregion
+
+        #region API
 
         public bool TryCastTo<T>(out T managedBitmap)
             where T : IReadOnlyBitmap<TPixel>
@@ -40,10 +58,6 @@ namespace InteropTypes.TensorBitmaps.Operands
             }
         }
 
-        public ReadOnlySpan<byte> GetRowBytesSpan(int y) => _Managed.GetRowBytesSpan(y);
-        public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y) => _Managed.GetRowPixelsSpan(y);
-
-
         public ManagedReadOnlyBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
         {
             var cropped = new _ReadOnlyBitmapCropped<TPixel>(_Managed, rectangle);
@@ -51,11 +65,8 @@ namespace InteropTypes.TensorBitmaps.Operands
             return new ManagedReadOnlyBitmapOperand<TPixel>(cropped);
         }
 
-        public void ReadRowPixelsSpan(int y, Span<TPixel> dst)
-        {
-            var src = GetRowPixelsSpan(y);
-            src.CopyTo(dst);
-        }
+        #endregion
+
     }
 
     /// <summary>
@@ -66,16 +77,41 @@ namespace InteropTypes.TensorBitmaps.Operands
         : IBitmap<ManagedBitmapOperand<TPixel>, TPixel>
         where TPixel : unmanaged
     {
+        #region lifecycle
         public ManagedBitmapOperand(IBitmap<TPixel> managed)
         {
             _Managed = managed;
         }
+
+        #endregion
+
+        #region data
 
         private readonly IBitmap<TPixel> _Managed; 
 
         public PixelFormat Format => _Managed.Format;
         public int Width => _Managed.Width;
         public int Height => _Managed.Height;
+
+        #endregion
+
+        #region API - Rows        
+
+        public Span<TPixel> GetRowPixelsSpan(int y) => _Managed.GetRowPixelsSpan(y);
+        public Span<byte> GetRowBytesSpan(int y) => System.Runtime.InteropServices.MemoryMarshal.AsBytes(GetRowPixelsSpan(y));
+
+        ReadOnlySpan<TPixel> IReadOnlyBitmap<TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y) => System.Runtime.InteropServices.MemoryMarshal.AsBytes(GetRowPixelsSpan(y));        
+
+        public void ReadRowPixelsSpan(int y, Span<TPixel> dst) => GetRowPixelsSpan(y).CopyTo(dst);
+        public void WriteRowPixelsSpan(int y, ReadOnlySpan<TPixel> src) => src.CopyTo(GetRowPixelsSpan(y));
+
+        public void ReadRowBytesSpan(int y, Span<byte> dst) => GetRowBytesSpan(y).CopyTo(dst);
+        public void WriteRowBytesSpan(int y, ReadOnlySpan<byte> src) => src.CopyTo(GetRowBytesSpan(y));
+
+        #endregion
+
+        #region API
 
         public bool TryCastTo<T>(out T managedBitmap)
             where T : IReadOnlyBitmap<TPixel>
@@ -90,21 +126,6 @@ namespace InteropTypes.TensorBitmaps.Operands
                 managedBitmap = default;
                 return false;
             }
-        }
-
-        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y) => _Managed.GetRowBytesSpan(y);
-        ReadOnlySpan<TPixel> IReadOnlyBitmap<TPixel>.GetRowPixelsSpan(int y) => _Managed.GetRowPixelsSpan(y);
-        public Span<byte> GetRowBytesSpan(int y) => _Managed.GetRowBytesSpan(y);
-        public Span<TPixel> GetRowPixelsSpan(int y) => _Managed.GetRowPixelsSpan(y);
-
-        public void ReadRowPixelsSpan(int y, Span<TPixel> dst)
-        {
-            GetRowPixelsSpan(y).CopyTo(dst);
-        }
-
-        public void WriteRowPixelsSpan(int y, ReadOnlySpan<TPixel> src)
-        {
-            src.CopyTo(GetRowPixelsSpan(y));
         }
 
         public ManagedBitmapOperand<TPixel> GetCropped(Rectangle rectangle)
@@ -124,5 +145,7 @@ namespace InteropTypes.TensorBitmaps.Operands
         {
             return new BITMAPOPERATORS.FillerContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel>(this);
         }
+
+        #endregion
     }
 }

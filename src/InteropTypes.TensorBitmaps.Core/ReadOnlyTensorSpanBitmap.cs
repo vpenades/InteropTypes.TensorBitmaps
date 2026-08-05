@@ -76,12 +76,7 @@ namespace InteropTypes.TensorBitmaps
 
         #endregion
 
-        #region API - Rows
-
-        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst)
-        {
-            GetRowPixelsSpan(y).CopyTo(dst);
-        }
+        #region API - Rows        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public ReadOnlySpan<TPixel> GetRowPixelsSpan(int y)
@@ -96,12 +91,10 @@ namespace InteropTypes.TensorBitmaps
 
             return pixels;
         }
+        public ReadOnlySpan<byte> GetRowBytesSpan(int y) => System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(GetRowPixelsSpan(y));
 
-        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y)
-        {
-            var pixels = GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(pixels);
-        }
+        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst) => GetRowPixelsSpan(y).CopyTo(dst);
+        public void ReadRowBytesSpan(int y, scoped Span<byte> dst) => GetRowBytesSpan(y).CopyTo(dst);
 
         #endregion
 
