@@ -8,6 +8,135 @@ using InteropTypes.Numerics;
 namespace InteropTypes.TensorBitmaps.Operands
 {
     /// <summary>
+    /// This class is used to wrap a managed <see cref="IBitmapReader{TPixel}"/> with a ByRef operand
+    /// </summary>    
+    [System.Diagnostics.DebuggerDisplay("ManagedBitmapReaderOperand {Width}x{Height} {Format}")]
+    public readonly ref struct ManagedBitmapReaderOperand<TPixel>
+        : IBitmapReader<ManagedBitmapReaderOperand<TPixel>, TPixel>
+        where TPixel : unmanaged
+    {
+        #region lifecycle
+        public ManagedBitmapReaderOperand(IBitmapReader<TPixel> managed)
+        {
+            _Managed = managed;
+        }
+
+        #endregion
+
+        #region data
+
+        private readonly IBitmapReader<TPixel> _Managed;
+        public PixelFormat Format => _Managed.Format;
+        public int Width => _Managed.Width;
+        public int Height => _Managed.Height;
+
+        #endregion
+
+        #region API - Rows
+
+        public void ReadRowPixelsSpan(int y, Span<TPixel> dst) => _Managed.ReadRowPixelsSpan(y,dst);
+        public void ReadRowBytesSpan(int y, Span<byte> dst) => _Managed.ReadRowBytesSpan(y,dst);
+
+        #endregion
+
+        #region API
+
+        public bool TryCastTo<T>(out T managedBitmap)
+            where T : IBitmapReader<TPixel>
+        {
+            if (_Managed is T typed)
+            {
+                managedBitmap = typed;
+                return true;
+            }
+            else
+            {
+                managedBitmap = default;
+                return false;
+            }
+        }
+
+        public ManagedBitmapReaderOperand<TPixel> GetCropped(Rectangle rectangle)
+        {
+            var cropped = new _BitmapReaderCropped<TPixel>(_Managed, rectangle);
+            return new ManagedBitmapReaderOperand<TPixel>(cropped);
+        }
+
+        #endregion
+
+    }
+
+    /// <summary>
+    /// This class is used to wrap a managed <see cref="IBitmapWriter{TPixel}"/> with a ByRef operand
+    /// </summary>    
+    [System.Diagnostics.DebuggerDisplay("ManagedBitmapWriterOperand {Width}x{Height} {Format}")]
+    public readonly ref struct ManagedBitmapWriterOperand<TPixel>
+        : IBitmapWriter<ManagedBitmapWriterOperand<TPixel>, TPixel>
+        where TPixel : unmanaged
+    {
+        #region lifecycle
+        public ManagedBitmapWriterOperand(IBitmapWriter<TPixel> managed)
+        {
+            _Managed = managed;
+        }
+
+        #endregion
+
+        #region data
+
+        private readonly IBitmapWriter<TPixel> _Managed;
+
+        public PixelFormat Format => _Managed.Format;
+        public int Width => _Managed.Width;
+        public int Height => _Managed.Height;
+
+        #endregion
+
+        #region API - Rows
+
+        public void ReadRowPixelsSpan(int y, Span<TPixel> dst) => _Managed.ReadRowPixelsSpan(y, dst);
+        public void ReadRowBytesSpan(int y, Span<byte> dst) => _Managed.ReadRowBytesSpan(y, dst);
+
+        public void WriteRowPixelsSpan(int y, ReadOnlySpan<TPixel> src) => _Managed.WriteRowPixelsSpan(y, src);        
+        public void WriteRowBytesSpan(int y, ReadOnlySpan<byte> src) => _Managed.WriteRowBytesSpan(y, src);
+
+        #endregion
+
+        #region API
+
+        public bool TryCastTo<T>(out T managedBitmap)
+            where T : IBitmapWriter<TPixel>
+        {
+            if (_Managed is T typed)
+            {
+                managedBitmap = typed;
+                return true;
+            }
+            else
+            {
+                managedBitmap = default;
+                return false;
+            }
+        }        
+
+        public ManagedBitmapWriterOperand<TPixel> GetCropped(Rectangle rectangle)
+        {
+            var cropped = new _BitmapWriterCropped<TPixel>(_Managed, rectangle);
+            return new ManagedBitmapWriterOperand<TPixel>(cropped);
+        }
+
+        public BITMAPOPERATORS.FillerContext<ManagedBitmapWriterOperand<TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
+        {
+            return new BITMAPOPERATORS.FillerContext<ManagedBitmapWriterOperand<TPixel>, TPixel, TContextPixel>(this);
+        }
+
+        #endregion
+    }
+
+
+
+
+    /// <summary>
     /// This class is used to wrap a managed <see cref="IReadOnlyBitmap{TPixel}"/> with a ByRef operand
     /// </summary>    
     [System.Diagnostics.DebuggerDisplay("ManagedReadOnlyBitmapOperand {Width}x{Height} {Format}")]

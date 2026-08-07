@@ -84,9 +84,9 @@ namespace InteropTypes.TensorBitmaps.Operators
             return transform.GetInstance<TContextPixel, TPixel>().FillEx(srcBmp, _DstBitmap, pixelConverter);
         }
 
-        public void Fill(IReadOnlyBitmap<TContextPixel> srcBmp, bool initPixels = true)
+        public void Fill(IBitmapReader<TContextPixel> srcBmp, bool initPixels = true)
         {
-            var srcRef = new ManagedReadOnlyBitmapOperand<TContextPixel>(srcBmp);
+            var srcRef = new ManagedBitmapReaderOperand<TContextPixel>(srcBmp);
             Fill(BitmapOperations.FillCopy, srcRef, initPixels);
         }
 

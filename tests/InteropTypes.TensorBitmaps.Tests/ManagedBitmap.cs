@@ -41,32 +41,18 @@ namespace InteropTypes.TensorBitmaps
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
             return _Pixels.AsSpan(y * Width, Width);
+        }        
+
+        public Operators.DrawingContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetDrawingContext<TContextPixel>()
+            where TContextPixel : unmanaged
+        {
+            return new ManagedBitmapOperand<TPixel>(this).GetDrawingContext<TContextPixel>();
         }
 
-        public void Fill<TSrcBitmap,TSrcPixel>(TSrcBitmap bmp)
-            where TSrcBitmap : IBitmapReader<TSrcBitmap, TSrcPixel>, allows ref struct
-            where TSrcPixel : unmanaged
+        public Operators.FillerContext<ManagedBitmapOperand<TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>()
+            where TContextPixel : unmanaged
         {
-            var cvt = IPixelConverter<TSrcPixel, TPixel>.Create(bmp.Format, this.Format, true);
-
-            var w = Math.Min(bmp.Width, this.Width);
-            var h = Math.Min(bmp.Height, this.Height);
-
-            Span<TSrcPixel> sr = stackalloc TSrcPixel[bmp.Width];
-
-            for (int y = 0; y < h; ++y)
-            {
-                bmp.ReadRowPixelsSpan(y, sr);                
-                var sd = this.GetRowPixelsSpan(y);
-                cvt.ConvertPixels(sr.Slice(0,w), sd.Slice(0, w));
-            }
-        }
-
-        public Operators.DrawingContext<ManagedBitmapOperand<TPixel>, TPixel, TSrcPixel> GetContext<TSrcPixel>()
-            where TSrcPixel:unmanaged
-        {
-            var m = new ManagedBitmapOperand<TPixel>(this);
-            return m.GetDrawingContext<TSrcPixel>();
+            return new ManagedBitmapOperand<TPixel>(this).GetFillerContext<TContextPixel>();
         }
 
         #endregion

@@ -53,16 +53,16 @@ namespace InteropTypes.TensorBitmaps
 
             var mso = new ProcessImageSettings { Width = s.Width, Height = s.Height, ResizeMode = CropScaleMode.Stretch };
             using var ms = MagicImageProcessor.BuildPipeline(f.File.FullName, mso);
-            AttachmentInfo.From($"shannon.MagicScaler.jpg").WriteToStream(x => ms.WriteOutput(x));
+            AttachmentInfo.From($"shannon.Reference.MagicScaler.jpg").WriteToStream(x => ms.WriteOutput(x));
 
             // imagesharp reference
 
             using var img = ImageSharpBitmap<Rgb24>.Read(f.OpenRead);
 
             using var iref = img.CreateStretched(s);
-            AttachmentInfo.From($"shannon.ImageSharp.jpg").WriteObjectEx(x => iref.Save(x));
+            AttachmentInfo.From($"shannon.Reference.ImageSharp.jpg").WriteObjectEx(x => iref.Save(x));
 
-            // algorythms
+            // operators
 
             foreach (var op in new[] { BitmapOperations.StretchToFitStep, BitmapOperations.StretchToFitBicubic, BitmapOperations.StretchToFitLanczos, MagicScalerUtils.StretchToFit })
             {
@@ -77,8 +77,6 @@ namespace InteropTypes.TensorBitmaps
                 AttachmentInfo.From($"shannon.{op.GetType().Name}.jpg").WriteObjectEx(x => dst.Save(x));
             }
         }
-
-
 
         [Test]
         public async Task TestScaledIntersectionCrop()
