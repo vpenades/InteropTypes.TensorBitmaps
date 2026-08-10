@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using RECT = System.Drawing.Rectangle;
 using SIZE = System.Drawing.Size;
 
-namespace InteropTypes.TensorBitmaps
+namespace InteropTypes.TensorBitmaps.Primitives
 {
     public interface IClientReadOnlyBitmap<TPixel> : IReadOnlyBitmap<TPixel>, IDisposable
         where TPixel : unmanaged

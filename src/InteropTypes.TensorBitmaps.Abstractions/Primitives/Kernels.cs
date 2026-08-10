@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
 
-namespace InteropTypes.TensorBitmaps
+namespace InteropTypes.TensorBitmaps.Primitives
 {
     public readonly ref struct Kernel5x5<TPixel>
         where TPixel : unmanaged

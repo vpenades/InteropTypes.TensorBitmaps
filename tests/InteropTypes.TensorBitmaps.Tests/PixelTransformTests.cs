@@ -7,8 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
 using InteropTypes.TensorBitmaps.Operators;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using PhotoSauce.MagicScaler;
 
@@ -30,8 +30,8 @@ namespace InteropTypes.TensorBitmaps
 
             // create another tensor bitmap and fill it with the image we've loaded
 
-            var bmp = TensorBitmap<byte, Bgr24>.Create(48, 32, KnownPixelFormats.Rgb8);
-            bmp.GetFillerContext<Rgb24>().Fill(BitmapOperations.StretchToFitStep, img);
+            var bmp = TensorBitmap<byte, Rgb24>.Create(48, 32, KnownPixelFormats.Rgb8);
+            bmp.Apply(FillOperations.StretchToFitStep, img);
 
             // save back
 
@@ -64,15 +64,13 @@ namespace InteropTypes.TensorBitmaps
 
             // operators
 
-            foreach (var op in new[] { BitmapOperations.StretchToFitStep, BitmapOperations.StretchToFitBicubic, BitmapOperations.StretchToFitLanczos, MagicScalerUtils.StretchToFit })
+            foreach (var op in new[] { FillOperations.StretchToFitStep, FillOperations.StretchToFitBicubic, FillOperations.StretchToFitLanczos, MagicScalerUtils.StretchToFit })
             {
-                var src = new ManagedBitmap<uint>(img.Width, img.Height, KnownPixelFormats.Rgba8);
-                var srcx = new ManagedBitmapOperand<uint>(src);
-                srcx.GetFillerContext<Rgb24>().Fill(img);
+                var src = new ArrayBitmap<uint>(img.Width, img.Height, KnownPixelFormats.Rgba8);                
+                src.CopyFrom(img);
 
-                var dst = new ManagedBitmap<uint>(s.Width, s.Height, KnownPixelFormats.Rgba8);
-                var dstx = new ManagedBitmapOperand<uint>(dst);
-                dstx.GetFillerContext<uint>().Fill(op, src);
+                var dst = new ArrayBitmap<uint>(s.Width, s.Height, KnownPixelFormats.Rgba8);                
+                dst.Apply(op, src);
 
                 AttachmentInfo.From($"shannon.{op.GetType().Name}.jpg").WriteObjectEx(x => dst.Save(x));
             }
@@ -99,23 +97,23 @@ namespace InteropTypes.TensorBitmaps
                 using var img_isharp = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
 
                 var bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetFillerContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_isharp);                
-                AttachmentInfo.From($"shannon.{oa}.imagesharp.jpg").WriteObjectEx(bmp.Save);
+                bmp.Apply(FillOperations.ScaleToFit(oa / 10f), img_isharp);                
+                AttachmentInfo.From($"shannon.{oa}.imagesharp.jpg").WriteObjectEx(x => bmp.Save(x));
 
                 // ref
 
                 img_isharp.ToTensorBitmap(out TensorBitmap<byte, Rgb24> img_ref);
 
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetFillerContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_ref);
-                AttachmentInfo.From($"shannon.{oa}.ref.jpg").WriteObjectEx(bmp.Save);
+                bmp.Apply(FillOperations.ScaleToFit(oa / 10f), img_ref);
+                AttachmentInfo.From($"shannon.{oa}.ref.jpg").WriteObjectEx(x => bmp.Save(x));
 
                 // ref lanczos
                 img_isharp.ToTensorBitmap(out img_ref);
 
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetFillerContext<Rgb24>().Fill(BitmapOperations.ScaleToFit(oa / 10f, BitmapOperations.StretchToFitLanczos), img_ref);
-                AttachmentInfo.From($"shannon.{oa}.ref_lanczos.jpg").WriteObjectEx(bmp.Save);
+                bmp.Apply(FillOperations.ScaleToFit(oa / 10f, FillOperations.StretchToFitLanczos), img_ref);
+                AttachmentInfo.From($"shannon.{oa}.ref_lanczos.jpg").WriteObjectEx(x => bmp.Save(x));
 
                 if (OperatingSystem.IsLinux()) continue;
 
@@ -124,8 +122,8 @@ namespace InteropTypes.TensorBitmaps
                 using var img_skia = SkiaSharpBitmapOperand<uint>.Read(ResourceInfo.From("shannon.jpg").OpenRead); ;
 
                 bmp = TensorBitmap<byte, Rgb24>.Create(w, h, KnownPixelFormats.Rgb8);
-                bmp.GetFillerContext<uint>().Fill(BitmapOperations.ScaleToFit(oa / 10f), img_skia);                
-                AttachmentInfo.From($"shannon.{oa}.skia.jpg").WriteObjectEx(bmp.Save);
+                bmp.Apply(FillOperations.ScaleToFit(oa / 10f), img_skia);                
+                AttachmentInfo.From($"shannon.{oa}.skia.jpg").WriteObjectEx(x => bmp.Save(x));
             }
         }
 

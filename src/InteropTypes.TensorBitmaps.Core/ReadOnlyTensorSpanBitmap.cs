@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -93,8 +93,12 @@ namespace InteropTypes.TensorBitmaps
         }
         public ReadOnlySpan<byte> GetRowBytesSpan(int y) => System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(GetRowPixelsSpan(y));
 
-        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst) => GetRowPixelsSpan(y).CopyTo(dst);
-        public void ReadRowBytesSpan(int y, scoped Span<byte> dst) => GetRowBytesSpan(y).CopyTo(dst);
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
+        {
+            var src = GetRowPixelsSpan(y);
+            src.Slice(x, Math.Min(src.Length - x, dst.Length)).CopyTo(dst);
+        }
+        public void ReadRowBytesSpan(int y, int x, scoped Span<byte> dst) => ReadRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, TPixel>(dst));
 
         #endregion
 

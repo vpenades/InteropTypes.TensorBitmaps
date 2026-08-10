@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
 
-namespace InteropTypes.TensorBitmaps
+namespace InteropTypes.TensorBitmaps.Primitives
 {   
 
     [System.Diagnostics.DebuggerDisplay("_ReadOnlyBitmapCasted {Width}x{Height}x{Format}")]
@@ -22,18 +23,21 @@ namespace InteropTypes.TensorBitmaps
             _Source = source;
         }
 
-        private readonly IReadOnlyBitmap<TSrcPixel> _Source;
-        
+        private readonly IReadOnlyBitmap<TSrcPixel> _Source;        
 
         public PixelFormat Format => _Source.Format;
         public int Width => _Source.Width;
         public int Height => _Source.Height;
 
         public ReadOnlySpan<TDstPixel> GetRowPixelsSpan(int y)
-        {
-            var row = _Source.GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TSrcPixel, TDstPixel>(row);
-        }        
+        {            
+            return System.Runtime.InteropServices.MemoryMarshal.Cast<TSrcPixel, TDstPixel>(_Source.GetRowPixelsSpan(y));
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TDstPixel> dst)
+        {            
+            _Source.ReadRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<TDstPixel, TSrcPixel>(dst));
+        }
     }
 
     [System.Diagnostics.DebuggerDisplay("_BitmapCasted {Width}x{Height}x{Format}")]
@@ -54,9 +58,18 @@ namespace InteropTypes.TensorBitmaps
         public int Height => _Source.Height;
 
         public Span<TDstPixel> GetRowPixelsSpan(int y)
+        {            
+            return System.Runtime.InteropServices.MemoryMarshal.Cast<TSrcPixel, TDstPixel>(_Source.GetRowPixelsSpan(y));
+        }
+
+        public void WriteRowPixelsSpan(int y, int x, scoped ReadOnlySpan<TDstPixel> src)
         {
-            var row = _Source.GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TSrcPixel, TDstPixel>(row);
+            _Source.WriteRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<TDstPixel, TSrcPixel>(src));
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TDstPixel> dst)
+        {
+            _Source.ReadRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<TDstPixel, TSrcPixel>(dst));
         }
     }
 }

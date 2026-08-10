@@ -4,10 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace InteropTypes.TensorBitmaps
@@ -85,7 +84,7 @@ namespace InteropTypes.TensorBitmaps
             var bmp = new Image<TPixel>(src.Width, src.Height);
             var dst = new ImageSharpBitmap<TPixel>(bmp);
 
-            dst.AsOperand().GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, src);
+            dst.AsOperand().GetContext<TSrcPixel>().Apply(FillOperations.Copy, src);
 
             return dst;
         }
@@ -136,17 +135,28 @@ namespace InteropTypes.TensorBitmaps
 
         #region API        
 
-        public ManagedBitmapOperand<TPixel> AsOperand()
+        public RefStructBitmap<TPixel> AsOperand()
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
 
-            return new ManagedBitmapOperand<TPixel>(this);
+            return new RefStructBitmap<TPixel>(this);
         }
 
         public Span<TPixel> GetRowPixelsSpan(int y)
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(Image<TPixel>));
             return _Bitmap.Frames[0].PixelBuffer.DangerousGetRowSpan(y);
+        }
+
+        public void WriteRowPixelsSpan(int y, int x, scoped ReadOnlySpan<TPixel> src)
+        {
+            src.CopyTo(GetRowPixelsSpan(y).Slice(x));
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
+        {
+            var src = GetRowPixelsSpan(y);
+            src.Slice(x, Math.Min(src.Length - x, dst.Length)).CopyTo(dst);
         }
 
         bool IClientBitmap<TPixel>.TryGetCropped(System.Drawing.Rectangle rect, [NotNullWhen(true)] out IClientBitmap<TPixel>? croppedBitmap)

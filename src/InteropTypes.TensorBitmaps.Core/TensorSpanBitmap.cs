@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -89,15 +89,19 @@ namespace InteropTypes.TensorBitmaps
 
 
         ReadOnlySpan<TPixel> IReadOnlyBitmap<TPixel>.GetRowPixelsSpan(int y) => GetRowPixelsSpan(y);
-        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y) => GetRowBytesSpan(y);        
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y) => GetRowBytesSpan(y);
 
 
-        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst) => GetRowPixelsSpan(y).CopyTo(dst);
-        public void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<TPixel> dst) => dst.CopyTo(GetRowPixelsSpan(y));
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
+        {
+            var src = GetRowPixelsSpan(y);
+            src.Slice(x, Math.Min(src.Length - x, dst.Length)).CopyTo(dst);
+        }
+        public void WriteRowPixelsSpan(int y, int x, scoped ReadOnlySpan<TPixel> src) => src.CopyTo(GetRowPixelsSpan(y).Slice(x));
 
 
-        public void ReadRowBytesSpan(int y, scoped Span<byte> dst) => GetRowBytesSpan(y).CopyTo(dst);
-        public void WriteRowBytesSpan(int y, scoped ReadOnlySpan<byte> dst) => dst.CopyTo(GetRowBytesSpan(y));
+        public void ReadRowBytesSpan(int y, int x, scoped Span<byte> dst) => ReadRowPixelsSpan(y,x, System.Runtime.InteropServices.MemoryMarshal.Cast<Byte,TPixel>(dst));
+        public void WriteRowBytesSpan(int y, int x, scoped ReadOnlySpan<byte> src) => WriteRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<Byte, TPixel>(src));
 
         #endregion
 
@@ -169,15 +173,9 @@ namespace InteropTypes.TensorBitmaps
             }
         }        
 
-        public BITMAPOPERATORS.DrawingContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetDrawingContext<TContextPixel>() where TContextPixel : unmanaged
+        public BITMAPOPERATORS.BitmapOperationContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new Operators.DrawingContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
-        }        
-
-
-        public BITMAPOPERATORS.FillerContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
-        {
-            return new Operators.FillerContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+            return new Operators.BitmapOperationContext<TensorSpanBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }
 
         #endregion

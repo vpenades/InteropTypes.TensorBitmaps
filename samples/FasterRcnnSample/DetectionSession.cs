@@ -5,8 +5,8 @@ using System.Text;
 
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps;
-using InteropTypes.TensorBitmaps.Operands;
 using InteropTypes.TensorBitmaps.Operators;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
@@ -42,15 +42,15 @@ namespace FasterRcnnSample
 
         private readonly PixelFormat _InputFormat;
 
-        public BitmapFillOperation<Matrix3x2>? StretchFilter { get; set; }
+        public BitmapOperationFactory<Matrix3x2>? StretchFilter { get; set; }
 
         public float MinConfidence { get; set; } = 0.7f;
 
         public IReadOnlyList<Prediction> Predict<TPixel>(IReadOnlyBitmap<TPixel> image)
             where TPixel: unmanaged
         {
-            var operand = new ManagedReadOnlyBitmapOperand<TPixel>(image);
-            return Predict<ManagedReadOnlyBitmapOperand<TPixel>, TPixel>(operand);
+            var operand = new RefStructReadOnlyBitmap<TPixel>(image);
+            return Predict<RefStructReadOnlyBitmap<TPixel>, TPixel>(operand);
         }
 
         public IReadOnlyList<Prediction> Predict<TBitmap, TPixel>(TBitmap image)
@@ -130,8 +130,8 @@ namespace FasterRcnnSample
 
             // resize, convert, fit, and copy pixels
             return planes
-                .GetFillerContext<TPixel>()
-                .Fill(BitmapOperations.ScaleToFit(0, StretchFilter), image);
+                .GetContext<TPixel>()
+                .Apply(FillOperations.ScaleToFit(0, StretchFilter), image);
         }
 
     }

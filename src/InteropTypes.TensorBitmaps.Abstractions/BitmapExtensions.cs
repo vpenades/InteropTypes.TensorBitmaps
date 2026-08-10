@@ -6,12 +6,24 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
     public static class BitmapExtensions
     {
+        public static IBitmap<TPixel> GetCropped<TPixel>(this IBitmap<TPixel> bitmap, System.Drawing.Rectangle rect)
+            where TPixel : unmanaged            
+        {
+            return new _BitmapCropped<TPixel>(bitmap, rect);
+        }
+
+        public static IReadOnlyBitmap<TPixel> GetCropped<TPixel>(this IReadOnlyBitmap<TPixel> bitmap, System.Drawing.Rectangle rect)
+            where TPixel : unmanaged
+        {
+            return new _ReadOnlyBitmapCropped<TPixel>(bitmap, rect);
+        }
+
         public static IBitmap<TDstPixel> Cast<TSrcPixel,TDstPixel>(this IBitmap<TSrcPixel> bitmap)
             where TSrcPixel: unmanaged
             where TDstPixel : unmanaged

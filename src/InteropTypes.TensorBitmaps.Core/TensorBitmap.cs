@@ -7,6 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Operators;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -16,9 +18,9 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TElement">The type of the backing tensor</typeparam>
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
-    public class TensorBitmap<TElement,TPixel>
+    public readonly struct TensorBitmap<TElement,TPixel>
         : ITensorBitmap
-        , IBitmap<TensorBitmap<TElement, TPixel>, TPixel>        
+        , IBitmapFull<TPixel>        
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {
@@ -79,51 +81,9 @@ namespace InteropTypes.TensorBitmaps
             return pixels;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public Span<byte> GetRowSpan(int y)
-        {
-            var pixels = GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, byte>(pixels);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y)
-        {
-            return GetRowSpan(y);
-        }        
-
-        Span<byte> IBitmap.GetRowBytesSpan(int y)
-        {
-            var pixels = GetRowPixelsSpan(y);
-            return System.Runtime.InteropServices.MemoryMarshal.Cast<TPixel, Byte>(pixels);
-        }
-
         #endregion
 
-        #region API
-
-        public bool TryCastTo<T>(out T managedBitmap)
-            where T : IReadOnlyBitmap<TPixel>
-        {
-            if (this is T managed)
-            {
-                managedBitmap = managed;
-                return true;
-            }
-
-            managedBitmap = default;            
-            return false;
-        }
-
-        ITensorBitmap ITensorBitmap.GetCropped(Rectangle rectangle)
-        {
-            return GetCropped(rectangle);
-        }
-
-        IReadOnlyTensorBitmap IReadOnlyTensorBitmap.GetCropped(Rectangle rectangle)
-        {
-            return GetCropped(rectangle);
-        }
+        #region API        
 
         public TensorSpanBitmap<TElement, TPixel> AsTensorSpanBitmap()
         {
@@ -134,6 +94,16 @@ namespace InteropTypes.TensorBitmaps
         {
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
         }
+
+        ITensorBitmap ITensorBitmap.GetCropped(Rectangle rectangle)
+        {
+            return GetCropped(rectangle);
+        }
+
+        IReadOnlyTensorBitmap IReadOnlyTensorBitmap.GetCropped(Rectangle rectangle)
+        {
+            return GetCropped(rectangle);
+        }        
 
         /// <summary>
         /// Gets a new cropped bitmap that references the original surface without allocating new memory.
@@ -155,15 +125,25 @@ namespace InteropTypes.TensorBitmaps
             return new TensorBitmap<TElement, TPixelOut>(this.Tensor, this.Format);
         }
 
-        public BITMAPOPERATORS.FillerContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
+        public TResult Apply<TSrcPixel, TResult>(BitmapOperationFactory<TResult> operation, IReadOnlyBitmap<TSrcPixel> srcBitmap)
+            where TSrcPixel : unmanaged
         {
-            return new Operators.FillerContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
+            return operation.GetInstance<TSrcPixel, TPixel>().Apply(srcBitmap, this);
         }
 
-        public BITMAPOPERATORS.DrawingContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetDrawingContext<TContextPixel>() where TContextPixel : unmanaged
+        public TResult Apply<TSrcPixel, TResult>(BitmapOperationFactory<TResult> operation, IReadOnlyBitmap<TSrcPixel> srcBitmap, IPixelConverter<TSrcPixel, TPixel> converter)
+            where TSrcPixel : unmanaged
         {
-            return new Operators.DrawingContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
-        }        
+            return operation.GetInstance<TSrcPixel, TPixel>().Apply(srcBitmap, this, converter);
+        }
+
+        #if NET9_0_OR_GREATER
+        public Operators.BitmapOperationContext<RefStructBitmap<TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>()
+            where TContextPixel : unmanaged
+        {
+            return new RefStructBitmap<TPixel>(this).GetContext<TContextPixel>();
+        }
+        #endif
 
         #endregion
     }

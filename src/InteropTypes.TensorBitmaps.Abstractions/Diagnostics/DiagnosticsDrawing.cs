@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using COLOR = System.Drawing.Color;
 using POINT = System.Drawing.PointF;

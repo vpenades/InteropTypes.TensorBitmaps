@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {

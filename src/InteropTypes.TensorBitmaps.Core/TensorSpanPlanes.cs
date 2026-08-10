@@ -9,6 +9,7 @@ using System.Xml.Linq;
 
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps.Operators;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -33,7 +34,7 @@ namespace InteropTypes.TensorBitmaps
     /// A CHW 3 planar bitmap backed by three <see cref="TensorSpanBitmap{TElement, TElement}"/>
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("TensorSpanPlanes3 {Width}x{Height}")]
-    public readonly ref struct TensorSpanPlanes3<TElement> : IBitmapWriter<TensorSpanPlanes3<TElement>, PlanesPixel3<TElement>>
+    public readonly ref struct TensorSpanPlanes3<TElement> : IBitmap<TensorSpanPlanes3<TElement>, PlanesPixel3<TElement>>
         where TElement : unmanaged , INumber<TElement>
     {
         #region lifecycle
@@ -115,7 +116,13 @@ namespace InteropTypes.TensorBitmaps
 
         #region API - Rows
 
-        public void WriteRowPixelsSpan(int y, scoped ReadOnlySpan<PlanesPixel3<TElement>> src)
+        Span<PlanesPixel3<TElement>> IBitmap<PlanesPixel3<TElement>>.GetRowPixelsSpan(int y) => throw new NotSupportedException("Use ReadRowPixelsSpan and WriteRowPixelsSpan");
+        ReadOnlySpan<PlanesPixel3<TElement>> IReadOnlyBitmap<PlanesPixel3<TElement>>.GetRowPixelsSpan(int y) => throw new NotSupportedException("Use ReadRowPixelsSpan and WriteRowPixelsSpan");
+        Span<Byte> IBitmap.GetRowBytesSpan(int y) => throw new NotSupportedException("Use ReadRowPixelsSpan and WriteRowPixelsSpan");
+        ReadOnlySpan<Byte> IReadOnlyBitmap.GetRowBytesSpan(int y) => throw new NotSupportedException("Use ReadRowPixelsSpan and WriteRowPixelsSpan");
+
+
+        public void WriteRowPixelsSpan(int y, int xx, scoped ReadOnlySpan<PlanesPixel3<TElement>> src)
         {
             var r0 = _PlaneX.GetRowPixelsSpan(y);
             var r1 = _PlaneY.GetRowPixelsSpan(y);
@@ -123,14 +130,14 @@ namespace InteropTypes.TensorBitmaps
 
             var w = Math.Min(r0.Length, src.Length);
 
-            for(int x=0; x < w; ++x)
+            for(int x=xx; x < w; ++x)
             {
                 r0[x] = src[x].X;
                 r1[x] = src[x].Y;
                 r2[x] = src[x].Z;
             }
         }
-        public void ReadRowPixelsSpan(int y, scoped Span<PlanesPixel3<TElement>> dst)
+        public void ReadRowPixelsSpan(int y, int xx, scoped Span<PlanesPixel3<TElement>> dst)
         {
             var r0 = _PlaneX.GetRowPixelsSpan(y);
             var r1 = _PlaneY.GetRowPixelsSpan(y);
@@ -138,26 +145,25 @@ namespace InteropTypes.TensorBitmaps
 
             var w = Math.Min(r0.Length, dst.Length);
 
-            for (int x = 0; x < w; ++x)
+            for (int x = xx; x < w; ++x)
             {
                 dst[x] = new PlanesPixel3<TElement>(r0[x], r1[x], r2[x]);
             }
         }
 
-        public void WriteRowBytesSpan(int y, ReadOnlySpan<byte> src) => WriteRowPixelsSpan(y, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, PlanesPixel3<TElement>>(src));
-        public void ReadRowBytesSpan(int y, Span<byte> dst) => ReadRowPixelsSpan(y, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, PlanesPixel3<TElement>>(dst));
-
-
-        public void GetRowPixelSpans(int y, out Span<TElement> planex, out Span<TElement> planey, out Span<TElement> planez)
-        {
-            planex = _PlaneX.GetRowPixelsSpan(y);
-            planey = _PlaneY.GetRowPixelsSpan(y);
-            planez = _PlaneZ.GetRowPixelsSpan(y);
-        }
+        public void WriteRowBytesSpan(int y, int x, ReadOnlySpan<byte> src) => WriteRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, PlanesPixel3<TElement>>(src));
+        public void ReadRowBytesSpan(int y, int x, Span<byte> dst) => ReadRowPixelsSpan(y, x, System.Runtime.InteropServices.MemoryMarshal.Cast<byte, PlanesPixel3<TElement>>(dst));
 
         #endregion
 
         #region API
+
+        public bool TryCastTo<TBitmap>(out TBitmap managedBitmap)
+            where TBitmap : IReadOnlyBitmap<PlanesPixel3<TElement>>
+        {
+            managedBitmap = default;
+            return false;
+        }
 
         public TensorSpanPlanes3<TElement> GetCropped(System.Drawing.Rectangle rectangle)
         {
@@ -169,11 +175,11 @@ namespace InteropTypes.TensorBitmaps
             var z = _PlaneZ.GetCropped(rectangle);
 
             return new TensorSpanPlanes3<TElement>(x, y, z, Format);
-        }        
+        }
 
-        public FillerContext<TensorSpanPlanes3<TElement>, PlanesPixel3<TElement>, TContextPixel> GetFillerContext<TContextPixel>() where TContextPixel : unmanaged
+        public BitmapOperationContext<TensorSpanPlanes3<TElement>, PlanesPixel3<TElement>, TContextPixel> GetContext<TContextPixel>() where TContextPixel : unmanaged
         {
-            return new FillerContext<TensorSpanPlanes3<TElement>, PlanesPixel3<TElement>, TContextPixel>(this);
+            return new BitmapOperationContext<TensorSpanPlanes3<TElement>, PlanesPixel3<TElement>, TContextPixel>(this);
         }        
 
         #endregion

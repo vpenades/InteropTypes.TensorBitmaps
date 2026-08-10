@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 using System.Text;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using COLOR = System.Drawing.Color;
 using POINT = System.Drawing.PointF;

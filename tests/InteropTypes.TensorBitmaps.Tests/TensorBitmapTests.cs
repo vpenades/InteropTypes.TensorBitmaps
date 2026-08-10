@@ -6,7 +6,6 @@ using System.Text;
 
 using InteropTypes.Numerics;
 
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 using TUnit;
@@ -19,8 +18,7 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task TestCreateBitmaps()
         {
-            var bmp = TensorBitmap<float, Vector3>.Create(256, 267, KnownPixelFormats.RgbF32);
-            await Assert.That(bmp).IsNotNull();
+            var bmp = TensorBitmap<float, Vector3>.Create(256, 267, KnownPixelFormats.RgbF32);            
 
             bmp.AsTensorSpanBitmap().FillPixels(new Vector3(0, 1, 0));
 
@@ -39,8 +37,9 @@ namespace InteropTypes.TensorBitmaps
         [Test]
         public async Task LoadSaveRoundtripTest()
         {
-            using var img = ImageSharpBitmap<Rgb24>.Read(ResourceInfo.From("shannon.jpg").OpenRead);
-            using var imgCrop = img.CreateCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
+            var img = ResourceInfo.From("shannon.jpg").File.LoadBitmap<Rgb24>();
+            
+            var imgCrop = img.GetCropped(new System.Drawing.Rectangle(5, 5, 16, 16));
 
             var fillColor = new Rgb24(0, 255, 0);
             for (int i = 0; i < imgCrop.Height; i++)
@@ -49,7 +48,9 @@ namespace InteropTypes.TensorBitmaps
                 row.Fill(fillColor);
             }            
 
-            AttachmentInfo.From("shannon.modified.jpg").WriteObjectEx(f => img.Write(f.Create));
+            AttachmentInfo.From("shannon.modified.jpg").WriteObjectEx(f => img.Save(f));
+
+            await Assert.That(img.CalculateCrc32()).IsEqualTo(3925569859u);
         }        
     }
 }

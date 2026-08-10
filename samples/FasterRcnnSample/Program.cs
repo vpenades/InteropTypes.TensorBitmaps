@@ -4,11 +4,9 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 
-using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps;
 using InteropTypes.TensorBitmaps.Diagnostics;
-using InteropTypes.TensorBitmaps.Operands;
-using InteropTypes.TensorBitmaps.Operators;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace FasterRcnnSample
 {
@@ -28,7 +26,7 @@ namespace FasterRcnnSample
             var predictions = session.Predict(image);            
 
             // draw predictions
-            var dc = new DiagnosticsDrawing<ManagedBitmapOperand<uint>, uint>(new ManagedBitmapOperand<uint>(image));
+            var dc = new DiagnosticsDrawing<RefStructBitmap<uint>, uint>(new RefStructBitmap<uint>(image));
 
             foreach(var prediction in predictions)
             {

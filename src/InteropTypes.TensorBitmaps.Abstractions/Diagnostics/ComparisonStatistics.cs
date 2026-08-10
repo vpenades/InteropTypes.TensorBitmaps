@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps.Diagnostics
 {

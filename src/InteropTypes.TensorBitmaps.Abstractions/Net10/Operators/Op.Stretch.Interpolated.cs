@@ -7,11 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps.Operators
 {
     readonly struct _InterpolatedStretchToFitOperator<TSrcPixel, TDstPixel>
-       : IFillOperation<TSrcPixel, TDstPixel, Matrix3x2>
+       : IBitmapOperation<TSrcPixel, TDstPixel, Matrix3x2>
        where TSrcPixel : unmanaged
        where TDstPixel : unmanaged
     {
@@ -38,9 +39,9 @@ namespace InteropTypes.TensorBitmaps.Operators
 
         private readonly WeightContributions.IFactory _Algorythm;
 
-        public Matrix3x2 Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
+        public Matrix3x2 Apply<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             var ccc = src.Format.Components.Select(c => new PixelComponent<float>(c.Semantic)).ToImmutableArray();
             var fmt = new PixelFormat(ccc);
@@ -48,9 +49,9 @@ namespace InteropTypes.TensorBitmaps.Operators
             switch (src.Format.Components.Length)
             {
                 case 3:
-                    return new _InterpolatedStretchToFitOperator<TSrcPixel, XYZ, TDstPixel>(fmt, _Algorythm, XYZ.GammaToLinear, XYZ.LinearToGamma).Fill(src, dst, null);
+                    return new _InterpolatedStretchToFitOperator<TSrcPixel, XYZ, TDstPixel>(fmt, _Algorythm, XYZ.GammaToLinear, XYZ.LinearToGamma).Apply(src, dst, null);
                 case 4:
-                    return new _InterpolatedStretchToFitOperator<TSrcPixel, XYZW, TDstPixel>(fmt, _Algorythm, XYZW.GammaIn, XYZW.GammaOut).Fill(src, dst, null);
+                    return new _InterpolatedStretchToFitOperator<TSrcPixel, XYZW, TDstPixel>(fmt, _Algorythm, XYZW.GammaIn, XYZW.GammaOut).Apply(src, dst, null);
 
                 default: throw new NotImplementedException();
             }
@@ -159,7 +160,7 @@ namespace InteropTypes.TensorBitmaps.Operators
     }
 
     readonly struct _InterpolatedStretchToFitOperator<TSrcPixel, TPixel, TDstPixel>
-        : IFillOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        : IBitmapOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TPixel : unmanaged, IPixel<TPixel>
         where TDstPixel : unmanaged
@@ -189,9 +190,9 @@ namespace InteropTypes.TensorBitmaps.Operators
 
         #region API
 
-        public Matrix3x2 Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
+        public Matrix3x2 Apply<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             // Precompute horizontal and vertical contributor lists
             var hrz = _Algorythm.CreateContributions(src.Width, dst.Width);
@@ -218,7 +219,7 @@ namespace InteropTypes.TensorBitmaps.Operators
                     float vWeight = vContrib.Weights[k];
 
                     // Pull the source row
-                    src.ReadRowPixelsSpan(Math.Clamp(srcY, 0, src.Height - 1), srcRow);
+                    src.ReadRowPixelsSpan(Math.Clamp(srcY, 0, src.Height - 1), 0, srcRow);
                     srcToTmp.ConvertPixels(srcRow, srcTmp);
                     _GammaToLinear(srcTmp);
 
@@ -261,7 +262,7 @@ namespace InteropTypes.TensorBitmaps.Operators
                 }
 
                 tmpToDst.ConvertPixels(dstTmp, dstRow);
-                dst.WriteRowPixelsSpan(yDst, dstRow);
+                dst.WriteRowPixelsSpan(yDst, 0, dstRow);
             }
 
             return Matrix3x2.CreateScale(src.Width / (float)dst.Width, src.Height / (float)dst.Height);

@@ -5,7 +5,7 @@ using System.Numerics.Tensors;
 using System.Text;
 
 using InteropTypes.TensorBitmaps;
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -17,9 +17,9 @@ namespace InteropTypes
         public static uint CalculateCrc32<TPixel>(this IReadOnlyBitmap<TPixel> bitmap)
             where TPixel: unmanaged
         {
-            var xbmp = new ManagedReadOnlyBitmapOperand<TPixel>(bitmap);            
+            var xbmp = new RefStructReadOnlyBitmap<TPixel>(bitmap);            
 
-            return CalculateCrc32<ManagedReadOnlyBitmapOperand<TPixel>, TPixel>(xbmp);
+            return CalculateCrc32<RefStructReadOnlyBitmap<TPixel>, TPixel>(xbmp);
         }
 
         public static uint CalculateCrc32<TBitmap, TPixel>(this TBitmap bitmap)
@@ -44,6 +44,16 @@ namespace InteropTypes
             using var img = bitmap.ToImageSharp<TPixel,Rgba32>();            
             
             img.Save(finfo.FullName);
+        }
+
+        public static ArrayBitmap<TPixel> LoadBitmap<TPixel>(this System.IO.FileInfo finfo)
+            where TPixel: unmanaged , IPixel<TPixel>
+        {
+            using var img = ImageSharpBitmap<TPixel>.Load(finfo);
+
+            var dst = new ArrayBitmap<TPixel>(img.Width, img.Height, img.Format);
+            dst.CopyFrom(img);
+            return dst;
         }
 
         public static void Save<TElement, TPixel>(this TensorBitmap<TElement, TPixel> tensor, System.IO.FileInfo finfo)

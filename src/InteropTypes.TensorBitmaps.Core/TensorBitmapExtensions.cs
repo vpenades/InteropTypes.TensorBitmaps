@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
 
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
@@ -16,17 +16,16 @@ namespace InteropTypes.TensorBitmaps
         {
             dst = TensorBitmap<TDstElement, TSrcPixel>.Create(src.Width, src.Height, src.Format);
 
-            dst.GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, src);
+            dst.Apply(FillOperations.Copy, src);
         }
 
         public static void ToTensorBitmap<TSrcPixel, TDstElement>(this IReadOnlyBitmap<TSrcPixel> src, out TensorBitmap<TDstElement, TSrcPixel> dst)            
             where TSrcPixel: unmanaged
             where TDstElement: unmanaged, INumber<TDstElement>
         {
-            dst = TensorBitmap<TDstElement, TSrcPixel>.Create(src.Width, src.Height, src.Format);
-            var srcx = new ManagedReadOnlyBitmapOperand<TSrcPixel>(src);
+            dst = TensorBitmap<TDstElement, TSrcPixel>.Create(src.Width, src.Height, src.Format);            
 
-            dst.GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, srcx);
+            dst.Apply(FillOperations.Copy, src);
         }
     }
 }

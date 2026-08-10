@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using InteropTypes.Numerics;
-using InteropTypes.TensorBitmaps.Operands;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using SkiaSharp;
 
@@ -74,7 +74,7 @@ namespace InteropTypes.TensorBitmaps
             var skbmp = new SKBitmap(src.Width, src.Height);
             var dst = new SkiaSharpBitmapOperand<TPixel>(skbmp);
 
-            dst.AsOperand().GetDrawingContext<TSrcPixel>().Draw(BitmapOperations.DrawCopy, src);
+            dst.AsOperand().GetContext<TSrcPixel>().Apply(FillOperations.Copy, src);
 
             return dst;
         }
@@ -125,10 +125,10 @@ namespace InteropTypes.TensorBitmaps
 
         #region API
 
-        public ManagedBitmapOperand<TPixel> AsOperand()
+        public RefStructBitmap<TPixel> AsOperand()
         {
             ObjectDisposedException.ThrowIf(_Bitmap == null, typeof(SKBitmap));
-            return new ManagedBitmapOperand<TPixel>(this);
+            return new RefStructBitmap<TPixel>(this);
         }
 
         public Span<TPixel> GetRowPixelsSpan(int y)
@@ -146,6 +146,17 @@ namespace InteropTypes.TensorBitmaps
             var buffer = _Bitmap.GetPixelSpan();
             var len = Math.Min(_Bitmap.RowBytes, _Bitmap.BytesPerPixel * _Bitmap.Width);
             return buffer.Slice(y * _Bitmap.RowBytes, len);
+        }
+
+        public void WriteRowPixelsSpan(int y, int x, scoped ReadOnlySpan<TPixel> src)
+        {
+            src.CopyTo(GetRowPixelsSpan(y).Slice(x));
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
+        {
+            var src = GetRowPixelsSpan(y);
+            src.Slice(x, Math.Min(src.Length-x, dst.Length)).CopyTo(dst);
         }
 
         bool IClientBitmap<TPixel>.TryGetCropped(System.Drawing.Rectangle rect, out IClientBitmap<TPixel> croppedBitmap)
@@ -193,7 +204,9 @@ namespace InteropTypes.TensorBitmaps
             if (!success) throw new InvalidOperationException();
 
             return new SkiaSharpBitmapOperand<TPixel>(croppedBitmap); // this is a view, so do not dispose
-        }        
+        }
+
+        
 
         #endregion
     }

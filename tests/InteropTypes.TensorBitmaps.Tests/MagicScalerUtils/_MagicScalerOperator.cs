@@ -8,6 +8,7 @@ using System.Text;
 
 using InteropTypes.Numerics;
 using InteropTypes.TensorBitmaps.Operators;
+using InteropTypes.TensorBitmaps.Primitives;
 
 using PhotoSauce.MagicScaler;
 
@@ -36,10 +37,10 @@ namespace InteropTypes.TensorBitmaps
             throw new NotImplementedException(format.ToString());
         }        
 
-        public static BitmapFillOperation<Matrix3x2> StretchToFit { get; } = new _MagicScalerStretchToFit();
+        public static BitmapOperationFactory<Matrix3x2> StretchToFit { get; } = new _MagicScalerStretchToFit();
 
 
-        static ManagedBitmap<TDstPixel> ReadBitmap<TDstPixel>(System.IO.Stream stream, ProcessImageSettings settings, PixelFormat dstFmt)
+        static ArrayBitmap<TDstPixel> ReadBitmap<TDstPixel>(System.IO.Stream stream, ProcessImageSettings settings, PixelFormat dstFmt)
             where TDstPixel: unmanaged
         {
             dstFmt.ThrowIfBytesPerPixelMismatch<TDstPixel>();
@@ -59,7 +60,7 @@ namespace InteropTypes.TensorBitmaps
     readonly struct BitmapToMagicScalerWrapper : IPixelSource
     {
         #region lifecycle
-        public BitmapToMagicScalerWrapper(IBitmapReader srcBitmap)
+        public BitmapToMagicScalerWrapper(IReadOnlyBitmap srcBitmap)
         {
             Format = MagicScalerUtils.GetMagicScalerFormat(srcBitmap.Format);
 
@@ -70,7 +71,7 @@ namespace InteropTypes.TensorBitmaps
 
         #region data
 
-        private readonly IBitmapReader _SrcBitmap;
+        private readonly IReadOnlyBitmap _SrcBitmap;
 
         public Guid Format { get; }
 
@@ -87,22 +88,18 @@ namespace InteropTypes.TensorBitmaps
 
         void IPixelSource.CopyPixels(Rectangle sourceArea, int cbStride, Span<byte> buffer)
         {
-            var bpp = _SrcBitmap.Format.BytesPerPixel;
-
-            Span<byte> row = stackalloc Byte[_SrcBitmap.Width * bpp];
+            var rw = sourceArea.Width * _SrcBitmap.Format.BytesPerPixel;            
 
             for(int i=0; i < sourceArea.Height; ++i)
             {
-                _SrcBitmap.ReadRowBytesSpan(i + sourceArea.Y, row);
-
-                row.Slice(sourceArea.X * bpp, sourceArea.Width * bpp).CopyTo(buffer);
+                _SrcBitmap.ReadRowBytesSpan(i + sourceArea.Y, sourceArea.X, buffer.Slice(0, rw));                
 
                 if (cbStride >= buffer.Length) break;
                 buffer = buffer.Slice(cbStride);
             }
         }        
 
-        public ManagedBitmap<DstTPixel> Resize<DstTPixel>(System.Drawing.Size dstSize, PixelFormat dstFmt)
+        public ArrayBitmap<DstTPixel> Resize<DstTPixel>(System.Drawing.Size dstSize, PixelFormat dstFmt)
             where DstTPixel: unmanaged
         {
             var settings = new ProcessImageSettings();
@@ -113,7 +110,7 @@ namespace InteropTypes.TensorBitmaps
             return Resize<DstTPixel>(settings, dstFmt);
         }
 
-        public ManagedBitmap<DstTPixel> Resize<DstTPixel>(ProcessImageSettings settings, PixelFormat dstFmt)
+        public ArrayBitmap<DstTPixel> Resize<DstTPixel>(ProcessImageSettings settings, PixelFormat dstFmt)
             where DstTPixel : unmanaged
         {
             using var pipeline = MagicImageProcessor.BuildPipeline(this, settings);
@@ -135,7 +132,7 @@ namespace InteropTypes.TensorBitmaps
     /// <remarks>
     /// This is the mirror of <see cref="BitmapToMagicScalerWrapper"/>
     /// </remarks>
-    class MagicScalerToBitmapWrapper : IBitmapReader
+    class MagicScalerToBitmapWrapper : IReadOnlyBitmap
     {
         #region lifecycle
 
@@ -167,40 +164,45 @@ namespace InteropTypes.TensorBitmaps
 
         #region API
 
-        public void ReadRowBytesSpan(int y, scoped Span<byte> dst)
+        ReadOnlySpan<byte> IReadOnlyBitmap.GetRowBytesSpan(int y)
         {
-            var rect = new System.Drawing.Rectangle(0, y, Width, 1);
+            throw new NotSupportedException("Use ReadRowBytesSpan");
+        }
+
+        public void ReadRowBytesSpan(int y, int x, scoped Span<byte> dst)
+        {
+            var rect = new System.Drawing.Rectangle(x, y, Width-x, 1);
             _SrcBitmap.CopyPixels(rect, dst.Length, dst);
         }        
 
-        public ManagedBitmap<TDstPixel> ToManagedBitmap<TDstPixel>(PixelFormat dstFmt)
+        public ArrayBitmap<TDstPixel> ToManagedBitmap<TDstPixel>(PixelFormat dstFmt)
             where TDstPixel: unmanaged
         {
-            var bmp = new ManagedBitmap<TDstPixel>(_SrcBitmap.Width, _SrcBitmap.Height, dstFmt);
+            var bmp = new ArrayBitmap<TDstPixel>(_SrcBitmap.Width, _SrcBitmap.Height, dstFmt);
 
             if (_SrcBitmap.Format == PixelFormats.Bgra32bpp)
             {
                 var wrap = new MagicScalerToBitmapWrapper<uint>(_SrcBitmap);
-                bmp.GetFillerContext<uint>().Fill(wrap);
+                bmp.GetContext<uint>().Apply(wrap);
             }
 
             if (_SrcBitmap.Format == PixelFormats.Bgr24bpp)
             {
                 var wrap = new MagicScalerToBitmapWrapper<_XYZ888>(_SrcBitmap);
-                bmp.GetFillerContext<_XYZ888>().Fill(wrap);
+                bmp.GetContext<_XYZ888>().Apply(wrap);
             }
 
             if (_SrcBitmap.Format == PixelFormats.Grey8bpp)
             {
                 var wrap = new MagicScalerToBitmapWrapper<byte>(_SrcBitmap);
-                bmp.GetFillerContext<byte>().Fill(wrap);
+                bmp.GetContext<byte>().Apply(wrap);
             }
 
             return bmp;
         }
 
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, Pack = 1)]
-        private struct _XYZ888 { public byte X, Y, Z; }
+        private struct _XYZ888 { public byte X, Y, Z; }        
 
         #endregion
     }
@@ -213,49 +215,54 @@ namespace InteropTypes.TensorBitmaps
     /// </remarks>
     sealed class MagicScalerToBitmapWrapper<TPixel>
         : MagicScalerToBitmapWrapper
-        , IBitmapReader<TPixel>
+        , IReadOnlyBitmap<TPixel>
         where TPixel: unmanaged
     {
         public MagicScalerToBitmapWrapper(IPixelSource srcBitmap)
             : base(srcBitmap)
         {
             Format.ThrowIfBytesPerPixelMismatch<TPixel>();            
-        }        
+        }
 
-        public void ReadRowPixelsSpan(int y, scoped Span<TPixel> dst)
+        ReadOnlySpan<TPixel> IReadOnlyBitmap<TPixel>.GetRowPixelsSpan(int y)
+        {
+            throw new NotSupportedException("Use ReadRowPixelsSpan");
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
         {
             var bytes = System.Runtime.InteropServices.MemoryMarshal.AsBytes(dst);
-            ReadRowBytesSpan(y, bytes);
-        }
+            ReadRowBytesSpan(y,x, bytes);
+        }        
     }
 
 
-    sealed class _MagicScalerStretchToFit : BitmapFillOperation<Matrix3x2>
+    sealed class _MagicScalerStretchToFit : BitmapOperationFactory<Matrix3x2>
     {        
-        public override IFillOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
+        public override IBitmapOperation<TSrcPixel, TDstPixel, Matrix3x2> GetInstance<TSrcPixel, TDstPixel>()
         {
             return _MagicScalerStretchOperator<TSrcPixel, TDstPixel>.Instance;
         }
     }
 
     readonly struct _MagicScalerStretchOperator<TSrcPixel, TDstPixel>
-        : IFillOperation<TSrcPixel, TDstPixel, Matrix3x2>
+        : IBitmapOperation<TSrcPixel, TDstPixel, Matrix3x2>
         where TSrcPixel : unmanaged
         where TDstPixel : unmanaged
     {
         public static _MagicScalerStretchOperator<TSrcPixel, TDstPixel> Instance { get; } = new _MagicScalerStretchOperator<TSrcPixel, TDstPixel>();
 
-        public Matrix3x2 Fill<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
-            where TSrcBmp : IBitmapReader<TSrcBmp, TSrcPixel>, allows ref struct
-            where TDstBmp : IBitmapWriter<TDstBmp, TDstPixel>, allows ref struct
+        public Matrix3x2 Apply<TSrcBmp, TDstBmp>(TSrcBmp src, TDstBmp dst, IPixelConverter<TSrcPixel, TDstPixel> pixelConverter)
+            where TSrcBmp : IReadOnlyBitmap<TSrcBmp, TSrcPixel>, allows ref struct
+            where TDstBmp : IBitmap<TDstBmp, TDstPixel>, allows ref struct
         {
             BitmapToMagicScalerWrapper? wrap = null;
 
             if (src.Format.Components.Length == 1)
             {
                 // we need a managed bitmap
-                var tmp = new ManagedBitmap<byte>(src.Width, src.Height, KnownPixelFormats.Luminance8);
-                tmp.GetFillerContext<TSrcPixel>().Fill(BitmapOperations.FillCopy, src);
+                var tmp = new ArrayBitmap<byte>(src.Width, src.Height, KnownPixelFormats.Luminance8);
+                tmp.GetContext<TSrcPixel>().Apply(FillOperations.Copy, src);
 
                 // convert src to magicScaler, stretch to dst size, and copy to dst
                 wrap = new BitmapToMagicScalerWrapper(tmp);
@@ -264,8 +271,8 @@ namespace InteropTypes.TensorBitmaps
             if (src.Format.Components.Length == 3)
             {
                 // we need a managed bitmap
-                var tmp = new ManagedBitmap<_XYZ888>(src.Width, src.Height, KnownPixelFormats.Bgr8);
-                tmp.GetFillerContext<TSrcPixel>().Fill(BitmapOperations.FillCopy, src);
+                var tmp = new ArrayBitmap<_XYZ888>(src.Width, src.Height, KnownPixelFormats.Bgr8);
+                tmp.GetContext<TSrcPixel>().Apply(FillOperations.Copy, src);
 
                 // convert src to magicScaler, stretch to dst size, and copy to dst
                 wrap = new BitmapToMagicScalerWrapper(tmp);                
@@ -274,8 +281,8 @@ namespace InteropTypes.TensorBitmaps
             if (src.Format.Components.Length == 4)
             {
                 // we need a managed bitmap
-                var tmp = new ManagedBitmap<uint>(src.Width, src.Height, KnownPixelFormats.Bgra8);
-                tmp.GetFillerContext<TSrcPixel>().Fill(BitmapOperations.FillCopy, src);
+                var tmp = new ArrayBitmap<uint>(src.Width, src.Height, KnownPixelFormats.Bgra8);
+                tmp.GetContext<TSrcPixel>().Apply(FillOperations.Copy, src);
 
                 // convert src to magicScaler, stretch to dst size, and copy to dst
                 wrap = new BitmapToMagicScalerWrapper(tmp);
@@ -285,7 +292,7 @@ namespace InteropTypes.TensorBitmaps
 
             var resized = wrap.Value.Resize<TDstPixel>(new System.Drawing.Size(dst.Width, dst.Height), dst.Format);
 
-            dst.GetFillerContext<TDstPixel>().Fill(resized);
+            dst.GetContext<TDstPixel>().Apply(resized);
 
             return Matrix3x2.CreateScale(src.Width / (float)dst.Width, src.Height / (float)dst.Height);
         }
