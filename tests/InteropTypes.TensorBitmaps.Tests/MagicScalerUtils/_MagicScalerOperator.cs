@@ -181,21 +181,18 @@ namespace InteropTypes.TensorBitmaps
             var bmp = new ArrayBitmap<TDstPixel>(_SrcBitmap.Width, _SrcBitmap.Height, dstFmt);
 
             if (_SrcBitmap.Format == PixelFormats.Bgra32bpp)
-            {
-                var wrap = new MagicScalerToBitmapWrapper<uint>(_SrcBitmap);
-                bmp.GetContext<uint>().Apply(wrap);
+            {                
+                bmp.CopyFrom(new MagicScalerToBitmapWrapper<uint>(_SrcBitmap));
             }
 
             if (_SrcBitmap.Format == PixelFormats.Bgr24bpp)
-            {
-                var wrap = new MagicScalerToBitmapWrapper<_XYZ888>(_SrcBitmap);
-                bmp.GetContext<_XYZ888>().Apply(wrap);
+            {                
+                bmp.CopyFrom(new MagicScalerToBitmapWrapper<_XYZ888>(_SrcBitmap));
             }
 
             if (_SrcBitmap.Format == PixelFormats.Grey8bpp)
-            {
-                var wrap = new MagicScalerToBitmapWrapper<byte>(_SrcBitmap);
-                bmp.GetContext<byte>().Apply(wrap);
+            {                
+                bmp.CopyFrom(new MagicScalerToBitmapWrapper<byte>(_SrcBitmap));
             }
 
             return bmp;

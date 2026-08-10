@@ -193,7 +193,7 @@ namespace InteropTypes.TensorBitmaps.Primitives
         #endif
         where TPixel : unmanaged
     {
-        #if NET10_0_OR_GREATER
+        #if NET9_0_OR_GREATER
 
         /// <summary>
         /// Returns a context that can be used to perform bulk operations on this bitmap

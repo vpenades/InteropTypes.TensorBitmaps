@@ -19,8 +19,8 @@ namespace InteropTypes.TensorBitmaps
     /// <typeparam name="TPixel">The type of the bitmap's pixel</typeparam>
     [System.Diagnostics.DebuggerDisplay("TensorBitmap {Width}x{Height}")]
     public readonly struct TensorBitmap<TElement,TPixel>
-        : ITensorBitmap
-        , IBitmapFull<TPixel>        
+        : IBitmap<TensorBitmap<TElement, TPixel>, TPixel>
+        , ITensorBitmap        
         where TElement: unmanaged, INumber<TElement>
         where TPixel: unmanaged
     {
@@ -90,6 +90,19 @@ namespace InteropTypes.TensorBitmaps
             return new TensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
         }
 
+        public void WriteRowPixelsSpan(int y, int x, scoped ReadOnlySpan<TPixel> src)
+        {
+            var row = GetRowPixelsSpan(y).Slice(x);
+            src.CopyTo(row);
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
+        {
+            var row = GetRowPixelsSpan(y).Slice(x);
+            row = row.Slice(0, Math.Min(row.Length, dst.Length));
+            row.CopyTo(dst);
+        }
+
         public ReadOnlyTensorSpanBitmap<TElement, TPixel> AsReadOnlyTensorSpanBitmap()
         {
             return new ReadOnlyTensorSpanBitmap<TElement, TPixel>(this.Tensor, this.Format);
@@ -138,11 +151,14 @@ namespace InteropTypes.TensorBitmaps
         }
 
         #if NET9_0_OR_GREATER
-        public Operators.BitmapOperationContext<RefStructBitmap<TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>()
-            where TContextPixel : unmanaged
+        
+
+        public BitmapOperationContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>()
+            where TContextPixel: unmanaged
         {
-            return new RefStructBitmap<TPixel>(this).GetContext<TContextPixel>();
+            return new BitmapOperationContext<TensorBitmap<TElement, TPixel>, TPixel, TContextPixel>(this);
         }
+        
         #endif
 
         #endregion

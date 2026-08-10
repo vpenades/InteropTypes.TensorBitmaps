@@ -10,7 +10,8 @@ using InteropTypes.TensorBitmaps.Primitives;
 
 namespace InteropTypes.TensorBitmaps
 {
-    public readonly struct ArrayBitmap<TPixel> : IBitmapFull<TPixel>
+    public readonly struct ArrayBitmap<TPixel>
+        : IBitmap<ArrayBitmap<TPixel>,TPixel>
         where TPixel: unmanaged
     {
         #region lifecycle        
@@ -60,6 +61,19 @@ namespace InteropTypes.TensorBitmaps
             return System.Runtime.InteropServices.MemoryMarshal.Cast<byte, TPixel>(row).Slice(0, Width);
         }
 
+        public void WriteRowPixelsSpan(int y, int x, scoped ReadOnlySpan<TPixel> src)
+        {
+            var row = GetRowPixelsSpan(y).Slice(x);
+            src.CopyTo(row);
+        }
+
+        public void ReadRowPixelsSpan(int y, int x, scoped Span<TPixel> dst)
+        {
+            var row = GetRowPixelsSpan(y).Slice(x);
+            row = row.Slice(0, Math.Min(row.Length, dst.Length));
+            row.CopyTo(dst);
+        }
+
         public void CopyFrom<TSrcPixel>(IReadOnlyBitmap<TSrcPixel> srcBitmap)
             where TSrcPixel: unmanaged
         {
@@ -90,12 +104,14 @@ namespace InteropTypes.TensorBitmaps
             return operation.GetInstance<TSrcPixel, TPixel>().Apply(srcBitmap, this, converter);
         }
 
-        #if NET9_0_OR_GREATER
-        public Operators.BitmapOperationContext<RefStructBitmap<TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>()
-            where TContextPixel : unmanaged
+        #if NET9_0_OR_GREATER        
+
+        public BitmapOperationContext<ArrayBitmap<TPixel>, TPixel, TContextPixel> GetContext<TContextPixel>()
+            where TContextPixel: unmanaged
         {
-            return new RefStructBitmap<TPixel>(this).GetContext<TContextPixel>();
+            return new BitmapOperationContext<ArrayBitmap<TPixel>, TPixel, TContextPixel>(this);
         }
+        
         #endif
 
         #endregion
