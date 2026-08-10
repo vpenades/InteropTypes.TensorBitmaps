@@ -37,6 +37,19 @@ namespace InteropTypes.TensorBitmaps
         }        
 
         public static BitmapFillOperation<Matrix3x2> StretchToFit { get; } = new _MagicScalerStretchToFit();
+
+
+        static ManagedBitmap<TDstPixel> ReadBitmap<TDstPixel>(System.IO.Stream stream, ProcessImageSettings settings, PixelFormat dstFmt)
+            where TDstPixel: unmanaged
+        {
+            dstFmt.ThrowIfBytesPerPixelMismatch<TDstPixel>();
+
+            using var pipeline = MagicImageProcessor.BuildPipeline(stream, settings);
+
+            var wrap = new MagicScalerToBitmapWrapper(pipeline);
+
+            return wrap.ToManagedBitmap<TDstPixel>(dstFmt);
+        }
     }   
 
 
@@ -125,6 +138,9 @@ namespace InteropTypes.TensorBitmaps
     class MagicScalerToBitmapWrapper : IBitmapReader
     {
         #region lifecycle
+
+        public MagicScalerToBitmapWrapper(ProcessingPipeline srcPipeline)
+            : this(srcPipeline.PixelSource) { }
 
         public MagicScalerToBitmapWrapper(IPixelSource srcBitmap)
         {
