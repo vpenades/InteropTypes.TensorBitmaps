@@ -67,7 +67,13 @@ namespace InteropTypes.TensorBitmaps
 
             // operators
 
-            foreach (var op in new[] { FillOperations.StretchToFitStep, FillOperations.StretchToFitBicubic, FillOperations.StretchToFitLanczos, MagicScalerUtils.StretchToFit })
+            var ops = new List<BitmapOperationFactory<Matrix3x2>>();
+            ops.Add(FillOperations.StretchToFitStep);
+            ops.Add(FillOperations.StretchToFitBicubic);
+            ops.Add(FillOperations.StretchToFitLanczos);
+            if (OperatingSystem.IsWindows())  ops.Add(MagicScalerUtils.StretchToFit);
+
+            foreach (var op in ops)
             {
                 var src = new ArrayBitmap<uint>(img.Width, img.Height, KnownPixelFormats.Rgba8);                
                 src.CopyFrom(img);

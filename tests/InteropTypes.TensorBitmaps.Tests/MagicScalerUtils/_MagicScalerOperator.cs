@@ -14,8 +14,26 @@ using PhotoSauce.MagicScaler;
 
 namespace InteropTypes.TensorBitmaps
 {
+    
+
     public static class MagicScalerUtils
     {
+        public static void ConfigureCodecs()
+        {
+            // linux codecs
+            // https://github.com/saucecontrol/PhotoSauce/discussions/138
+
+            /*
+            CodecManager.Configure(codecs => {
+                codecs.UseLibwebp();
+                codecs.UseLibjpeg();
+                codecs.UseLibpng();
+                codecs.UseGiflib();
+                codecs.UseLibheif();
+                codecs.UseLibjxl();
+            });*/
+        }
+
         /// <summary>
         /// Determines the number of channels from a PhotoSauce pixel format GUID.
         /// </summary>

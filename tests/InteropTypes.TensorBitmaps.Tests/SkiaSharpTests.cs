@@ -59,7 +59,7 @@ namespace InteropTypes.TensorBitmaps
 
             using var stretched = bmp.CreateStretched(new System.Drawing.Size(64, 48));
 
-            await Assert.That(stretched.CalculateCrc32()).IsEqualTo(2859208297u);
+            await Assert.That(stretched.CalculateCrc32()).IsEqualTo(2859208297u); // 145639874 on github
 
             AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(s=> stretched.Write(s) );
         }
