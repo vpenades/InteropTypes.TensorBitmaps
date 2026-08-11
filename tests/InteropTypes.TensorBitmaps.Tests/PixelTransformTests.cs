@@ -51,9 +51,12 @@ namespace InteropTypes.TensorBitmaps
 
             // magic scaler reference
 
-            var mso = new ProcessImageSettings { Width = s.Width, Height = s.Height, ResizeMode = CropScaleMode.Stretch };
-            using var ms = MagicImageProcessor.BuildPipeline(f.File.FullName, mso);
-            AttachmentInfo.From($"shannon.Reference.MagicScaler.jpg").WriteToStream(x => ms.WriteOutput(x));
+            if (!OperatingSystem.IsLinux())
+            {
+                var mso = new ProcessImageSettings { Width = s.Width, Height = s.Height, ResizeMode = CropScaleMode.Stretch };
+                using var ms = MagicImageProcessor.BuildPipeline(f.File.FullName, mso);
+                AttachmentInfo.From($"shannon.Reference.MagicScaler.jpg").WriteToStream(x => ms.WriteOutput(x));
+            }
 
             // imagesharp reference
 
