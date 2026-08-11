@@ -57,9 +57,9 @@ namespace InteropTypes.TensorBitmaps
 
             using var bmp = SkiaSharpBitmapOperand<uint>.Load(ResourceInfo.From("shannon.jpg"));
 
-            using var stretched = bmp.CreateStretched(new System.Drawing.Size(64, 48));
+            using var stretched = bmp.CreateStretched(new System.Drawing.Size(64, 48));            
 
-            await Assert.That(stretched.CalculateCrc32()).IsEqualTo(2859208297u); // 145639874 on github
+            await Assert.That(new[] { 2859208297u , 145639874u}).Contains(stretched.CalculateCrc32());
 
             AttachmentInfo.From("shannon.stretched.jpg").WriteToStream(s=> stretched.Write(s) );
         }

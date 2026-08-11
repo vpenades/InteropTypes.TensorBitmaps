@@ -18,6 +18,8 @@ namespace InteropTypes.TensorBitmaps
 
     public static class MagicScalerUtils
     {
+        // apparently we need to register codecs in linux and mac even if we don't load images
+
         public static void ConfigureCodecs()
         {
             // linux codecs
