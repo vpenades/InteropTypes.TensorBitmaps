@@ -51,7 +51,7 @@ namespace InteropTypes.TensorBitmaps
 
             // magic scaler reference
 
-            if (!OperatingSystem.IsLinux())
+            if (OperatingSystem.IsWindows())
             {
                 var mso = new ProcessImageSettings { Width = s.Width, Height = s.Height, ResizeMode = CropScaleMode.Stretch };
                 using var ms = MagicImageProcessor.BuildPipeline(f.File.FullName, mso);
